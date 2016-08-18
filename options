@@ -1,0 +1,24 @@
+-classpath
+'D:/workspace/simplity/kernel/target/classes;D:/workspace/simplity/js/target/classes;D:/workspace/simplity/example/target/classes;D:/workspace/simplity/archetype/target/classes;C:/Users/chetana_shanbhag/.m2/repository/mysql/mysql-connector-java/5.1.29/mysql-connector-java-5.1.29.jar;C:/Users/chetana_shanbhag/.m2/repository/com/oracle/ojdbc6/11.2.0.3/ojdbc6-11.2.0.3.jar;C:/Users/chetana_shanbhag/.m2/repository/javax/servlet/javax.servlet-api/3.1.0/javax.servlet-api-3.1.0.jar'
+-encoding
+'Cp1252'
+-protected
+-sourcepath
+'D:/workspace/simplity/kernel/src/main/java;D:/workspace/simplity/example/src/main/java'
+-author
+-bottom
+'Copyright &#169; 2016. All rights reserved.'
+-charset
+'UTF-8'
+-d
+'D:/workspace/simplity/target/site/apidocs'
+-docencoding
+'UTF-8'
+-doctitle
+'simplity 1.0-SNAPSHOT API'
+-linkoffline
+'http://docs.oracle.com/javase/8/docs/api' 'D:/workspace/simplity/target/javadoc-bundle-options'
+-use
+-version
+-windowtitle
+'simplity 1.0-SNAPSHOT API'
