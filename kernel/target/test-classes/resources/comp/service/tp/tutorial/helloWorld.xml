@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<service
+	xmlns="http://www.simplity.org/schema"
+	name="helloWorld"
+	moduleName="tutorial"
+	dbAccessType="none"
+>
+<!-- 
+	we expect no input. We are to set value to a field named 'hello'
+ -->
+	<actions>
+		<setValue
+			actionName="sayHello"
+			fieldName="hello"
+			fieldValue="Hello World" />
+	</actions>
+	<outputData fieldNames="hello" />
+</service>

@@ -1,0 +1,12 @@
+#set( $symbol_pound = '#' )
+#set( $symbol_dollar = '$' )
+#set( $symbol_escape = '\' )
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<services xmlns="http://www.simplity.org/schema"
+	name="film"
+    >
+    <components>
+    	<entry name="tutorial.helloJavaDirect"
+    		   className="${package}.HelloJava" />
+    </components>
+</services>

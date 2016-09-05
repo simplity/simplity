@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<dataTypes
+	name="myTypes"
+	xmlns="http://www.simplity.org/schema"
+>
+	<components>
+		<!-- 
+		This is a set of suggested data types for a project. 
+		
+		You may define your data types based on these examples.
+		You MUST edit declaredDataType.xml in schema to keep it
+		in synch with this list. (A utility is internally available,
+		and will be provided with a UI in later versions)
+		-->
+		<!-- text types  -->
+		<textDataType
+			name="description"
+			description="Three thousand characters are more than enough to describe pretty much anything. Well almost."
+			maxLength="3000"
+			 />
+		<textDataType
+			name="email"
+			description="email"
+			maxLength="50"
+			regex="[~@]*@.[~@]*"
+			messageName="invalidEmail" />
+		<textDataType
+			name="longName"
+			maxLength="255"
+			 />
+		<textDataType
+			name="name"
+			maxLength="50"
+			description="comma separated list of entityNames"
+			regex="[_a-zA-Z][\w.]{0,49}" />
+		<textDataType
+			name="password"
+			description="password"
+			minLength="8"
+			maxLength="15"
+			 />
+		<textDataType
+			name="phone"
+			maxLength="20"
+			messageName="invalidPhone"
+			description="You may use space, - and () to format the phone number"
+			regex="[0-9\- ()]{1,19}" />
+		<textDataType
+			name="shortName"
+			maxLength="20"
+			 />
+		<textDataType
+			name="text"
+			description="Three thousand characters are more than enough to describe pretty much anything. Well almost."
+			maxLength="3000"
+			messageName="invalidText" />
+		<textDataType
+			name="text1"
+			description="single character."
+			maxLength="1"
+			messageName="invalidText1" />
+<!--  We have some example data base that have used different length. For convenience  txtnnn -->
+		<textDataType
+			name="text50"
+			description="Text with upto 50 characters."
+			maxLength="50"
+			/>
+			
+		<textDataType
+			name="userName"
+			maxLength="16"
+			regex="[a-zA-Z][\w.-_]{1,16}" />
+		
+		<!-- integer -->
+		<numericDataType
+			name="id"
+			description="Internally generated number by the system as primary key for table"
+			maxValue="99999999999999"
+		 />
+		<numericDataType
+			name="number"
+			description="Non-negative whole number with a max of 14 digits"
+			maxValue="99999999999999"
+			/>
+		<numericDataType
+			name="shortNumber"
+			description="number up to 999"
+			maxValue="999" />
+		<numericDataType
+			name="signedNumber"
+			description="Whole number, possibly signed with a max of 14 digits."
+			maxValue="99999999999999"
+			minValue="-99999999999999" />
+		<numericDataType
+			name="year"
+			description="year between 1900 and 2020"
+			maxValue="2020"
+			minValue="1900" />
+		
+		<!-- decimal -->
+		<numericDataType
+			name="amt"
+			maxValue="999999"
+			nbrFractionDigits="2"
+			description="amount less than 100,000 with two decimal places" />
+		<numericDataType
+			name="amt2"
+			description="Amount with two decimal places"
+			maxValue="9999999999999999"
+			messageName="invalidAmt2"
+			minValue="0"
+			nbrFractionDigits="2" />
+		<numericDataType
+			name="decimal"
+			description="Number with an optional decimal point, but not negative."
+			maxValue="99999999999999"
+			messageName="invalidDecimal"
+			minValue="0"
+			nbrFractionDigits="6" />
+		<numericDataType
+			name="shortAmt"
+			maxValue="9999"
+			nbrFractionDigits="2"
+			description="amount less than a grand with two decimal places" />
+		<numericDataType
+			name="signedDecimal"
+			description="Number with an optional negative sign, and an optional decimal point."
+			maxValue="99999999999999"
+			messageName="invalidSignedDecimal"
+			minValue="-99999999999999"
+			nbrFractionDigits="6" />
+		
+		<!-- date -->
+		<dateDataType
+			name="date"
+			description="Date"
+			maxDaysIntoFuture="730000"
+			maxDaysIntoPast="3650000"
+			messageName="invalidDate" />
+		<dateDataType
+			name="dateTime"
+			description="Date with time"
+			maxDaysIntoFuture="730000"
+			maxDaysIntoPast="3650000"
+			messageName="invalidDateTime"
+			hasTime="true" />
+		<dateDataType
+			name="futureDate"
+			description="date in the future"
+			maxDaysIntoFuture="730000"
+			maxDaysIntoPast="0"
+			messageName="invalidFutureDate" />
+		<dateDataType
+			name="pastDate"
+			description="Date in the past"
+			maxDaysIntoFuture="0"
+			maxDaysIntoPast="3650000"
+			messageName="invalidPastDate" />
+		<dateDataType
+			name="timeStamp"
+			description="Date with time used as time stamp"
+			maxDaysIntoFuture="730000"
+			maxDaysIntoPast="3650000"
+			messageName="invalidDateTime"
+			hasTime="true" />
+		
+		<!--  boolean  -->
+		<booleanDataType
+			name="active"
+			description="Is this active" 
+			valueList="0:Inactive,1:Active"
+			messageName="invalidActive"/>
+		<booleanDataType
+			name="boolean"
+			description="0 for false and 1 for true"
+			valueList="0:False,1:True"
+			messageName="invalidBoolean" />
+		<booleanDataType
+			name="trueFalse"
+			description="true and false are the only valid values"
+			valueList="0:False,1:True"
+			messageName="invalidTrueFalse" />
+		<booleanDataType
+			name="yesNo"
+			description="yes or no please"
+			valueList="0:Yes,1:No"
+			messageName="invalidYesNo" />
+	</components>
+</dataTypes>

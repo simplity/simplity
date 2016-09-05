@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<record xmlns="http://www.simplity.org/schema" 
+	name="date"
+	moduleName="poc" 
+	recordType="structure"
+	>
+	<fields>
+		<field name="date" dataType="_date" />
+	</fields>
+</record>

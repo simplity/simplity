@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema targetNamespace="http://www.simplity.org/declaredDataTypes"
+           xmlns="http://www.simplity.org/dataTypes"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:simpleType name="declaredDataTypes">
+    <xs:restriction base="xs:NCName">
+    <!-- internally used. Avoid using these in projects, but not an issue -->
+      <xs:enumeration value="_boolean" />
+      <xs:enumeration value="_date" />
+      <xs:enumeration value="_dateTime" />
+      <xs:enumeration value="_decimal" />
+      <xs:enumeration value="_entityList" />
+      <xs:enumeration value="_entityName" />
+      <xs:enumeration value="_number" />
+      <xs:enumeration value="_text" />
+      <!-- defined in exampleDataTypes.xml -->
+
+      <!--  boolean -->
+      <xs:enumeration value="active" />
+      <xs:enumeration value="boolean" />
+      <xs:enumeration value="trueFalse" />
+      <xs:enumeration value="yesNo" />
+      
+      <!--  text -->
+      <xs:enumeration value="description" />
+      <xs:enumeration value="email" />
+      <xs:enumeration value="longName" />
+      <xs:enumeration value="name" />
+      <xs:enumeration value="password" />
+      <xs:enumeration value="phone" />
+      <xs:enumeration value="shortName" />
+      <xs:enumeration value="text" />
+      <xs:enumeration value="text1" />
+      <xs:enumeration value="userName" />
+      
+      <!-- integral -->
+      <xs:enumeration value="id" />
+      <xs:enumeration value="number" />
+      <xs:enumeration value="shortNumber" />
+      <xs:enumeration value="signedNumber" />
+      <xs:enumeration value="year" />
+      
+      <!--  decimal -->
+      <xs:enumeration value="amt" />
+      <xs:enumeration value="amt2" />
+      <xs:enumeration value="decimal" />
+      <xs:enumeration value="shortAmt" />
+      <xs:enumeration value="signedDecimal" />
+      
+      <!-- date -->
+      <xs:enumeration value="date" />
+      <xs:enumeration value="dateTime" />
+      <xs:enumeration value="futureDate" />
+      <xs:enumeration value="pastDate" />
+      <xs:enumeration value="timeStamp" />
+
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>

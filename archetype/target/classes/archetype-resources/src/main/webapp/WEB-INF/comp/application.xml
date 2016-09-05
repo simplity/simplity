@@ -1,0 +1,26 @@
+#set( $symbol_pound = '#' )
+#set( $symbol_dollar = '$' )
+#set( $symbol_escape = '\' )
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<application
+	xmlns="http://www.simplity.org/schema"
+	applicationId="simplityTutorial"
+	dbVendor="mysql"
+	dbDriverClassName="com.mysql.jdbc.Driver"
+	connectionString="jdbc:mysql://localhost:3306/sakila?user=root" 
+	sendTraceToClient="true"
+	logSqls="true"
+>
+<!-- 
+	<schemaDetails>
+		<schemaDetail
+			schemaName="simplity"
+			connectionString="jdbc:oracle:thin:simplity/simplity@localhost:1521:XE" />
+	</schemaDetails>
+ -->
+	<!-- mySql dbVendor="mysql" dbDriverClassName="com.mysql.jdbc.Driver" connectionString="jdbc:mysql://localhost:3306/sakila?user=root&amp;password=exility" 
+		Sql server dbVendor1="mssql" dbDriverClassName="com.microsoft.sqlserver.jdbc.SQLServerDriver" 
+		connectionString="jdbc:sqlserver://dbinstancename${symbol_escape}${symbol_escape}inst4:1433;integratedSecurity=true;" 
+		connectionString="jdbc:sqlserver://localhost:1433;databaseName=xel;user=user;password=pwd" 
+		Oracle dbVendor1="oracle" dbDriverClassName="oracle.jdbc.OracleDriver" connectionString="jdbc:oracle:thin:oracle/oracle@localhost:1521:XE" -->
+</application>

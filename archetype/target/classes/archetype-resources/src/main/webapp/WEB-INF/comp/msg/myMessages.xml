@@ -1,0 +1,16 @@
+#set( $symbol_pound = '#' )
+#set( $symbol_dollar = '$' )
+#set( $symbol_escape = '\' )
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<messages name="myTypes"
+    xmlns="http://www.simplity.org/schema"
+    >
+    <components>
+    <!-- 
+    	Use this file to define messages used in your project.
+    	DO not hesitate to use multiple files in case of large 
+    	project with multiple modules 
+     -->
+    <message messageType="error" name="a" text="a"/>
+    </components>
+</messages>

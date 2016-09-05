@@ -1,0 +1,13 @@
+#set( $symbol_pound = '#' )
+#set( $symbol_dollar = '$' )
+#set( $symbol_escape = '\' )
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<record xmlns="http://www.simplity.org/schema" 
+	name="int"
+	moduleName="poc" 
+	recordType="structure"
+	>
+	<fields>
+		<field name="int" dataType="_number" />
+	</fields>
+</record>

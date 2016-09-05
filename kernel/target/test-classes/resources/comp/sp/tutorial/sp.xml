@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<storedProcedure xmlns="http://www.simplity.org/schema"
+	procedureName="film_in_stock" name="sp" moduleName="tutorial">
+	<parameters>
+		<procedureParameter name="inArr" inOutType="input"
+			isArray="true" sqlArrayType="filestockinArray" sqlObjectType="filestockin"
+			recordName="tutorial.filestockin" />
+		<procedureParameter name="outArr" inOutType="output"
+			isArray="true" sqlArrayType="filestockoutArray" sqlObjectType="filestockout"
+			recordName="tutorial.filestockout" />
+		<procedureParameter name="txt" inOutType="output"
+			dataType="text" />
+		<!-- <procedureParameter name="yesno" inOutType="output" dataType="boolean"/> -->
+	</parameters>
+</storedProcedure>

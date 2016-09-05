@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<service
+	xmlns="http://www.simplity.org/schema"
+	name="ps"
+	moduleName="tutorial"
+	dbAccessType="none"
+	description="gets ps -e, and filters it by match supplied by client."
+>
+	<actions>
+		<logic
+			actionName="ps"
+			className="org.simplity.tutorial.CommandAction" />
+	</actions>
+	<outputData>
+		<outputRecords>
+		<outputRecord sheetName="ps"/>
+		</outputRecords>
+	</outputData>
+</service>

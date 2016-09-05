@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<record xmlns="http://www.simplity.org/schema" 
+	name="dec"
+	moduleName="poc" 
+	recordType="structure"
+	>
+	<fields>
+		<field name="dec" dataType="_decimal" />
+	</fields>
+</record>

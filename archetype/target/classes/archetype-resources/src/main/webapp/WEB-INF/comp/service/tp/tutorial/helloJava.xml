@@ -1,0 +1,26 @@
+#set( $symbol_pound = '#' )
+#set( $symbol_dollar = '$' )
+#set( $symbol_escape = '\' )
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<service
+	xmlns="http://www.simplity.org/schema"
+	name="helloJava"
+	moduleName="tutorial"
+	dbAccessType="none"
+	description="This is the customary ${artifactId} that every one is used to.."
+	responseTextFieldName="response"
+>
+	<actions>
+		<logic
+			actionName="sayHello"
+			className="${package}.HelloWorldAction" />
+			<log actionName="log" names="hello,junk"/>
+			<setValue actionName="setting" fieldName="response" fieldValue="{&quot;hello&quot;:&quot;Helloooooo Java&quot;}"></setValue>
+	</actions>
+	<outputData fieldNames="hello"></outputData>
+	<inputData>
+		<inputFields>
+			<inputField dataType="_text" name="junk" defaultValue="junk"/>
+		</inputFields>
+	</inputData>
+</service>

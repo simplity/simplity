@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service dbAccessType="none" description="Action setvalue test"
+	executeInBackground="true" moduleName="test" name="SetValue"
+	xmlns="http://www.simplity.org/schema">
+	<!-- No Input data required for setValye action -->
+	<outputData fieldNames="island,leader,gang,adversaries,novel,lostBoys">
+	</outputData>
+	<actions>
+		<setValue actionName="1" fieldName="island" fieldValue="NeverLand" description="Where did they live?"></setValue>
+		<setValue actionName="2" fieldName="leader" fieldValue="Peter Pan"></setValue>
+		<setValue actionName="3" fieldName="gang" fieldValue="Lost Boys"></setValue>
+		
+		<setValue actionName="4" fieldName="adversary1" fieldValue="Captain Hook"></setValue>
+		<setValue actionName="5" fieldName="adversary2" fieldValue="Mr.Smee"></setValue>
+		<setValue actionName="6" fieldName="comma" fieldValue=","></setValue>
+		<setValue actionName="7" fieldName="adversaries" expression="adversary1 + comma + adversary2"></setValue>
+		
+		<setValue actionName="8" fieldName="novel" fieldValue="The Little White Bird" executeOnCondition="?leader"></setValue>		
+		
+	</actions>
+</service>

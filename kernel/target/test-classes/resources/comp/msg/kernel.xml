@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<messages name="kernel"
+    xmlns="http://www.simplity.org/schema">
+    <!-- 
+    	messages used by kernel. These are defined as constants in Messages class.
+    	we have to ensure that this list and the ones declared in the class are in synch
+    	
+    	DO NOT MODIFY THIS FOR YOUR PROJECT.
+    	use myMessages.xml or create a new one for your messages.
+     -->
+    <components>
+	<message messageType="error" name="kernel.invalidValue" text="This value is not valid"/>
+	<message messageType="error" name="kernel.invalidData" text="This value is invalid"/>
+	<message messageType="error" name="kernel.invalidField" text="This field has an invalid value"/>
+	<message messageType="error" name="kernel.invalidComparator" text="This is not a valid comparator"/>
+	<message messageType="error" name="kernel.invalidEntityList" text="This is not a valid list of names"/>
+	<message messageType="error" name="kernel.valueRequired" text="Value is required. No value is entered."/>
+	<message messageType="error" name="kernel.invalidFromTo" text="To value can not be less than the from value"/>
+	<message messageType="error" name="kernel.invalidOtherField" text="Value is required for this field because of the value its related field has."/>
+	<message messageType="error" name="kernel.invalidSortOrder" text="Sort order shoudl be either asc or desc"/>
+	<message messageType="error" name="kernel.invalidBasedOnField" text="Value is required for this field because of the value its related field has."/>
+	<message messageType="error" name="kernel.internalError" text="We are sorry. There was an internal error detected and reported to the support team. You retry this transaction and see if the it goes through.\n@1"/>
+	<message messageType="error" name="kernal.invalidTableAction" text="add, modify, delete and save are the vaid actions."/>
+	<message messageType="error" name="kernel.invalidInputStream" text="Serialized data sent by the client is invalid"/>
+	<message messageType="error" name="kernel.noService" text="Service $1 is not served by this server."/>
+
+    <message messageType="error" name="kernel.invalidText" text="We accpet any character up to a max of 3000 of them."/>
+	<message messageType="error" name="kernel.invalidBoolean" text="1 for true and 0 for false"/>
+	<message messageType="error" name="kernel.invalidDate" text="This is not a vlid date"/>
+	<message messageType="error" name="kernel.invalidDateTime" text="This is not a vlid date and time"/>
+	<message messageType="error" name="kernel.invalidNumber" text="This is not valid number"/>
+	<message messageType="error" name="kernel.invalidDecimal" text="This is not a vlid decimal number"/>
+    </components>
+</messages>

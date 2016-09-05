@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sql xmlns="http://www.simplity.org/schema" description="testsqldesc"
+	moduleName="testSql" name="NCName" preparedStatement="testpreparedstatement"
+	sqlType="singleSelect" xmlns:p="htt//www.simplity.org/schema">
+</sql>

@@ -1,0 +1,20 @@
+#set( $symbol_pound = '#' )
+#set( $symbol_dollar = '$' )
+#set( $symbol_escape = '\' )
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<record xmlns="http://www.simplity.org/schema" 
+	name="t2"
+	moduleName="poc" 
+	recordType="storage"
+	okToSelectAll="true"
+	tableName="misuser.t2"
+	>
+	<fields>
+		<field name="id" dataType="number" fieldType="primaryKey" />
+		<field name="parentId" fieldType="parentKey" referredField="id" referredRecord="poc.t1" />
+		<field name="qty" dataType="number" />
+		<field name="required" dataType="boolean" />
+		<field name="name" dataType="text" />
+		<field name="description" dataType="text" />
+	</fields>
+</record>

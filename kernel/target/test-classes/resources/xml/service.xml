@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service dbAccessType="none" description="testDescription"
+	executeInBackground="true" moduleName="Testmodule" name="NCName"
+	referredServiceForInput="testserviceinput" referredServiceForOutput="testserviceoutput"
+	requestTextFieldName="NCName" responseTextFieldName="NCName"
+	schemaName="NCName" xmlns="http://www.simplity.org/schema">
+	<inputData>
+		<inputFields />
+		<inputRecords>
+			<inputRecord description="inputrecord" fieldNames="testfield"
+				maxRows="0" minRows="0" purpose="read" recordName="testrecordname"
+				sheetName="NCName" />
+		</inputRecords>
+	</inputData>
+	<outputData fieldNames="testooutputdata">
+		<outputRecords>
+			<outputRecord linkColumnInParentSheet="testouputsheet"
+				linkColumnInThisSheet="testlink" parentSheetName="testparentsheet"
+				recordName="tesadf" sheetName="NCName" />
+		</outputRecords>
+	</outputData>
+	<actions>
+		<addColumn actionName="testaction" columnName="NCName"
+			columnValue="testcolumn" columnValueExpression="testexpression"
+			columnValueType="text" description="fasdfa" executeIfNoRowsInSheet="klfasj"
+			executeIfRowsInSheet="ijskdjfa" executeOnCondition="jhasd" sheetName="sfas" />
+	</actions>
+</service>

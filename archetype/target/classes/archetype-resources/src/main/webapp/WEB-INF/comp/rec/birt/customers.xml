@@ -1,0 +1,27 @@
+#set( $symbol_pound = '#' )
+#set( $symbol_dollar = '$' )
+#set( $symbol_escape = '\' )
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<record xmlns="http://www.simplity.org/schema" 
+	name="customers"
+	moduleName="birt" 
+	recordType="storage"
+	okToSelectAll="true"
+	keyToBeGenerated="true"
+	>
+	<fields>
+		<field name="customerNumber" dataType="id" fieldType="primaryKey" />
+		<field name="customerName" dataType="text" />
+		<field name="contactLastName" dataType="text" />
+		<field name="contactFirstName" dataType="text" />
+		<field name="phone" dataType="text" />
+		<field name="addressLine1" dataType="text" />
+		<field name="addressLine2" dataType="text"  isNullable="true" />
+		<field name="city" dataType="text" />
+		<field name="state" dataType="text"  isNullable="true" />
+		<field name="postalCode" dataType="text"  isNullable="true" />
+		<field name="country" dataType="text" />
+		<field name="salesRepEmployeeNumber" dataType="id"  isNullable="true"/>
+		<field name="creditLimit" dataType="decimal" isNullable="true"/>
+	</fields>
+</record>
