@@ -8,7 +8,7 @@
 	dbVendor="h2"
 	dbDriverClassName="org.h2.Driver"
 	connectionString="jdbc:h2:file:${project.build.directory}/hw;user=sa;"
-	batchJobToRunOnStartup="batch"
+	
 >
 	<ldapProperties
 		factory="com.sun.jndi.ldap.LdapCtxFactory"

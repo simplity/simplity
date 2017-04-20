@@ -21,7 +21,10 @@
  */
 package org.simplity.kernel.data;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -34,6 +37,9 @@ import org.simplity.kernel.ApplicationError;
 import org.simplity.kernel.Tracer;
 import org.simplity.kernel.dm.Field;
 import org.simplity.kernel.util.ArrayUtil;
+import org.simplity.kernel.util.ReflectUtil;
+import org.simplity.kernel.util.SheetUtil;
+import org.simplity.kernel.value.InvalidValueException;
 import org.simplity.kernel.value.Value;
 import org.simplity.kernel.value.ValueType;
 
@@ -626,9 +632,393 @@ public class MultiRowsSheet implements DataSheet {
 	}
 
 	/**
-	 * @return widths of columns in case this used for fixed-width fomtting
+	 * @return widths of columns in case this used for fixed-width formatting
 	 */
 	public int[] getWidths() {
 		return this.columnWidths;
+	}
+
+	/** 
+	 * 
+	 * @param sheet
+	 * 			  sheet 			
+	 * @param columnName
+	 * 			  columnName
+	 * @return array of column values of primitive data type  
+	 */
+	public Object[] columnAsArray(String columnName) {
+		Value[] columnValues = this.getColumnValues(columnName);
+		Object[] array = new Object[columnValues.length];
+		for(int i=0;i<columnValues.length;i++){
+			Value value = columnValues[i];
+			array[i] = valueToPrimitive(value);
+		}
+		return array;
+	}
+	
+	/** 
+	 * 
+	 * @param sheet
+	 * 			  sheet 			
+	 * @param columnName
+	 * 			  columnName
+	 * @return list of column values  
+	 */
+	public List<Object> columnAsList(String columnName) {
+		Value[] columnValues = this.getColumnValues(columnName);
+		List<Object> list = new ArrayList<Object>();
+		for(Value value:columnValues){
+			list.add(valueToPrimitive(value));
+		}
+		return list;
+	}
+
+	/**
+	 * 
+	 * @param sheet
+	 * @param columnName
+	 * @return set of column values
+	 */
+	public Set<Object> columnAsSet(String columnName) {
+		Value[] columnValues = this.getColumnValues(columnName);
+		Set<Object> set = new HashSet<Object>();
+		for(Value value:columnValues){
+			set.add(valueToPrimitive(value));
+		}
+		return set;
+	}
+
+	/**
+	 * 
+	 * @param sheet
+	 * @param keyColumnName
+	 * @param valueColumnName
+	 * @return 2 column values as a map with 1 column data as keys and other column data as values
+	 */
+	public Map<String,Object> columnsAsMap(String keyColumnName, String valueColumnName) {
+		Value[] keys = this.getColumnValues(keyColumnName);
+		Value[] values = this.getColumnValues(valueColumnName);		
+		Map<String,Object> map = new HashMap<String, Object>();
+		for(int i=0;i<keys.length;i++){	
+			Object value = valueToPrimitive(values[i]);
+			map.put(keys[i].toString(),value);
+			}
+		return map;
+	}
+
+	/**
+	 * 
+	 * @param sheet
+	 * @param className
+	 * 				fully qualified class name
+	 * @return List of entity objects 
+	 */
+	public List<Object> toList(String className) {		
+		List<Object> entityList = new ArrayList<Object>();
+		List<Value[]> rowList = this.getAllRows();
+		String[] columnNames = this.getColumnNames();
+		for(Value[] row:rowList){
+			Object obj;
+			try {
+				obj = Class.forName(className).newInstance();		
+				java.lang.reflect.Field[] fields = obj.getClass().getDeclaredFields();
+				for(java.lang.reflect.Field field:fields){	
+					for (int j = 0; j < columnNames.length; j++) {
+						/* 
+						 * sets value to corresponding field of class instance 
+						 */
+						if (field.getName().equalsIgnoreCase(columnNames[j])) {							
+							/*
+							 * We expects the caller to make sure the field names of the class and data sheet column names to be same
+							 */
+							field.setAccessible(true);
+							SheetUtil.setAttribute(obj, field.getName(), row[j].toString(), false);
+						}
+					}
+				}
+				entityList.add(obj);
+			} catch (Exception e) {
+				throw new ApplicationError(e.getMessage());
+			} 
+		}
+		return entityList;
+	}
+
+	/**
+	 * 
+	 * @param sheet
+	 * @param className
+	 * 				fully qualified class name
+	 * @return Set of entity objects
+	 */
+	public Set<Object> toSet(String className) {
+		Set<Object> entitySet = new HashSet<Object>();
+		List<Value[]> rowList = this.getAllRows();
+		for(Value[] row:rowList){
+			Object obj;
+			try {
+				obj = Class.forName(className).newInstance();		
+				java.lang.reflect.Field[] fields = obj.getClass().getDeclaredFields();
+				for(java.lang.reflect.Field field:fields){	
+					for (int j = 0; j < columnNames.length; j++) {
+						if (field.getName().equals(columnNames[j])) {
+							field.setAccessible(true);
+							SheetUtil.setAttribute(obj, field.getName(), row[j].toString(), false);
+						}
+					}
+				}
+				entitySet.add(obj);
+			} catch (Exception e) {
+				throw new ApplicationError(e.getMessage());
+			} 
+		}
+		return entitySet;
+	}
+
+	/**
+	 * 
+	 * @param arr
+	 * @param columnName
+	 * @return MultiRowsSheet
+	 */
+	public static MultiRowsSheet toDatasheet(Object[] arr,String columnName) {
+		Class<?> cls = arr[0].getClass();
+		if(cls.isPrimitive() || cls.equals(String.class) || cls.equals(Date.class) || cls.equals(Timestamp.class)){
+			String[] header = {columnName};
+			ValueType[] valueTypes = {getType(cls)};
+			MultiRowsSheet sheet = new MultiRowsSheet(header, valueTypes);
+			for(Object value:arr){
+				Value[] valarray = new Value[1];
+				valarray[0] = Value.newTextValue(value.toString());
+				sheet.addRow(valarray);
+			}
+			return sheet;
+		}
+		java.lang.reflect.Field[] fields = cls.getDeclaredFields();
+		String[] header = new String[fields.length];
+		ValueType[] valueTypes = new ValueType[fields.length];
+		int i=0;
+		for(java.lang.reflect.Field field:fields){
+			header[i] = field.getName();
+			valueTypes[i] = getType(field.getType());
+			i++;
+		}
+		MultiRowsSheet sheet = new MultiRowsSheet(header, valueTypes);
+		for(Object obj:arr){
+			Value[] valarray = objectToValueArray(obj,fields);
+			sheet.addRow(valarray);
+		}
+		return sheet;
+	}
+
+	/**
+	 * 
+	 * @param list
+	 * @param columnName
+	 * @return MultiRowsSheet 
+	 */
+	public static MultiRowsSheet toDatasheet(List<? extends Object> list,String columnName) {
+		Class<?> cls = list.get(0).getClass();
+		if(cls.isPrimitive() || cls.getName().startsWith("java.lang") || cls.equals(String.class) || cls.equals(Date.class) || cls.equals(Timestamp.class)){
+			String[] header = {columnName};
+			ValueType[] valueTypes = {getType(cls)};
+			MultiRowsSheet sheet = new MultiRowsSheet(header, valueTypes);
+			for(Object value:list){
+				Value[] valarray = new Value[1];
+				valarray[0] = Value.newTextValue(value.toString());
+				sheet.addRow(valarray);
+			}
+			return sheet;
+		}
+		java.lang.reflect.Field[] fields = cls.getDeclaredFields();
+		String[] header = new String[fields.length];
+		ValueType[] valueTypes = new ValueType[fields.length];
+		int i=0;
+		for(java.lang.reflect.Field field:fields){
+			header[i] = field.getName();
+			valueTypes[i] = getType(field.getType());
+			i++;
+		}
+		MultiRowsSheet sheet = new MultiRowsSheet(header, valueTypes);
+		for(Object obj:list){
+			Value[] valarray = objectToValueArray(obj,fields);
+			sheet.addRow(valarray);
+		}
+		return sheet;
+	}
+
+	/**
+	 * 
+	 * @param set
+	 * @param columnName
+	 * @return MultiRowsSheet 
+	 */
+	public static MultiRowsSheet toDatasheet(Set<? extends Object> set,String columnName) {
+		Class<?> cls = set.iterator().next().getClass();
+		if(cls.isPrimitive() || cls.getName().startsWith("java.lang") || cls.equals(String.class) || cls.equals(Date.class) || cls.equals(Timestamp.class)){
+			String[] header = {columnName};
+			ValueType[] valueTypes = {getType(cls)};
+			MultiRowsSheet sheet = new MultiRowsSheet(header, valueTypes);
+			for(Object value:set){
+				Value[] valarray = new Value[1];
+				valarray[0] = Value.newTextValue(value.toString());
+				sheet.addRow(valarray);
+			}
+			return sheet;
+		}
+		java.lang.reflect.Field[] fields = cls.getDeclaredFields();
+		String[] header = new String[fields.length];
+		ValueType[] valueTypes = new ValueType[fields.length];
+		int i=0;
+		for(java.lang.reflect.Field field:fields){
+			header[i] = field.getName();
+			valueTypes[i] = getType(field.getType());
+			i++;
+		}
+		MultiRowsSheet sheet = new MultiRowsSheet(header, valueTypes);
+		for(Object obj:set){
+			Value[] valarray = objectToValueArray(obj,fields);
+			sheet.addRow(valarray);
+		}
+		return sheet;
+	}
+
+	/**
+	 * writes map data to a MultiRowsSheet
+	 * 
+	 * @param map
+	 * 			map
+	 * @param transpose
+	 * 		    If transpose = true, 
+	 * 				the output data sheet will be a SingleRowDataSheet with keys as the column and values as the row. 
+	 * 			If transpose = false, 
+	 * 				the output data sheet will be MultiRowDatasheet with columns as "Key","Value" and corresponding rows.
+	 * @return
+	 * 		DataSheet
+	 */
+	public static DataSheet toDatasheet(Map<String,? extends Object> map, boolean transpose) {
+		if(transpose){
+			String[] columnNames = new String[map.size()];
+			ValueType[] valueTypes = new ValueType[map.size()];
+			Value[] row = new Value[map.size()];
+			int i=0;
+			for(Object key:map.keySet()){
+				columnNames[i] = key.toString();
+				valueTypes[i] = ValueType.TEXT;
+				row[i] = Value.newTextValue(map.get(key).toString());
+				i++;
+			}
+			SingleRowSheet singleRowSheet = new SingleRowSheet(columnNames, valueTypes);
+			singleRowSheet.addRow(row);
+			return singleRowSheet;
+		}
+		String[] columnNames = {"key","value"};
+		ValueType[] valueTypes = {ValueType.TEXT,ValueType.TEXT};
+		MultiRowsSheet multirowsSheet = new MultiRowsSheet(columnNames, valueTypes);
+		for(Object key:map.keySet()){
+			Value[] row = new Value[2];
+			row[0] = Value.newTextValue(key.toString());
+			row[1] = Value.newTextValue(map.get(key).toString());
+			multirowsSheet.addRow(row);
+		}
+		return multirowsSheet;
+	}
+
+	private Object valueToPrimitive(Value value){
+		try {
+			switch (value.getValueType()){
+			case BLOB:{	
+				return value.toObject();
+			}
+			case CLOB:{	
+				return value.toObject();
+			}
+			case DECIMAL:{
+				return new Float(value.toDecimal());
+			}
+			case BOOLEAN:{
+				return new Boolean(value.toBoolean());
+			}
+			case DATE:{
+				return value.toDate();
+			}
+			case INTEGER:{
+				return new Long(value.toInteger());
+			}
+			case TEXT:{
+				return value.toText();
+			}
+			case TIMESTAMP:{
+				return value.toDate();
+			}
+			default: {
+				return value.toString();
+			}
+			}
+		} catch (InvalidValueException e) {
+			throw new ApplicationError(e.getMessage());
+		}
+	}
+	
+	private static ValueType getType(Class<?> type) {
+		if (type.equals(String.class)) {
+			return ValueType.TEXT;
+		}
+
+		if (type.isPrimitive()) {
+			if (type.equals(int.class)) {
+				return ValueType.INTEGER;
+			}
+
+			if (type.equals(long.class)) {
+				return ValueType.INTEGER;
+			}
+
+			if (type.equals(short.class)) {
+				return ValueType.INTEGER;
+			}
+
+			if (type.equals(byte.class)) {
+				return ValueType.INTEGER;
+			}
+
+			if (type.equals(char.class)) {
+				return ValueType.TEXT;
+			}
+
+			if (type.equals(boolean.class)) {
+				return ValueType.BOOLEAN;
+			}
+
+			if (type.equals(float.class)) {
+				return ValueType.DECIMAL;
+			}
+
+			if (type.equals(double.class)) {
+				return ValueType.DECIMAL;
+			}
+		}
+		if (type.equals(Date.class)) {
+			return ValueType.DATE;
+		}
+		if (type.equals(Timestamp.class)) {
+			return ValueType.TIMESTAMP;
+		}
+		return ValueType.TEXT;
+	}
+
+	private static Value[] objectToValueArray(Object obj,java.lang.reflect.Field[] fields){
+		Value[] valarray = new Value[fields.length];
+		int j = 0;
+		for(java.lang.reflect.Field field:fields){
+			try {
+				field.setAccessible(true);
+				valarray[j] = Value.parseObject(field.get(obj));
+				j++;
+			} catch (Exception e) {
+				throw new ApplicationError(e.getMessage());
+			}
+		}
+		return valarray;
 	}
 }

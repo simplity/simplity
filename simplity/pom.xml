@@ -7,8 +7,8 @@
 	<packaging>pom</packaging>
 	<name>simplity</name>
 	<properties>
-		<maven.compiler.source>1.6</maven.compiler.source>
-		<maven.compiler.target>1.6</maven.compiler.target>
+		<maven.compiler.source>1.5</maven.compiler.source>
+		<maven.compiler.target>1.5</maven.compiler.target>
 	</properties>
 	<scm>
 		<developerConnection>scm:git:http://infygit/encore/simplity/tree/master</developerConnection>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<service
+	xmlns="http://www.simplity.org/schema"
+	name="sheetactions"
+	dbAccessType="readOnly">
+	<actions>
+		<filter filterRecordName="tables.orders" outputSheetName="orders"></filter>		
+		<logic className="org.simplity.helloworld.SheetManipulations"/>
+	</actions>
+	<outputData dataSheets="settosheet,listtosheet" fieldNames="columnArray,columnList,columnSet,columnsMap,orderObj" arrayNames="arraytosheet"></outputData>
+</service>
