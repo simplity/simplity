@@ -4,6 +4,7 @@
 	name="orders"
 	recordType="storage"
 	tableName="ORDERS"
+	okToSelectAll="true"
 	xmlns="http://www.simplity.org/schema"
 >
 	<fields>

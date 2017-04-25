@@ -9,6 +9,12 @@
 	dbDriverClassName="org.h2.Driver"
 	connectionString="jdbc:h2:file:${project.build.directory}/hw;user=sa;"
 	batchJobToRunOnStartup="batch">
+	<ldapProperties
+		factory="com.sun.jndi.ldap.LdapCtxFactory"
+		credentials="Renew@2020"
+		authentication="Simple"
+		ldapurl="ldap://192.168.200.57:3268/"
+		principal="ENCORE@ITLINFOSYS" />
 	<schemaDetails>
 		<schemaDetail
 			schemaName="testSchema"

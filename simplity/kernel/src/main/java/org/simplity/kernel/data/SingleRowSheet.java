@@ -381,7 +381,7 @@ public class SingleRowSheet implements DataSheet {
 	}
 
 	/**
-	 * @return widths of columns in case this used for fixed-width fomtting
+	 * @return widths of columns in case this used for fixed-width formatting
 	 */
 	public int[] getWidths(){
 		return this.columnWidths;
