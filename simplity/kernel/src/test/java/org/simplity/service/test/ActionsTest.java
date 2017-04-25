@@ -11,8 +11,16 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.Hashtable;
+import java.util.Properties;
 import java.util.Set;
 
+import javax.mail.Folder;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.Store;
+import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.BasicAttributes;
@@ -42,10 +50,12 @@ import org.simplity.kernel.comp.ComponentType;
 import org.simplity.kernel.dm.Record;
 import org.simplity.kernel.file.FileManager;
 import org.simplity.kernel.ldap.LdapAgent;
+import org.simplity.kernel.mail.MailConnector;
 import org.simplity.kernel.util.XmlUtil;
 import org.simplity.kernel.value.Value;
 import org.simplity.service.ServiceAgent;
 import org.simplity.service.ServiceData;
+import org.simplity.test.mock.ldap.MockInitialDirContextFactory;
 
 public class ActionsTest extends Mockito {
 	private static final String COMP_PATH = "comp/";
@@ -68,6 +78,8 @@ public class ActionsTest extends Mockito {
 	@Rule
 	public final ExpectedException exception = ExpectedException.none();
 
+	// private static final int SMTP_TEST_PORT = 3025;
+
 	@BeforeClass
 	public static void setUp() throws Exception {
 		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
@@ -76,6 +88,19 @@ public class ActionsTest extends Mockito {
 		MockitoAnnotations.initMocks(ActionsTest.class);
 
 		ServletContext context = mock(ServletContext.class);
+
+		MockInitialDirContextFactory factory = mock(MockInitialDirContextFactory.class);
+		
+		Class<Hashtable<?, ?>> clazz = null;
+		when(factory.getInitialContext(any(clazz))).thenAnswer(new Answer<Context>() {
+
+			@Override
+			public Context answer(InvocationOnMock invocation) throws Throwable {
+				System.out.println("hello");
+				return (DirContext) Mockito.mock(DirContext.class);
+			}
+		});
+
 		ComponentType.setComponentFolder(compFolder);
 		FileManager.setContext(context);
 
@@ -112,6 +137,16 @@ public class ActionsTest extends Mockito {
 		 */
 		app.configure();
 
+		MailConnector mailConnector = mock(MailConnector.class);
+		when(mailConnector.initialize()).then(new Answer<Session>() {
+
+			@Override
+			public Session answer(InvocationOnMock invocation) throws Throwable {
+				return ActionsTest.getMailSession();
+			}
+
+		});
+
 		DirContext mockContext = LdapAgent.getInitialDirContext();
 			
 		
@@ -125,6 +160,7 @@ public class ActionsTest extends Mockito {
 			}
 			 
 		 });
+
 		/*
 		 * Load the db data
 		 */
@@ -405,12 +441,46 @@ public class ActionsTest extends Mockito {
 		assertEquals(outData.hasErrors(), true);
 	}
 
+	public static Session getMailSession() {
+		Properties props = System.getProperties();
+		props.setProperty("mail.store.protocol", "imaps");
+		props.setProperty("mail.imap.partialfetch", "0");
+		return Session.getDefaultInstance(props, null);
+	}
+
+	/*
+	 * Test method for 
+	 * org.simplity.tp.SendMail
+	 */
+	@Test
+	public void sendMailTest() {
+		ServiceData outData = serviceAgentSetup("test.sendMail", null);
+
+		try {
+			Session session = getMailSession();
+			Store store = session.getStore("imap");
+			store.connect("mockserver.com", "bar", "samplepassword");
+			Folder folder = store.getDefaultFolder();
+			folder = folder.getFolder("inbox");
+			folder.open(Folder.READ_ONLY);
+			for (Message message : folder.getMessages()) {
+				assertEquals((String) message.getSubject(), "Simplity - sample subject");
+			}
+		} catch (MessagingException e) {
+			e.printStackTrace();
+		}
+
+		JSONObject obj = new JSONObject(outData.getPayLoad());
+		assertEquals((String) obj.get("_requestStatus"), "ok");
+	}
+	
 	@Test
 	public void ldapLookupTest() {
 		String payLoad = "{'objectId':'CN=Sunita Williams','attrName':'surname'}";
 		ServiceData outData = serviceAgentSetup("ldap.ldapLookup", payLoad);
 		JSONObject obj = new JSONObject(outData.getPayLoad());
 		assertEquals((String) obj.get("ldapLookup"), "Williams");
+
 	}
 
 	/**

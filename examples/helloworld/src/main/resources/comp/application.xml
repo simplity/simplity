@@ -14,4 +14,6 @@
 			schemaName="testSchema"
 			connectionString="jdbc:h2:file:${project.build.directory}/hw;SCHEMA=TEST_SCHEMA;user=sa;" />
 	</schemaDetails>
+	<smtpProperties host="blrkecsmtp01" port="25">
+	</smtpProperties>
 </application>

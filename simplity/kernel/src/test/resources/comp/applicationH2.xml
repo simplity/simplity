@@ -18,4 +18,12 @@
 		credentials="pwd"
 		authentication="Simple"
 		ldapurl="ldap://192.168.200.57:3268/"/>
+	<schemaDetails>
+		<schemaDetail
+			schemaName="TESTSCHEMA"
+			connectionString="jdbc:h2:~/simplitykernel/db/classicmodels;" />
+	</schemaDetails>
+	<mailProperties host="blrkecsmtp01" port="25">
+	</mailProperties>
+
 </application>
