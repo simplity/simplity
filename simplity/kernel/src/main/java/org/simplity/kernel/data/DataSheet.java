@@ -21,6 +21,7 @@
  */
 package org.simplity.kernel.data;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -203,4 +204,5 @@ public interface DataSheet extends FieldsInterface, Iterable<FieldsInterface> {
 	public void fromSerializedText(String text,
 			DataSerializationType serializationType,
 			boolean replaceExistingRows);
+	
 }

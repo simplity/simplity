@@ -15,7 +15,8 @@
 		</inputFields>
 	</inputData>
 	<actions>
-		<log names="_userId,_userToken,_isAutoLogin"/>		
+		<log names="_userId,_userToken,_isAutoLogin"/>	
+		<copyUserId fieldName="username"/>	
 		<setValue fieldName="isAutoLogin" fieldValue="$_isAutoLogin"></setValue>
 		<ldapAuthenticate
 			actionName="authenticate"

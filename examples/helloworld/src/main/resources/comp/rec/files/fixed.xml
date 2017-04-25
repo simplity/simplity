@@ -4,9 +4,7 @@
 	name="fixed"
 	moduleName="files"
 	forFixedWidthRow="true"
-	recordType="structure"
-	
-	
+	recordType="structure"	
 >
 	<fields>
 		<field
