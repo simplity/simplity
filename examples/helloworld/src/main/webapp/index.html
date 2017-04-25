@@ -59,6 +59,10 @@
 	<br>
 	<button onClick="login()">Login</button>
 	<br>
+	<br>
+	<button onclick="sendMail()">Send Mail</button>
+	<br>
+	<br>
 </body>
 <script src="js/simplity.js"></script>
 <script type="text/javascript">
@@ -152,6 +156,24 @@
 	}
 	function login() {
 		Simplity.login("XXXX", "XXXX", onSuccess, onError)
+	}
+	
+	function sendMail() {
+		//var value = document.getElementById("message").value
+		//var data = "{'fromId':'" + value 
+		//	+ ", 'toIds':'" + value
+		//	+ ", 'content':'" + value
+		//	+ ", 'subject':'" + value
+		//	+ "'}"
+		Simplity.getResponse("mailService.sendMail", null, onSendMailSuccess, onSendMailError);
+	}
+	
+	function onSendMailSuccess(response) {
+		document.getElementById("tag").innerHTML = JSON.stringify(response);
+	}
+	
+	function onSendMailError(response) {
+		console.log(response);
 	}
 </script>
 </html>

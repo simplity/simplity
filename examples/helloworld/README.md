@@ -19,4 +19,10 @@ This example provides an overview
  	- uploads the file and generates a random key for each uploaded file and stores it in temp area
 	- File download method takes the generated file key and downloads the file with the name we have provided along with file key
 
+2. Mail functionality - Refer to /helloworld/src/main/resources/comp/service/tp/sendMail.xml
+	
+    Step-1: create email content sheet using the record - mailContent and add sample row.
+    Step-2: create email attachment sheet using the record - attachment and add sample row(filename - name of the file to be attached with the mail, filepath - valid file path the along with file name).
+    Step-3: in the sendMail tag, update the attributes(fromId - mandatory attribute, toIds - mandatory attribute, bccIds - optional attribute, ccIds - optional attribute, subject, attachmentSheetName - optional attribute, update the attachment sheet created in step-2).
+    Step-4: inside sendMail tag, add the content tag and its attributes (type - mandatory attribute(text/template), templatePath - if type=template update the template absolute path, template - if type=template update the template name, inputSheetName - update the input sheet created in step-3).
      

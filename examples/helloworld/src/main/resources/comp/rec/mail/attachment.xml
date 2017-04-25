@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<record name="attachment" moduleName="mail" recordType="structure" xmlns="http://www.simplity.org/schema">
+	<fields>
+		<field columnName="name" dataType="_text" fieldType="data" name="name"/>
+		<field columnName="filepath" dataType="_text" fieldType="data" name="filepath"/>
+	</fields>
+</record>
