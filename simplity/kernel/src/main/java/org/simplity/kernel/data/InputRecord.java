@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.simplity.tp;
+package org.simplity.kernel.data;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,10 +33,6 @@ import org.simplity.kernel.FormattedMessage;
 import org.simplity.kernel.Tracer;
 import org.simplity.kernel.comp.ComponentManager;
 import org.simplity.kernel.comp.ValidationContext;
-import org.simplity.kernel.data.DataPurpose;
-import org.simplity.kernel.data.DataSheet;
-import org.simplity.kernel.data.FieldsInterface;
-import org.simplity.kernel.data.MultiRowsSheet;
 import org.simplity.kernel.dm.Field;
 import org.simplity.kernel.dm.Record;
 import org.simplity.kernel.util.JsonUtil;
@@ -767,5 +763,34 @@ public class InputRecord {
 			count++;
 		}
 		return count;
+	}
+
+	/**
+	 * @param recName
+	 */
+	public void setRecordName(String recName) {
+		this.recordName = recName;
+
+	}
+	/**
+	 * @param purpose the purpose to set
+	 */
+	public void setPurpose(DataPurpose purpose) {
+		this.purpose = purpose;
+	}
+
+	/**
+	 * set saveActionExpected = true
+	 */
+	public void enableSaveAction(){
+		this.saveActionExpected = true;
+	}
+
+	/**
+	 * @param sheetName
+	 */
+	public void setSheetName(String sheetName) {
+		this.sheetName = sheetName;
+
 	}
 }

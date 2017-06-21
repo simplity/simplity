@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.simplity.openapi;
+package org.simplity.rest;
 
 import java.net.MalformedURLException;
 
@@ -124,7 +124,7 @@ public class Startup extends HttpServlet {
 		}
 		Tracer.trace("Going to load apis from " + folder);
 		try {
-			ServiceSpecs.loadAll(folder);
+			Operations.loadAll(folder);
 		} catch (Exception e) {
 			Tracer.trace(e,
 					"Unable to load APIs from folder " + folder + ". Application will not work.");

@@ -46,6 +46,8 @@ import org.simplity.kernel.Tracer;
 import org.simplity.kernel.comp.ComponentManager;
 import org.simplity.kernel.comp.ValidationContext;
 import org.simplity.kernel.data.DataSerializationType;
+import org.simplity.kernel.data.InputData;
+import org.simplity.kernel.data.OutputData;
 import org.simplity.kernel.dm.Record;
 import org.simplity.kernel.value.Value;
 import org.simplity.service.DataExtractor;
@@ -65,14 +67,26 @@ public class JmsDestination {
 
 	/**
 	 * name of the queue (destination) used for requesting a service. This is
-	 * the jndi name that is available in the context
+	 * the jndi name that is available in the context.
 	 */
 	String name;
 
 	/**
-	 * is this destination a topic? false means it is a queue
+	 * is this destination a topic? false means it is a queue. This is for
+	 * documentation. JNDI set up for name decides whether it is a queue or
+	 * topic
 	 */
 	boolean isTopic;
+	/**
+	 * if this is used for working with other services, we need to accept body
+	 * of the message as a payload and parse it into our data structures
+	 */
+	InputData inputData;
+	/**
+	 * if this is used for working with other services, we need to accept body
+	 * of the message as a payload and parse it into our data structures
+	 */
+	OutputData outputData;
 	/**
 	 * null if message body is not used, but header parameters are used to
 	 * transport data.
@@ -121,7 +135,7 @@ public class JmsDestination {
 	 */
 	String messageSelector;
 	/**
-	 * message type to the message header. Use this ONLY if the provider insists
+	 * message type of the message header. Use this ONLY if the provider insists
 	 * on this, or your application uses this.
 	 */
 	String messageType;
@@ -409,6 +423,11 @@ public class JmsDestination {
 		TextMessage message = session.createTextMessage();
 		String text = null;
 
+		if(this.outputData != null){
+			message.setText(this.outputData.dataToJsonText(ctx));
+			return message;
+		}
+
 		if (this.bodyFieldName != null) {
 			/*
 			 * simplest of our task. text is readily available in this field.
@@ -520,6 +539,10 @@ public class JmsDestination {
 		String text = ((TextMessage) message).getText();
 		if (text == null) {
 			Tracer.trace("Messaage text is null. No data extracted.");
+			return;
+		}
+		if(this.inputData != null){
+			this.inputData.extractFromJson(text, ctx);
 			return;
 		}
 		if (this.bodyFieldName != null) {

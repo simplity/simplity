@@ -19,7 +19,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.simplity.tp;
+package org.simplity.kernel.data;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,7 +32,6 @@ import org.simplity.kernel.FormattedMessage;
 import org.simplity.kernel.MessageType;
 import org.simplity.kernel.Tracer;
 import org.simplity.kernel.comp.ValidationContext;
-import org.simplity.kernel.data.DataSheet;
 import org.simplity.kernel.dm.Field;
 import org.simplity.kernel.util.JsonUtil;
 import org.simplity.kernel.util.TextUtil;
@@ -257,6 +256,19 @@ public class OutputData {
 	}
 
 	/**
+	 * return a json text based on the data spec and teh actual data in service context
+	 * @param ctx
+	 * @return json text
+	 */
+	public String dataToJsonText(ServiceContext ctx){
+		JSONWriter writer = new JSONWriter();
+		writer.object();
+		this.dataToJson(writer, ctx);
+		writer.endObject();
+		writer.end();
+		return writer.toString();
+	}
+	/**
 	 * write data to the json writer based on this spec, and data available in
 	 * the context
 	 *
@@ -321,13 +333,26 @@ public class OutputData {
 		}
 	}
 
-	void onServiceStart(ServiceContext ctx) {
+	/**
+	 * to be called before starting the service
+	 *
+	 * @param ctx
+	 */
+	public void onServiceStart(ServiceContext ctx) {
 		if (this.outputFromWriter) {
 			Tracer.trace("Started Writer for this service");
 			ResponseWriter writer = new JSONWriter();
 			writer.init();
 			ctx.setWriter(writer);
 		}
+	}
+
+	/**
+	 * @param outputRecords
+	 *            the outputRecords to set
+	 */
+	public void setOutputRecords(OutputRecord[] outputRecords) {
+		this.outputRecords = outputRecords;
 	}
 
 	/**
@@ -531,5 +556,13 @@ public class OutputData {
 			}
 		}
 		return true;
+	}
+
+	/**
+	 * enable output from a writer
+	 */
+	public void enableOutputFromWriter() {
+		this.outputFromWriter = true;
+
 	}
 }

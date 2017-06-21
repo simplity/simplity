@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 simplity.org
+ * Copyright (c) 2016 simplity.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,8 +21,7 @@
  */
 
 /**
- * classes that handle open-api requests
  * @author simplity.org
  *
  */
-package org.simplity.openapi;
+package org.simplity.rest.param;

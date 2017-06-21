@@ -4507,6 +4507,10 @@
 		</xs:choice>
 	</xs:group>
 	<xs:complexType name="jmsDestination">
+		<xs:all>
+			<xs:element name="inputData" type="inputData" minOccurs="0" maxOccurs="1" />
+			<xs:element name="outputData" type="outputData" minOccurs="0" maxOccurs="1" />
+		</xs:all>
 		<xs:attribute
 			name="name"
 			type="xs:string">

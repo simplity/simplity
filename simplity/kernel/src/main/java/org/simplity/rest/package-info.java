@@ -20,27 +20,9 @@
  * SOFTWARE.
  */
 
-package org.simplity.openapi;
-
-import org.simplity.json.JSONObject;
-
 /**
- * utility class that maps a service request from this channel/client into
- * desired name/format for the server
- *
+ * classes that handle open-api requests
  * @author simplity.org
  *
  */
-public class ServiceMapper {
-
-	/**
-	 * translate client request into name/format that this server understands
-	 * @param serviceName
-	 * @param params input parameters. We may alter the contents to suit the server
-	 * @return service name that the server understands
-	 */
-	public static String translate(String serviceName, JSONObject params){
-		params.put("_serviceName", serviceName);
-		return "junk";
-	}
-}
+package org.simplity.rest;

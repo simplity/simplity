@@ -20,23 +20,28 @@
  * SOFTWARE.
  */
 
-package org.simplity.service;
+package org.simplity.rest;
 
 /**
- * utility to take data elements from a service context and format them as a
- * text
- *
+ * represents a response from a swagger (open api) document
  * @author simplity.org
  *
  */
-public interface DataFormatter {
+public class Response {
+
 	/**
-	 * pick values for data elements from service contract and format a text that
-	 * can be used to transport this
-	 *
-	 * @param ctx
-	 *            service context
-	 * @return serialized/formatted text
+	 * @return
 	 */
-	public String format(ServiceContext ctx);
+	public String getCode() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	/*
+	 * default is typically for error.
+	 * there must be one.
+	 * if there is only one, then it is for success
+	 * if there is a default, and a numbered one, then numbered one is for success
+	 * headers is a set of params
+	 *
+	 */
 }

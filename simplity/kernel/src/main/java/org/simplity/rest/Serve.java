@@ -20,7 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.simplity.openapi;
+package org.simplity.rest;
 
 import java.io.IOException;
 
@@ -50,11 +50,11 @@ public class Serve extends HttpServlet {
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 		try {
-			Agent.serve(req, resp);
+			RestAgent.serve(req, resp);
 		} catch (Exception e) {
 			String msg = "We have an internal error. ";
 			Tracer.trace(e, msg);
-			Agent.respondWithError(resp, msg + e.getMessage());
+			RestAgent.respondWithError(resp, msg + e.getMessage());
 			return;
 		}
 	}

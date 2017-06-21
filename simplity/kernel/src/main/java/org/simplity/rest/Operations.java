@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package org.simplity.openapi;
+package org.simplity.rest;
 
 import java.io.File;
 
@@ -35,73 +35,18 @@ import org.simplity.kernel.file.FileManager;
  * @author simplity.org
  *
  */
-public class ServiceSpecs {
+public class Operations {
 
-	/**
-	 * property name of definitions in an api
-	 */
-	public static final String DEFS_ATTR = "definitions";
-	/**
-	 * standard to refer to another node in a json
-	 */
-	public static final String REF_ATTR = "$ref";
-	/**
-	 * standard to refer to another node in a json
-	 */
-	public static final String REF_START = "#/definitions/";
-
-	/**
-	 * base path of the spec. We expect only one spec for a base path. Hence
-	 * this is used as the id of the spec. starts with / and does not include /
-	 * at the end. example /v1
-	 */
-	public static final String BASE_PATH_ATTR = "basePath";
-
-	/**
-	 * operation id associated with an operation (for a path and method
-	 * combination)
-	 */
-	public static final String OP_ID_ATTR = "operationId";
-
-	/**
-	 * simplity specific attribute for serviceNme
-	 */
-	public static final String SERVICE_NAME_ATTR = "x-serviceName";
-
-	/**
-	 * paths that are allowed inside this path. this is a collection indexed by
-	 * path. each path starts with / and does not include / at the end. example
-	 * /pet/{petId}
-	 */
-	public static final String PATHS_ATTR = "paths";
-
-	/**
-	 * path part delimiter as string
-	 */
-	public static final String PATH_SEP_STR = "/";
-	/**
-	 * path part delimiter as char
-	 */
-	public static final char PATH_SEP_CHAR = '/';
-
-	/**
-	 * service part delimiter
-	 */
-	public static final char SERVICE_SEP_CHAR = '.';
-	/**
-	 * open api json is invalid
-	 */
-	public static final String INVALID_API = "Open API document has invalid paths";
 
 	/**
 	 * root node of the path-tree that holds service spec for paths
 	 */
-	private static Node rootNode = new Node(null, null);
+	private static PathNode rootNode = new PathNode(null, null, null);
 
 	/**
 	 * private constructor
 	 */
-	private ServiceSpecs() {
+	private Operations() {
 		// enforce static
 	}
 
@@ -112,11 +57,11 @@ public class ServiceSpecs {
 	 * @param params
 	 * @return spec or null if there is no spec for this url
 	 */
-	public static ServiceSpec getServiceSpec(String path, String method, JSONObject params) {
+	public static Operation getServiceSpec(String path, String method, JSONObject params) {
 		if (path == null || path.isEmpty()) {
 			return null;
 		}
-		Node node = findNodeForPath(path, params);
+		PathNode node = findNodeForPath(path, params);
 		/*
 		 * get the spec at this node. In case we do not have one at this node,
 		 * then we keep going up
@@ -125,7 +70,7 @@ public class ServiceSpecs {
 		while (node != null) {
 			Tracer.trace("Looking for spec at " + node.getPathPrefix());
 			if (node.isValidPath()) {
-				ServiceSpec spec = node.getServiceSpec(method);
+				Operation spec = node.getServiceSpec(method);
 				if (spec == null) {
 					Tracer.trace(method + " is not valid for path " + path);
 					return null;
@@ -142,25 +87,25 @@ public class ServiceSpecs {
 		return null;
 	}
 
-	private static Node findNodeForPath(String path, JSONObject params){
-		Node node = rootNode;
-		if(path == null){
+	private static PathNode findNodeForPath(String path, JSONObject params) {
+		PathNode node = rootNode;
+		if (path == null) {
 			return node;
 		}
 		String p = path.trim();
-		if(p.isEmpty()){
+		if (p.isEmpty()) {
 			return node;
 		}
 		/*
 		 * go down the path as much as we can.
 		 */
-		String[] parts = p.split(PATH_SEP_STR);
+		String[] parts = p.split(Tags.PATH_SEP_STR);
 		for (String part : parts) {
-			if(part.isEmpty()){
+			if (part.isEmpty()) {
 				continue;
 			}
 			Tracer.trace("looking at node=" + node.getPathPrefix() + " for part=" + part);
-			Node child = node.getChild(part);
+			PathNode child = node.getChild(part);
 			if (child == null) {
 				/*
 				 * this is not path. Is it field?
@@ -182,6 +127,7 @@ public class ServiceSpecs {
 		Tracer.trace("leaf node is " + node.getPathPrefix());
 		return node;
 	}
+
 	/**
 	 * load all api's from a resource folder
 	 *
@@ -233,14 +179,14 @@ public class ServiceSpecs {
 	 * unload/reset all apis
 	 */
 	public static void unloadAll() {
-		rootNode = new Node(null, null);
+		rootNode = new PathNode(null, null, null);
 	}
 
 	/**
 	 * @param json
 	 */
 	public static void loadFromJson(JSONObject json) {
-		JSONObject paths = json.optJSONObject(PATHS_ATTR);
+		JSONObject paths = json.optJSONObject(Tags.PATHS_ATTR);
 		if (paths == null || paths.length() == 0) {
 			Tracer.trace(" No paths in the API");
 			return;
@@ -248,7 +194,7 @@ public class ServiceSpecs {
 		/*
 		 * for run-time efficiency, we substitute refs with actual JSON
 		 */
-		JSONObject defs = json.optJSONObject(DEFS_ATTR);
+		JSONObject defs = json.optJSONObject(Tags.DEFS_ATTR);
 		if (defs != null) {
 			Tracer.trace("We found " + defs.length() + " definitions");
 			/*
@@ -263,15 +209,16 @@ public class ServiceSpecs {
 			Tracer.trace("No definitions in this api");
 		}
 
-		String basePath = json.optString(BASE_PATH_ATTR, null);
-		loadAnApi(paths, basePath);
+		String basePath = json.optString(Tags.BASE_PATH_ATTR, null);
+		String moduleName = json.optString(Tags.MODULE_ATTR, null);
+		loadAnApi(paths, basePath, moduleName);
 	}
 
 	/**
 	 * @param paths
 	 * @param basePath
 	 */
-	private static void loadAnApi(JSONObject paths, String basePath) {
+	private static void loadAnApi(JSONObject paths, String basePath, String moduleName) {
 
 		for (String key : paths.keySet()) {
 			JSONObject methods = paths.optJSONObject(key);
@@ -280,10 +227,10 @@ public class ServiceSpecs {
 			/*
 			 * build the branch to this path-node
 			 */
-			Node node = rootNode;
+			PathNode node = rootNode;
 			if (fullPath != null && fullPath.isEmpty() == false) {
 
-				String[] parts = trimPath(fullPath).split(PATH_SEP_STR);
+				String[] parts = trimPath(fullPath).split(Tags.PATH_SEP_STR);
 				for (String part : parts) {
 					if (part.isEmpty()) {
 						Tracer.trace("Empty part found in path.Igonred");
@@ -295,9 +242,9 @@ public class ServiceSpecs {
 						 * we trust the spec is in order
 						 */
 						fieldName = part.substring(1, part.length() - 1);
-						node = node.setFieldName(fieldName);
+						node = node.setFieldName(fieldName, moduleName);
 					} else {
-						node = node.setChild(part);
+						node = node.setChild(part, moduleName);
 					}
 				}
 			}
@@ -311,12 +258,12 @@ public class ServiceSpecs {
 	private static String trimPath(String path) {
 		String result = path;
 
-		if (result.charAt(0) == PATH_SEP_CHAR) {
+		if (result.charAt(0) == Tags.PATH_SEP_CHAR) {
 			result = result.substring(1);
 		}
 
 		int idx = result.length() - 1;
-		if (idx >= 0 && result.charAt(idx) == PATH_SEP_CHAR) {
+		if (idx >= 0 && result.charAt(idx) == Tags.PATH_SEP_CHAR) {
 			result = result.substring(0, idx);
 		}
 		return result;
@@ -413,28 +360,34 @@ public class ServiceSpecs {
 		if (jsonObj == null || jsonObj.length() != 1) {
 			return null;
 		}
-		String ref = jsonObj.optString(REF_ATTR, null);
+		String ref = jsonObj.optString(Tags.REF_ATTR, null);
 		if (ref == null) {
 			return null;
 		}
-		if (ref.indexOf(REF_START) != 0) {
-			Tracer.trace("$ref is to be set to a value starting with " + REF_START);
+		if (ref.indexOf(Tags.REF_START) != 0) {
+			Tracer.trace("$ref is to be set to a value starting with " + Tags.REF_START);
 			return null;
 		}
 		Tracer.trace("Found a ref entry for " + ref);
-		return ref.substring(REF_START.length());
+		return ref.substring(Tags.REF_START.length());
 	}
 
 	public static void main(String[] args) {
 		String rootFolder = "C:/repos/simplity/test/WebContent/WEB-INF/api/";
 		loadAll(rootFolder);
 		JSONObject params = new JSONObject();
-		ServiceSpec spec = getServiceSpec("/app/troubleTicket/1234", "get", params);
+		Operation spec = getServiceSpec("/app/troubleTicket/1234", "get", params);
 		if (spec == null) {
 			Tracer.trace("That is not a valid request");
 		} else {
-			System.out.println("ServiceName is " + spec.getServiceName(params));
+			System.out.println("ServiceName is " + spec.getServiceName());
 			System.out.println("params is " + params.toString(2));
 		}
 	}
+	/*
+	 * 1. parameters and responses at the root level to be used as reference
+	 * 2. body is an object in swagger. In our convention, it contains other
+	 * objects/primitive. How do we want to handle that?
+	 *
+	 */
 }

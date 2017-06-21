@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.regex.Matcher;
@@ -32,6 +33,7 @@ import java.util.regex.Pattern;
 
 import org.apache.xerces.impl.dv.util.Base64;
 import org.simplity.kernel.ApplicationError;
+import org.simplity.kernel.Tracer;
 import org.simplity.kernel.data.FieldsInterface;
 import org.simplity.kernel.expr.Expression;
 import org.simplity.kernel.expr.InvalidExpressionException;
@@ -202,10 +204,16 @@ public class TextUtil {
 			return date;
 		} else if (type.equals(Pattern.class)) {
 			return Pattern.compile(value);
+		} else if(type.isInterface() || Modifier.isAbstract(type.getModifiers())){
+			try {
+				return Class.forName(value).newInstance();
+			} catch (Exception e) {
+				Tracer.trace(value + " is expected to be an implementation/extension of class " + type.getName() + " but there was an error when it is used for create an instance." + e.getMessage());
+				return null;
+			}
 		}
 
 		return null;
-
 	}
 
 	/**
@@ -382,7 +390,7 @@ public class TextUtil {
 		String parsedName = getFieldName(name);
 		if(parsedName!=null){
 			return ctx.getValue(parsedName);
-		}		
+		}
 		return Value.newTextValue(name);
 	}
 	/**

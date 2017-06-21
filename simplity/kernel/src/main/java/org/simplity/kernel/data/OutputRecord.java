@@ -19,7 +19,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.simplity.tp;
+package org.simplity.kernel.data;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,8 +31,6 @@ import org.simplity.kernel.ApplicationError;
 import org.simplity.kernel.Tracer;
 import org.simplity.kernel.comp.ComponentManager;
 import org.simplity.kernel.comp.ValidationContext;
-import org.simplity.kernel.data.DataSheet;
-import org.simplity.kernel.data.HierarchicalSheet;
 import org.simplity.kernel.dm.Field;
 import org.simplity.kernel.dm.Record;
 import org.simplity.kernel.util.JsonUtil;
@@ -409,5 +407,12 @@ public class OutputRecord {
 	 */
 	int validate(ValidationContext ctx) {
 		return 0;
+	}
+
+	/**
+	 * @param recordName the recordName to set
+	 */
+	public void setRecordName(String recordName) {
+		this.recordName = recordName;
 	}
 }

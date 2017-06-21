@@ -36,14 +36,14 @@ import org.simplity.json.JSONWriter;
 import org.simplity.kernel.ApplicationError;
 import org.simplity.kernel.Tracer;
 import org.simplity.kernel.comp.ValidationContext;
+import org.simplity.kernel.data.InputData;
+import org.simplity.kernel.data.OutputData;
 import org.simplity.kernel.db.DbAccessType;
 import org.simplity.kernel.util.JsonUtil;
 import org.simplity.kernel.util.TextUtil;
 import org.simplity.kernel.util.XmlUtil;
 import org.simplity.kernel.value.Value;
 import org.simplity.service.ServiceContext;
-
-import com.google.common.net.HttpHeaders;
 
 /**
  * Get response from a server using rest call
@@ -147,14 +147,28 @@ public class HttpClient extends Action {
 	 */
 	private boolean isXml;
 
+	/**
+	 * default constructor
+	 */
 	public HttpClient() {
 
 	}
 
-	public HttpClient(String urlString, String httpMethod, String contentType,
-			OutputData requestData, String requestFieldName,
-			InputData responseData, String responseFieldName,
-			boolean isJson, boolean isXml) {
+	/**
+	 * creating a client at run time
+	 *
+	 * @param urlString
+	 * @param httpMethod
+	 * @param contentType
+	 * @param requestData
+	 * @param requestFieldName
+	 * @param responseData
+	 * @param responseFieldName
+	 * @param isJson
+	 * @param isXml
+	 */
+	public HttpClient(String urlString, String httpMethod, String contentType, OutputData requestData,
+			String requestFieldName, InputData responseData, String responseFieldName, boolean isJson, boolean isXml) {
 		this.urlString = urlString;
 		this.httpMethod = httpMethod;
 		this.contentType = contentType;
@@ -169,8 +183,8 @@ public class HttpClient extends Action {
 	@Override
 	public Value doAct(ServiceContext ctx) {
 		String txt;
-		if(parsedUrlString != null){
-			this.urlString = ctx.getTextValue(parsedUrlString);
+		if (this.parsedUrlString != null) {
+			this.urlString = ctx.getTextValue(this.parsedUrlString);
 		}
 		if (this.urlParts == null) {
 			txt = this.urlString;
@@ -194,8 +208,7 @@ public class HttpClient extends Action {
 			}
 		} else if (this.isXml) {
 			if (this.responseData != null) {
-				throw new ApplicationError(
-						"We are not yet ready with xml based extraction of data.");
+				throw new ApplicationError("We are not yet ready with xml based extraction of data.");
 			}
 			XmlUtil.extractAll(responseText, ctx);
 		} else {
@@ -218,11 +231,9 @@ public class HttpClient extends Action {
 			 * get connection
 			 */
 			if (this.proxy != null) {
-				Authenticator auth = this.authenticator == null
-						? this.getAuth(ctx) : this.authenticator;
+				Authenticator auth = this.authenticator == null ? this.getAuth(ctx) : this.authenticator;
 
-				Proxy proxyCon = new Proxy(Proxy.Type.HTTP,
-						new InetSocketAddress(this.proxy, this.proxyPort));
+				Proxy proxyCon = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(this.proxy, this.proxyPort));
 				Authenticator.setDefault(auth);
 				conn = (HttpURLConnection) url.openConnection(proxyCon);
 			} else {
@@ -234,10 +245,10 @@ public class HttpClient extends Action {
 			 */
 			conn.setRequestMethod(this.httpMethod);
 			conn.setRequestProperty("Accept", this.contentType);
-			conn.setRequestProperty(HttpHeaders.CONTENT_TYPE, this.contentType);
+			conn.setRequestProperty("Conent-Type", this.contentType);
 			conn.setDoOutput(true);
 			String req = this.getRequestText(ctx);
-			if(req != null){
+			if (req != null) {
 				conn.getOutputStream().write(req.getBytes("UTF-8"));
 			}
 			/*
@@ -245,15 +256,13 @@ public class HttpClient extends Action {
 			 */
 			int resp = conn.getResponseCode();
 			if (resp != 200) {
-				throw new ApplicationError("Http call for url " + url
-						+ " returned with a non200 status " + resp);
+				throw new ApplicationError("Http call for url " + url + " returned with a non200 status " + resp);
 			}
 			return readResponse(conn);
 		} catch (ApplicationError e) {
 			throw e;
 		} catch (Exception e) {
-			throw new ApplicationError(e,
-					"Error while rest call using url " + txt);
+			throw new ApplicationError(e, "Error while rest call using url " + txt);
 		}
 	}
 
@@ -272,8 +281,7 @@ public class HttpClient extends Action {
 		}
 		if (this.requestData != null) {
 			if (!this.isJson) {
-				throw new ApplicationError(
-						"We are not ready with an xml output formatter.");
+				throw new ApplicationError("We are not ready with an xml output formatter.");
 
 			}
 			JSONWriter writer = new JSONWriter();
@@ -321,13 +329,11 @@ public class HttpClient extends Action {
 		return new MyAuthenticator(user, pwd);
 	}
 
-	private static String readResponse(HttpURLConnection conn)
-			throws IOException {
+	private static String readResponse(HttpURLConnection conn) throws IOException {
 		BufferedReader reader = null;
 		StringBuilder sbf = new StringBuilder();
 		try {
-			reader = new BufferedReader(
-					new InputStreamReader((conn.getInputStream())));
+			reader = new BufferedReader(new InputStreamReader((conn.getInputStream())));
 			int ch;
 			while ((ch = reader.read()) > -1) {
 				sbf.append((char) ch);
@@ -359,17 +365,14 @@ public class HttpClient extends Action {
 	public void getReady(int idx, Service service) {
 		super.getReady(idx, service);
 		this.urlParts = TextUtil.parseToParts(this.urlString);
-		if (this.proxyUserName != null
-				&& this.proxyUserName.charAt(0) == DOLLAR) {
+		if (this.proxyUserName != null && this.proxyUserName.charAt(0) == DOLLAR) {
 			this.proxyUserField = this.proxyUserName.substring(1);
 		}
-		if (this.proxyPassword != null
-				&& this.proxyPassword.charAt(0) == DOLLAR) {
+		if (this.proxyPassword != null && this.proxyPassword.charAt(0) == DOLLAR) {
 			this.proxyPwdField = this.proxyPassword.substring(1);
 		}
 		if (this.proxyPwdField != null && this.proxyUserField != null) {
-			this.authenticator = new MyAuthenticator(this.proxyUserName,
-					this.proxyPassword);
+			this.authenticator = new MyAuthenticator(this.proxyUserName, this.proxyPassword);
 		}
 		if (this.contentType.endsWith(JSON)) {
 			this.isJson = true;
@@ -379,8 +382,8 @@ public class HttpClient extends Action {
 			throw new ApplicationError(
 					"responseFieldName is requried for a restClient action that has its content type set to "
 							+ this.contentType);
-		}	
-		if(this.urlString != null){
+		}
+		if (this.urlString != null) {
 			this.parsedUrlString = TextUtil.getFieldName(this.urlString);
 		}
 	}
@@ -405,15 +408,13 @@ public class HttpClient extends Action {
 		 * mandatory fields for proxy
 		 */
 		if (this.proxy == null) {
-			if (this.proxyPort != 0 || this.proxyUserName != null
-					|| this.proxyPassword != null) {
-				ctx.addError(
-						"proxy port, user, password are not relavant when proxy is not specified.");
+			if (this.proxyPort != 0 || this.proxyUserName != null || this.proxyPassword != null) {
+				ctx.addError("proxy port, user, password are not relavant when proxy is not specified.");
 				count++;
 			}
 		} else if (this.proxyPort == 0) {
-				ctx.addError("proxyPort is required if proxy is to be used.");
-				count++;
+			ctx.addError("proxyPort is required if proxy is to be used.");
+			count++;
 		}
 
 		/*
@@ -440,8 +441,7 @@ public class HttpClient extends Action {
 		 */
 		if (this.responseFieldName == null) {
 			if (responseIsJson == false && responseIsXml == false) {
-				ctx.addError(
-						"You should specify responseFieldName when content-type is non-json and non-xml.");
+				ctx.addError("You should specify responseFieldName when content-type is non-json and non-xml.");
 				count++;
 			}
 		} else {
@@ -463,8 +463,7 @@ class MyAuthenticator extends Authenticator {
 	private final PasswordAuthentication auth;
 
 	MyAuthenticator(String userName, String userPassword) {
-		this.auth = new PasswordAuthentication(userName,
-				userPassword.toCharArray());
+		this.auth = new PasswordAuthentication(userName, userPassword.toCharArray());
 	}
 
 	/*

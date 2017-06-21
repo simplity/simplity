@@ -48,10 +48,13 @@ public class JmsConsumer extends Block {
 	boolean consumeAll;
 
 	/**
-	 * true means wait for the message. consumeAll=false means wait for one, but then come out. consumeAll=true means keep listening till cows come home :-).
+	 * true means wait for the message. consumeAll=false means wait for one, but
+	 * then come out. consumeAll=true means keep listening till cows come home
+	 * :-).
 	 * false means do not wait, even for one.
 	 */
 	boolean waitForMessage;
+
 	/*
 	 * (non-Javadoc)
 	 *
@@ -96,9 +99,9 @@ public class JmsConsumer extends Block {
 		if (this.responseDestination != null) {
 			count += this.responseDestination.validate(vtx, false);
 		}
-		if(service.jmsUsage == null){
+		if (service.jmsUsage == null) {
 			vtx.addError("Service uses JMS but has not specified jmsUsage attribute.");
-			count ++;
+			count++;
 		}
 		return count;
 	}

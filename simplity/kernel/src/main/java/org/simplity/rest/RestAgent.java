@@ -19,10 +19,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.simplity.openapi;
+package org.simplity.rest;
 
 import java.io.IOException;
 import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -34,7 +36,7 @@ import org.simplity.kernel.ApplicationError;
 import org.simplity.kernel.FormattedMessage;
 import org.simplity.kernel.MessageType;
 import org.simplity.kernel.Tracer;
-import org.simplity.kernel.util.HttpUtil;
+import org.simplity.kernel.value.Value;
 import org.simplity.service.PayloadType;
 import org.simplity.service.ServiceAgent;
 import org.simplity.service.ServiceData;
@@ -46,7 +48,7 @@ import org.simplity.service.ServiceData;
  * @author simplity.org
  *
  */
-public class Agent {
+public class RestAgent {
 	private static final String UTF = "UTF-8";
 
 	/**
@@ -75,16 +77,12 @@ public class Agent {
 		resp.setDateHeader("Expires", 0);
 
 		/*
-		 * parse body and query string into json object
-		 */
-		JSONObject params = getPayload(req);
-		/*
 		 * assuming http://www.simplity.org:8020/app1/subapp/a/b/c?a=b&c=d
 		 *
 		 * we need to get a/b/c as RESTful path
 		 */
 		String path = URLDecoder.decode(req.getRequestURI(), UTF);
-		System.out.println("getRequestURI=" + path + " and contextPath is " + req.getContextPath());
+		Tracer.trace("Started serving URI=" + path );
 		/*
 		 * path now is set to /app1/subapp/a/b/c
 		 */
@@ -97,29 +95,47 @@ public class Agent {
 			/*
 			 * this should never happen though..
 			 */
-			System.out.println("oooooops. URI is shorter than contextpath ???");
+			Tracer.trace("oooooops. URI is shorter than contextpath ???");
 			path = "";
 		}else{
 			path = path.substring(idx);
+			Tracer.trace("Going to use path=" + path + " for mapping this request to an operation/service");
 		}
-		System.out.println("GOing to look for service spec for path=" + path);
-		ServiceSpec spec = ServiceSpecs.getServiceSpec(path, req.getMethod().toLowerCase(), params);
-		if (spec == null) {
+		/*
+		 * parse body and query string into json object
+		 */
+		JSONObject pathJson = new JSONObject();
+		Operation operation = Operations.getServiceSpec(path, req.getMethod().toLowerCase(), pathJson);
+		if (operation == null) {
 			respondWithError(resp, "We do not serve that request path");
 			return;
 		}
 
 		/*
-		 * get the service name
+		 * using operation specification, get service name and input data
 		 */
-		ServiceData inData = spec.getInData(req, params);
+		JSONObject inJson = new JSONObject();
+		List<FormattedMessage> messages = new ArrayList<FormattedMessage>();
+		String serviceName = operation.prepareService(req, inJson, pathJson, messages);
 
-		if(inData.hasErrors()){
-			spec.writeResponse(resp, inData);
+		if(messages.size() > 0){
+			Tracer.trace("Input data has validation errors. Responding back without clliing the service");
+			operation.writeResponse(resp, messages.toArray(new FormattedMessage[0]));
+			return;
 		}
 
-		Tracer.trace("Request received for service " + inData.getServiceName());
+		Tracer.trace("Request received for service " + serviceName);
 		FormattedMessage message = null;
+		//TODO : get user ID
+		Value userId = Value.newTextValue("100");
+		ServiceData inData = new ServiceData(userId, serviceName);
+		inData.setPayLoad(inJson.toString());
+		/*
+		 * discard heavy objects as early as possible
+		 */
+		pathJson = null;
+		inJson = null;
+
 		ServiceData outData = null;
 		try {
 			outData = ServiceAgent.getAgent().executeService(inData, PayloadType.JSON);
@@ -138,25 +154,7 @@ public class Agent {
 			}
 			outData.addMessage(message);
 		}
-		spec.writeResponse(resp, outData);
-
-	}
-
-	/**
-	 * @param req
-	 * @return
-	 * @throws IOException
-	 */
-	private static JSONObject getPayload(HttpServletRequest req) throws IOException {
-		String text = HttpUtil.readInput(req);
-		JSONObject params;
-		if (text == null || text.isEmpty()) {
-			params = new JSONObject();
-		} else {
-			params = new JSONObject(text);
-		}
-		HttpUtil.parseQueryString(req, params);
-		return params;
+		operation.writeResponse(resp, outData);
 	}
 
 	/**

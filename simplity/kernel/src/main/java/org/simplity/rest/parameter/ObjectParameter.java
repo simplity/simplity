@@ -1,0 +1,127 @@
+/*
+ * Copyright (c) 2017 simplity.org
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package org.simplity.rest.param;
+
+import java.util.List;
+
+import org.simplity.json.JSONObject;
+import org.simplity.kernel.ApplicationError;
+import org.simplity.kernel.FormattedMessage;
+import org.simplity.kernel.Tracer;
+import org.simplity.rest.Tags;
+
+/**
+ * @author simplity.org
+ *
+ */
+public class ObjectParameter extends Parameter {
+	private Parameter[] items;
+	private boolean uniqueItem;
+	private int minItems;
+	private int maxItems;
+
+	/**
+	 * @param name
+	 * @param parameterSpec
+	 */
+	public ObjectParameter(String name, JSONObject parameterSpec) {
+		this(parameterSpec);
+		this.name = name;
+	}
+
+	/**
+	 * construct based on api spec
+	 *
+	 * @param paramSpec
+	 */
+	protected ObjectParameter(JSONObject paramSpec) {
+		super(paramSpec);
+
+		/*
+		 * just a safety. valid values is not valid for this type
+		 */
+		this.validValues = null;
+
+		JSONObject obj = paramSpec.optJSONObject(Tags.SCHEMA_ATTR);
+		if (obj == null) {
+			throw new ApplicationError("schema specification is missing for " + this.name);
+		}
+		int nbrItems = obj.length();
+		this.items = new Parameter[nbrItems];
+		int i = 0;
+		for (String key : obj.keySet()) {
+			this.items[i] = Parameter.parse(key, obj.getJSONObject(key));
+			i++;
+		}
+		this.minItems = paramSpec.optInt(Tags.MIN_ITEMS_ATT, 0);
+		this.maxItems = paramSpec.optInt(Tags.MAX_ITEMS_ATT, 0);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see org.simplity.rest.param.Parameter#doValidate(java.lang.Object,
+	 * java.util.List)
+	 */
+	@Override
+	protected Object doValidate(Object value, List<FormattedMessage> messages) {
+		if (value instanceof JSONObject == false) {
+			return this.invalidValue(messages);
+		}
+		JSONObject data = (JSONObject) value;
+		JSONObject result = new JSONObject();
+		for (Parameter item : this.items) {
+			String key = item.getName();
+			Object val = item.validate(data.opt(key), messages);
+
+			if (val != null) {
+				result.put(key, val);
+			}
+		}
+		/*
+		 * max/min items?
+		 */
+		int len = result.length();
+		if (len < this.minItems || (this.maxItems != 0 && len > this.maxItems)) {
+			Tracer.trace(this.name + " has " + len + " items against a specification of maxItems=" +this.maxItems + " and a minItems=" + this.minItems + " as " );
+			return this.invalidValue(messages);
+		}
+
+		/*
+		 * unique items?
+		 */
+		if (this.uniqueItem) {
+			String[] keys = JSONObject.getNames(result);
+
+			for (int i = 0; i < keys.length; i++) {
+				for (int j = i + 1; j < keys.length; j++) {
+					if (result.get(keys[i]).equals(result.get(keys[j]))) {
+						Tracer.trace(this.name + " has to have unique values, but " + keys[i] + " and " + keys[j] + " have same values");
+						return this.invalidValue(messages);
+					}
+				}
+			}
+		}
+		return result;
+	}
+}

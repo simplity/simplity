@@ -20,23 +20,49 @@
  * SOFTWARE.
  */
 
-package org.simplity.service;
+package org.simplity.rest.param;
 
 /**
- * utility to take data elements from a service context and format them as a
- * text
- *
+ * represents a parameter type as in a swagger document
  * @author simplity.org
  *
  */
-public interface DataFormatter {
+public enum ParameterFormat {
 	/**
-	 * pick values for data elements from service contract and format a text that
-	 * can be used to transport this
-	 *
-	 * @param ctx
-	 *            service context
-	 * @return serialized/formatted text
+	 * sequence of octets, not implemented
 	 */
-	public String format(ServiceContext ctx);
+	BINARY,
+	/**
+	 * base64 encoded characters, not implemented
+	 */
+	BYTE,
+	/**
+	 * date only
+	 */
+	DATE,
+	/**
+	 * date with time
+	 */
+	DATETIME,
+	/**
+	 * number greater that float
+	 */
+	DOUBLE,
+	/**
+	 * number
+	 */
+	FLOAT,
+	/**
+	 * integer
+	 */
+	INT32,
+	/**
+	 * long integer
+	 */
+	INT64,
+
+	/**
+	 * password
+	 */
+	PASSWORD;
 }

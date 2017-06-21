@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package org.simplity.openapi;
+package org.simplity.rest;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,7 +36,7 @@ import org.simplity.kernel.Tracer;
  * @author simplity.org
  *
  */
-public class Node {
+public class PathNode {
 	/**
 	 * non-null only if this this node is for a field
 	 */
@@ -45,18 +45,18 @@ public class Node {
 	 * non-null when fieldName is non-null. This is the sole child from this
 	 * node irrespective of the field value
 	 */
-	private Node fieldChild = null;
+	private PathNode fieldChild = null;
 	/**
 	 * child paths from here. one entry for each possible value of the path part
 	 * from here. null if this is a field
 	 */
-	private Map<String, Node> children;
+	private Map<String, PathNode> children;
 	/**
 	 * specs at this level. It is possible to have children as well as spec.
 	 * That
 	 * is, this path is valid and sub-paths are also valid
 	 */
-	private Map<String, ServiceSpec> serviceSpecs;
+	private Map<String, Operation> serviceSpecs;
 	/**
 	 * path without the field-part. Also it is in "." notation. for example
 	 * inv.item
@@ -64,14 +64,20 @@ public class Node {
 	private String pathPrefix;
 
 	/**
+	 * module name to be used for service name
+	 */
+	private String moduleName;
+
+	/**
 	 * way to go up the path. required when when spec may be assigned at a
 	 * sub-path and not at full path.
 	 */
-	private final Node parent;
+	private final PathNode parent;
 
-	Node(Node parent, String pathPrefix) {
+	PathNode(PathNode parent, String pathPrefix, String moduleName) {
 		this.parent = parent;
 		this.pathPrefix = pathPrefix;
+		this.moduleName = moduleName;
 		Tracer.trace("Node created with prefix=" + pathPrefix);
 	}
 
@@ -87,10 +93,10 @@ public class Node {
 	 *            the fieldName to set
 	 * @return child-node associated with this field
 	 */
-	public Node setFieldName(String fieldName) {
+	public PathNode setFieldName(String fieldName, String moduleName) {
 		if (this.fieldName == null) {
 			this.fieldName = fieldName;
-			this.fieldChild = new Node(this, this.pathPrefix);
+			this.fieldChild = new PathNode(this, this.pathPrefix, moduleName);
 
 			Tracer.trace("field-child added at " + this.pathPrefix + " with field name=" + fieldName);
 		} else if (this.fieldName.equals(fieldName) == false) {
@@ -98,7 +104,7 @@ public class Node {
 			 * two paths can not have different field names at the same
 			 * location
 			 */
-			throw new ApplicationError(ServiceSpecs.INVALID_API);
+			throw new ApplicationError(Tags.INVALID_API);
 		}
 		return this.fieldChild;
 	}
@@ -114,21 +120,22 @@ public class Node {
 	 * set a child path for this path-part
 	 *
 	 * @param pathPart
+	 * @param moduleName
 	 * @return child node for this path-part
 	 */
-	public Node setChild(String pathPart) {
-		Node child = null;
+	public PathNode setChild(String pathPart, String moduleName) {
+		PathNode child = null;
 		if (this.children == null) {
-			this.children = new HashMap<String, Node>();
+			this.children = new HashMap<String, PathNode>();
 		} else {
 			child = this.children.get(pathPart);
 		}
 		if (child == null) {
 			String prefix = pathPart;
 			if (this.pathPrefix != null) {
-				prefix = this.pathPrefix + ServiceSpecs.SERVICE_SEP_CHAR + pathPart;
+				prefix = this.pathPrefix + Tags.SERVICE_SEP_CHAR + pathPart;
 			}
-			child = new Node(this, prefix);
+			child = new PathNode(this, prefix, moduleName);
 			this.children.put(pathPart, child);
 			Tracer.trace("New Child added at " + this.pathPrefix + " for sub path " + pathPart);
 		}
@@ -143,9 +150,9 @@ public class Node {
 	 * @return child node for this pathPart. null if no child node for this
 	 *         part.
 	 */
-	public Node getChild(String pathPart) {
-		Node child = null;
-		if(this.children != null){
+	public PathNode getChild(String pathPart) {
+		PathNode child = null;
+		if (this.children != null) {
 			child = this.children.get(pathPart);
 		}
 		return child;
@@ -156,9 +163,10 @@ public class Node {
 	 * @return child associated with the field
 	 *
 	 */
-	public Node getFieldChild() {
+	public PathNode getFieldChild() {
 		return this.fieldChild;
 	}
+
 	/**
 	 * set service specs associated with methods
 	 *
@@ -170,21 +178,27 @@ public class Node {
 			return;
 		}
 
-		this.serviceSpecs = new HashMap<String, ServiceSpec>();
+		this.serviceSpecs = new HashMap<String, Operation>();
 		for (String method : methods.keySet()) {
 			JSONObject obj = methods.getJSONObject(method);
-			String serviceName = obj.optString(ServiceSpecs.SERVICE_NAME_ATTR, null);
-			if(serviceName == null){
-				serviceName = obj.optString(ServiceSpecs.OP_ID_ATTR, null);
-				if (serviceName == null) {
-					/*
-					 * use path.method
-					 */
-					serviceName = this.pathPrefix + ServiceSpecs.SERVICE_SEP_CHAR + method;
+			String serviceName = obj.optString(Tags.SERVICE_NAME_ATTR, null);
+			if (serviceName == null) {
+				serviceName = obj.optString(Tags.OP_ID_ATTR, null);
+			}
+			if (serviceName == null) {
+				/*
+				 * use path.method
+				 */
+				serviceName = this.pathPrefix + Tags.SERVICE_SEP_CHAR + method;
+			} else {
+				if (this.moduleName != null) {
+					serviceName = this.moduleName + Tags.SERVICE_SEP_CHAR + serviceName;
 				}
 			}
-			this.serviceSpecs.put(method, new ServiceSpec(obj, serviceName));
-			Tracer.trace("Service spec added at prefix=" + this.pathPrefix + " for method=" + method + " and service name=" + serviceName + (this.parent != null ? (" and parent at " + this.parent.pathPrefix) : ""));
+			this.serviceSpecs.put(method, new Operation(obj, serviceName));
+			Tracer.trace(
+					"Service spec added at prefix=" + this.pathPrefix + " for method=" + method + " and service name="
+							+ serviceName + (this.parent != null ? (" and parent at " + this.parent.pathPrefix) : ""));
 		}
 	}
 
@@ -193,7 +207,7 @@ public class Node {
 	 * @param method
 	 * @return service spec associated with this method, or null if no such spec
 	 */
-	public ServiceSpec getServiceSpec(String method) {
+	public Operation getServiceSpec(String method) {
 		if (this.serviceSpecs == null) {
 			return null;
 		}
@@ -204,7 +218,7 @@ public class Node {
 	 *
 	 * @return the parent node. null for the root node
 	 */
-	public Node getParent() {
+	public PathNode getParent() {
 		return this.parent;
 	}
 

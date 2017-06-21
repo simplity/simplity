@@ -46,6 +46,11 @@ import org.simplity.kernel.comp.ComponentType;
 import org.simplity.kernel.comp.ValidationContext;
 import org.simplity.kernel.data.DataPurpose;
 import org.simplity.kernel.data.DataSheet;
+import org.simplity.kernel.data.InputData;
+import org.simplity.kernel.data.InputField;
+import org.simplity.kernel.data.InputRecord;
+import org.simplity.kernel.data.OutputData;
+import org.simplity.kernel.data.OutputRecord;
 import org.simplity.kernel.db.DbAccessType;
 import org.simplity.kernel.db.DbDriver;
 import org.simplity.kernel.dm.Record;
@@ -619,11 +624,11 @@ public class Service implements ServiceInterface {
 		 * what is to be input
 		 */
 		InputRecord inRec = new InputRecord();
-		inRec.recordName = recordName;
-		inRec.purpose = DataPurpose.READ;
+		inRec.setRecordName(recordName);
+		inRec.setPurpose(DataPurpose.READ);
 		InputRecord[] inRecs = { inRec };
 		InputData inData = new InputData();
-		inData.inputRecords = inRecs;
+		inData.setRecords(inRecs);
 		service.inputData = inData;
 
 		/*
@@ -640,7 +645,7 @@ public class Service implements ServiceInterface {
 		 */
 		OutputRecord[] outRecs = getOutputRecords(record);
 		OutputData outData = new OutputData();
-		outData.outputRecords = outRecs;
+		outData.setOutputRecords(outRecs);
 		service.outputData = outData;
 
 		return service;
@@ -664,11 +669,11 @@ public class Service implements ServiceInterface {
 		 * input for filter
 		 */
 		InputRecord inRec = new InputRecord();
-		inRec.recordName = recordName;
-		inRec.purpose = DataPurpose.FILTER;
+		inRec.setRecordName(recordName);
+		inRec.setPurpose(DataPurpose.FILTER);
 		InputRecord[] inRecs = { inRec };
 		InputData inData = new InputData();
-		inData.inputRecords = inRecs;
+		inData.setRecords(inRecs);
 		service.inputData = inData;
 
 		Action action;
@@ -680,11 +685,11 @@ public class Service implements ServiceInterface {
 		 */
 		if (record.getChildrenToOutput() == null) {
 			action = new FilterToJson(record);
-			outData.outputFromWriter = true;
+			outData.enableOutputFromWriter();
 		} else {
 			action = new Filter(record);
 			OutputRecord[] outRecs = getOutputRecords(record);
-			outData.outputRecords = outRecs;
+			outData.setOutputRecords(outRecs);
 		}
 		action.failureMessageName = Messages.NO_ROWS;
 		Action[] actions = { action };
@@ -717,7 +722,7 @@ public class Service implements ServiceInterface {
 
 		InputField[] inFields = { f1, f2 };
 		InputData inData = new InputData();
-		inData.inputFields = inFields;
+		inData.setInputFields(inFields);
 		service.inputData = inData;
 
 		/*
@@ -734,7 +739,7 @@ public class Service implements ServiceInterface {
 		OutputRecord outRec = new OutputRecord(record);
 		OutputRecord[] outRecs = { outRec };
 		OutputData outData = new OutputData();
-		outData.outputRecords = outRecs;
+		outData.setOutputRecords(outRecs);
 		service.outputData = outData;
 
 		/*
@@ -770,7 +775,7 @@ public class Service implements ServiceInterface {
 		InputField f1 = new InputField(ServiceProtocol.LIST_SERVICE_KEY, DataType.DEFAULT_TEXT, false, null);
 		InputField[] inFields = { f1 };
 		InputData inData = new InputData();
-		inData.inputFields = inFields;
+		inData.setInputFields(inFields);
 		service.inputData = inData;
 		/*
 		 * use a List action to do the job
@@ -785,7 +790,7 @@ public class Service implements ServiceInterface {
 		OutputRecord outRec = new OutputRecord(record);
 		OutputRecord[] outRecs = { outRec };
 		OutputData outData = new OutputData();
-		outData.outputRecords = outRecs;
+		outData.setOutputRecords(outRecs);
 		service.outputData = outData;
 
 		/*
@@ -815,7 +820,7 @@ public class Service implements ServiceInterface {
 		 * child-records in data sheets
 		 */
 		InputData inData = new InputData();
-		inData.inputRecords = getInputRecords(record);
+		inData.setRecords(getInputRecords(record));
 		service.inputData = inData;
 
 		/*
@@ -841,10 +846,10 @@ public class Service implements ServiceInterface {
 		 * fields
 		 */
 		OutputRecord outRec = new OutputRecord();
-		outRec.recordName = recordName;
+		outRec.setRecordName(recordName);
 		OutputData outData = new OutputData();
 		OutputRecord[] outRecs = { outRec };
-		outData.outputRecords = outRecs;
+		outData.setOutputRecords(outRecs);
 		service.outputData = outData;
 
 		return service;
@@ -907,14 +912,14 @@ public class Service implements ServiceInterface {
 		}
 
 		InputRecord inRec = new InputRecord();
-		inRec.recordName = recordName;
-		inRec.purpose = DataPurpose.SAVE;
-		inRec.saveActionExpected = true;
+		inRec.setRecordName(recordName);
+		inRec.setPurpose(DataPurpose.SAVE);
+		inRec.enableSaveAction();
 		/*
 		 * inputRecord is lenient about sheetName. It is okay to specify that.
 		 * In case one row comes from client as fields, inputRecord manages that
 		 */
-		inRec.sheetName = record.getDefaultSheetName();
+		inRec.setSheetName(record.getDefaultSheetName());
 		InputRecord[] recs = new InputRecord[nrecs];
 		recs[0] = inRec;
 		if (children != null) {

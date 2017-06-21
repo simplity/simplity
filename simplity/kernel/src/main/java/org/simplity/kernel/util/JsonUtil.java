@@ -1055,4 +1055,19 @@ public class JsonUtil {
 		return getValueWorker(itemSelector, json, 2);
 	}
 
+	/**
+	 * copy all attributes from one josn to another. In case of attribute name
+	 * clash, existing value is replaced
+	 *
+	 * @param toJson
+	 * @param fromJson
+	 * @return toJson for convenience
+	 */
+	public static JSONObject copyAll(JSONObject toJson, JSONObject fromJson) {
+		for (String key : fromJson.keySet()) {
+			toJson.put(key, fromJson.get(key));
+		}
+		return toJson;
+	}
+
 }

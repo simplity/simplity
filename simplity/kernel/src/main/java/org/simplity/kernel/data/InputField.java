@@ -19,7 +19,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.simplity.tp;
+package org.simplity.kernel.data;
 
 import org.simplity.json.JSONArray;
 import org.simplity.kernel.ApplicationError;
@@ -27,8 +27,6 @@ import org.simplity.kernel.Messages;
 import org.simplity.kernel.Tracer;
 import org.simplity.kernel.comp.ComponentManager;
 import org.simplity.kernel.comp.ValidationContext;
-import org.simplity.kernel.data.DataSheet;
-import org.simplity.kernel.data.MultiRowsSheet;
 import org.simplity.kernel.dt.DataType;
 import org.simplity.kernel.value.Value;
 import org.simplity.kernel.value.ValueType;

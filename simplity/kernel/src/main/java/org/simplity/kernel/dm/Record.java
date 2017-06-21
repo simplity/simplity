@@ -53,7 +53,9 @@ import org.simplity.kernel.data.DataSerializationType;
 import org.simplity.kernel.data.DataSheet;
 import org.simplity.kernel.data.FieldsInterface;
 import org.simplity.kernel.data.FlatFileRowType;
+import org.simplity.kernel.data.InputRecord;
 import org.simplity.kernel.data.MultiRowsSheet;
+import org.simplity.kernel.data.OutputRecord;
 import org.simplity.kernel.data.SingleRowSheet;
 import org.simplity.kernel.db.DbDriver;
 import org.simplity.kernel.dt.DataType;
@@ -68,8 +70,6 @@ import org.simplity.kernel.value.ValueType;
 import org.simplity.service.ResponseWriter;
 import org.simplity.service.ServiceContext;
 import org.simplity.service.ServiceProtocol;
-import org.simplity.tp.InputRecord;
-import org.simplity.tp.OutputRecord;
 
 /**
  *

@@ -20,23 +20,33 @@
  * SOFTWARE.
  */
 
-package org.simplity.service;
+package org.simplity.rest;
+
+import org.simplity.json.JSONObject;
 
 /**
- * utility to take data elements from a service context and format them as a
- * text
+ * interface to be used to develop an installation specific mapper/translator
+ * between Swagger defined operations, and service implementations
  *
  * @author simplity.org
  *
  */
-public interface DataFormatter {
+public interface ServiceTranslator {
+
 	/**
-	 * pick values for data elements from service contract and format a text that
-	 * can be used to transport this
+	 * translate client request into name/format that this server understands
 	 *
-	 * @param ctx
-	 *            service context
-	 * @return serialized/formatted text
+	 * @param serviceName
+	 * @param params
+	 *            input parameters. We may alter the contents to suit the server
+	 * @return service name that the server understands
 	 */
-	public String format(ServiceContext ctx);
+	public String translateInput(String serviceName, JSONObject params);
+
+	/**
+	 * translate output parameters from service implementation output to the desired output as per OPen Api
+	 * @param serviceName
+	 * @param params
+	 */
+	public void translateOutput(String serviceName, JSONObject params);
 }
