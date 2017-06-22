@@ -24,8 +24,11 @@ package org.simplity.rest.param;
 
 import java.util.List;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.simplity.json.JSONArray;
 import org.simplity.json.JSONObject;
+import org.simplity.json.JSONWriter;
 import org.simplity.kernel.ApplicationError;
 import org.simplity.kernel.FormattedMessage;
 import org.simplity.kernel.Messages;
@@ -51,6 +54,7 @@ public abstract class Parameter {
 
 	/**
 	 * parse swagger document node into an appropriate Parameter
+	 *
 	 * @param name
 	 *
 	 * @param param
@@ -60,13 +64,13 @@ public abstract class Parameter {
 		return getParameterType(param).parseParameter(name, param);
 	}
 
-	private static ParameterType getParameterType(JSONObject obj){
-		String text = obj.optString(Tags.TYPE_ATTR,null);
-		if(text == null){
+	private static ParameterType getParameterType(JSONObject obj) {
+		String text = obj.optString(Tags.TYPE_ATTR, null);
+		if (text == null) {
 			throw new ApplicationError("Missing type attribute for a parameter");
 		}
 		ParameterType tp = ParameterType.valueOf(text.toUpperCase());
-		if(tp == null){
+		if (tp == null) {
 			throw new ApplicationError("Prameter type " + text + " is not implemented.");
 		}
 		return tp;
@@ -107,10 +111,10 @@ public abstract class Parameter {
 		this.isRequired = paramSpec.optBoolean(Tags.REQUIRED_ATTR, false);
 
 		JSONArray vals = paramSpec.optJSONArray(Tags.ENUM_ATT);
-		if(vals != null){
+		if (vals != null) {
 			this.validValues = new Object[vals.length()];
 			int i = 0;
-			for(Object obj :vals){
+			for (Object obj : vals) {
 				this.validValues[i] = obj;
 				i++;
 			}
@@ -119,6 +123,7 @@ public abstract class Parameter {
 
 	/**
 	 * spec when name is not part of it, For example inside a schema
+	 *
 	 * @param paramSpec
 	 * @param name
 	 */
@@ -126,7 +131,6 @@ public abstract class Parameter {
 		this(paramSpec);
 		this.name = name;
 	}
-
 
 	/**
 	 * @return name of this parameter
@@ -153,9 +157,9 @@ public abstract class Parameter {
 			}
 			return this.defaultValue;
 		}
-		if(this.validValues != null){
-			for(Object obj : this.validValues){
-				if(obj.equals(value)){
+		if (this.validValues != null) {
+			for (Object obj : this.validValues) {
+				if (obj.equals(value)) {
 					return value;
 				}
 			}
@@ -175,6 +179,7 @@ public abstract class Parameter {
 
 	/**
 	 * sub-classes use this method to return when they detect an invalid value
+	 *
 	 * @param messages
 	 *
 	 * @return always null
@@ -182,5 +187,43 @@ public abstract class Parameter {
 	protected Object invalidValue(List<FormattedMessage> messages) {
 		messages.add(new FormattedMessage(Messages.INVALID_VALUE, null, this.name, null, 0, ""));
 		return null;
+	}
+
+	/**
+	 * @param resp
+	 * @param data
+	 */
+	public void setHeader(HttpServletResponse resp, Object data) {
+		/*
+		 * this method works for all value-types. Array and Object need to over-ride this
+		 */
+		if (data != null) {
+			resp.setHeader(this.name, data.toString());
+		}
+	}
+
+	/**
+	 * write this parameter into a json writer. For example "fieldName":"value",
+	 * or just "value" if justTheValue is true
+	 *
+	 * @param writer
+	 * @param data
+	 * @param asAttribute
+	 *            if this is true, then we write key,value pair, else we write just the value
+	 *            and not as an attribute.
+	 */
+	public void toWriter(JSONWriter writer, Object data, boolean asAttribute) {
+		/*
+		 * this method works for all value-types. Array and Object need to over-ride this
+		 */
+
+		/*
+		 * do we write even if it is null? we are saying yes.
+		 * And, we are assuming that server is always right!! Why waste cpu cycles validating data
+		 */
+		if (asAttribute) {
+			writer.key(this.name);
+		}
+		writer.value(data);
 	}
 }

@@ -336,7 +336,7 @@ public class JmsDestination {
 			}
 			return true;
 		} catch (Exception e) {
-			Tracer.trace("Error while putting mesage on tp a queue. " + e.getMessage());
+			Tracer.trace("Error while putting mesage on to a queue. " + e.getMessage());
 			return false;
 		} finally {
 			if (consumer != null) {
@@ -716,6 +716,12 @@ public class JmsDestination {
 		} catch (Exception e) {
 			throw new ApplicationError("Jms destination name " + this.name
 					+ " could not be used as a JNDI name to locate a queue name. " + e.getMessage());
+		}
+		if(this.inputData != null){
+			this.inputData.getReady();
+		}
+		if(this.outputData != null){
+			this.outputData.getReady();
 		}
 	}
 

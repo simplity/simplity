@@ -322,4 +322,10 @@ public abstract class ServiceProtocol {
 	 * name of the file currently being processed
 	 */
 	public static final String FIlE_BATCH = "_fileBatch";
+
+	/**
+	 * http response code to be used by the server to respond back to client
+	 */
+
+	public static final String HTTP_RESP_CODE_FIELD_NAME = "_httpResponseCode";
 }

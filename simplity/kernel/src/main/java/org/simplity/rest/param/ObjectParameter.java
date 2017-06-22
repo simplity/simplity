@@ -24,7 +24,10 @@ package org.simplity.rest.param;
 
 import java.util.List;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.simplity.json.JSONObject;
+import org.simplity.json.JSONWriter;
 import org.simplity.kernel.ApplicationError;
 import org.simplity.kernel.FormattedMessage;
 import org.simplity.kernel.Tracer;
@@ -124,4 +127,49 @@ public class ObjectParameter extends Parameter {
 		}
 		return result;
 	}
+
+	/* (non-Javadoc)
+	 * @see org.simplity.rest.param.Parameter#toWriter(org.simplity.json.JSONWriter, org.simplity.json.JSONObject, boolean)
+	 */
+	@Override
+	public void toWriter(JSONWriter writer, Object data, boolean asAttribute) {
+		if(asAttribute){
+			writer.key(this.name);
+		}
+		writer.object();
+		/*
+		 * write child attributes, if any..
+		 */
+		if(data != null){
+			if(data instanceof JSONObject == false){
+				throw new ApplicationError("An object is expected for field " + this.name + "but we got " + data.getClass().getName() );
+			}
+			JSONObject childData = (JSONObject) data;
+			for(Parameter item : this.items){
+				item.toWriter(writer, childData.opt(item.getName()), true);
+			}
+		}
+		writer.endObject();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.simplity.rest.param.Parameter#setHeader(javax.servlet.http.HttpServletResponse, org.simplity.json.JSONObject)
+	 */
+	@Override
+	public void setHeader(HttpServletResponse resp, Object data) {
+		if (data == null) {
+			return;
+		}
+		if(data instanceof JSONObject == false){
+			throw new ApplicationError("An object is expected for field " + this.name + "but we got " + data.getClass().getName() );
+		}
+		JSONObject json = (JSONObject)data;
+		for(Parameter item : this.items){
+			if(item instanceof ObjectParameter){
+				throw new ApplicationError("Field " + this.name + " is an object with an attribute named " + item.getName() + " as a child objecy in it. Such an embedded object data can not be used to set header values.");
+			}
+			item.setHeader(resp, json.opt(item.getName()));
+		}
+	}
+
 }

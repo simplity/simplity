@@ -114,9 +114,9 @@ public class RestAgent {
 		/*
 		 * using operation specification, get service name and input data
 		 */
-		JSONObject inJson = new JSONObject();
+		JSONObject json = new JSONObject();
 		List<FormattedMessage> messages = new ArrayList<FormattedMessage>();
-		String serviceName = operation.prepareService(req, inJson, pathJson, messages);
+		String serviceName = operation.prepareRequest(req, json, pathJson, messages);
 
 		if(messages.size() > 0){
 			Tracer.trace("Input data has validation errors. Responding back without clliing the service");
@@ -129,12 +129,12 @@ public class RestAgent {
 		//TODO : get user ID
 		Value userId = Value.newTextValue("100");
 		ServiceData inData = new ServiceData(userId, serviceName);
-		inData.setPayLoad(inJson.toString());
+		inData.setPayLoad(json.toString());
 		/*
 		 * discard heavy objects as early as possible
 		 */
 		pathJson = null;
-		inJson = null;
+		json = null;
 
 		ServiceData outData = null;
 		try {
@@ -154,7 +154,17 @@ public class RestAgent {
 			}
 			outData.addMessage(message);
 		}
-		operation.writeResponse(resp, outData);
+		if(outData.hasErrors()){
+			operation.writeResponse(resp, outData.getMessages());
+		}else{
+			String payload = outData.getPayLoad();
+			if(payload == null || payload.isEmpty()){
+				json = new JSONObject();
+			}else{
+				json = new JSONObject(payload);
+			}
+			operation.writeResponse(resp, json);
+		}
 	}
 
 	/**

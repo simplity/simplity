@@ -120,7 +120,8 @@ public class Tags {
 	public static final String MAX_ATT = "maximum";
 
 	/**
-	 * whether the value should be strictly less than the max value length of a text parameter
+	 * whether the value should be strictly less than the max value length of a
+	 * text parameter
 	 */
 	public static final String EXCL_MIN_ATT = "exclusiveMinimum";
 
@@ -155,7 +156,8 @@ public class Tags {
 	public static final String UNIQUE_ATT = "uniqueItems";
 
 	/**
-	 * list of valid values. if this is given, we do not use other attributes for validation
+	 * list of valid values. if this is given, we do not use other attributes
+	 * for validation
 	 */
 	public static final String ENUM_ATT = "enum";
 
@@ -185,7 +187,7 @@ public class Tags {
 	public static final String FORMAT_ATT = "format";
 
 	/**
-	 *float (not double)
+	 * float (not double)
 	 */
 	public static final String FLOAT_FORMAT = "float";
 	/**
@@ -208,6 +210,10 @@ public class Tags {
 	 * type of value
 	 */
 	public static final String TYPE_ATTR = "type";
+	/**
+	 * value of in attribute for headers
+	 */
+	public static final String HEADERS_ATTR = "headers";
 
 	/*
 	 * custom tags defined and used by Simplity
@@ -236,6 +242,11 @@ public class Tags {
 	 */
 	public static final String SEND_ALL_ATTR = "x-sendAllData";
 
+	/**
+	 * field name associated with the body of response. This is at
+	 * responseObject level
+	 */
+	public static final String FIELD_NAME_ATTR = "x-fieldName";
 	/**
 	 * open api json is invalid
 	 */

@@ -31,14 +31,12 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.simplity.json.JSONArray;
 import org.simplity.json.JSONObject;
-import org.simplity.json.JSONWriter;
 import org.simplity.kernel.ApplicationError;
 import org.simplity.kernel.FormattedMessage;
 import org.simplity.kernel.Tracer;
 import org.simplity.kernel.util.HttpUtil;
 import org.simplity.kernel.util.JsonUtil;
 import org.simplity.rest.param.Parameter;
-import org.simplity.service.ServiceData;
 import org.simplity.service.ServiceProtocol;
 
 /**
@@ -78,7 +76,7 @@ public class Operation {
 	 * with all that the service has responded with.
 	 */
 	private boolean sendAll;
-	private Response[] sucessResponses;
+	private Response[] successResponses;
 	private Response[] failureResponses;
 	private Response defaultResponse;
 
@@ -150,12 +148,12 @@ public class Operation {
 			if (Tags.IN_BODY.equals(pin) || Tags.IN_FORM.equals(pin)) {
 				if (this.bodyParameter == null) {
 					this.bodyIsFormData = Tags.IN_FORM.equals(pin);
-					if(RestContext.getContext().retainBodyAsObject()){
+					if (RestContext.getContext().retainBodyAsObject()) {
 						this.bodyFieldName = parm.getName();
 					}
 
 					this.bodyParameter = parm;
-				}else{
+				} else {
 					throw new ApplicationError("More than one body field defined for operation " + this.serviceName);
 				}
 			} else if (Tags.IN_QUERY.equals(pin)) {
@@ -175,18 +173,18 @@ public class Operation {
 					header = new ArrayList<Parameter>();
 				}
 				header.add(parm);
-			}else{
+			} else {
 				Tracer.trace("Parameter " + parm.getName() + " ignored as it has an invalid 'in' attribute of " + pin);
 			}
 		}
 		Parameter[] empty = new Parameter[0];
-		if(qry != null){
+		if (qry != null) {
 			this.qryParameters = qry.toArray(empty);
 		}
-		if(path != null){
+		if (path != null) {
 			this.pathParameters = path.toArray(empty);
 		}
-		if(header != null){
+		if (header != null) {
 			this.headerParameters = header.toArray(empty);
 		}
 	}
@@ -210,12 +208,12 @@ public class Operation {
 				throw new ApplicationError("Response object is null for " + code);
 			}
 			char c = code.charAt(0);
-			if (c == '5') {
-				failures.add(this.createResponse(obj, code));
+			if (c == '5' || c == '4') {
+				failures.add(new Response(code, obj));
 			} else if (c == '2') {
-				successes.add(this.createResponse(obj, code));
+				successes.add(new Response(code, obj));
 			} else if (code.equals("default")) {
-				this.defaultResponse = this.createResponse(obj, null);
+				this.defaultResponse = new Response(null, obj);
 			} else {
 				Tracer.trace("Operation " + this.serviceName + "will ignore response code " + code
 						+ ", assuming that it will be managed by the controller/agent.");
@@ -224,22 +222,12 @@ public class Operation {
 		int nbr = successes.size();
 		Response[] empty = new Response[0];
 		if (nbr > 0) {
-			this.sucessResponses = successes.toArray(empty);
+			this.successResponses = successes.toArray(empty);
 		}
 		nbr = failures.size();
 		if (nbr > 0) {
 			this.failureResponses = successes.toArray(empty);
 		}
-	}
-
-	/**
-	 * @param obj
-	 * @param code
-	 * @return
-	 */
-	private Response createResponse(JSONObject obj, String code) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	/**
@@ -269,7 +257,7 @@ public class Operation {
 	 *         error.
 	 * @throws IOException
 	 */
-	public String prepareService(HttpServletRequest req, JSONObject serviceData, JSONObject pathData,
+	public String prepareRequest(HttpServletRequest req, JSONObject serviceData, JSONObject pathData,
 			List<FormattedMessage> messages) throws IOException {
 		/*
 		 * get body/form data into a json first. Of course it would be empty if
@@ -292,7 +280,7 @@ public class Operation {
 			}
 		} else {
 			if (this.bodyParameter != null) {
-				bodyData = (JSONObject)this.bodyParameter.validate(bodyData, messages);
+				bodyData = (JSONObject) this.bodyParameter.validate(bodyData, messages);
 			}
 			if (this.qryParameters != null) {
 				this.parseAndValidate(this.qryParameters, HttpUtil.parseQueryString(req, null), serviceData, messages);
@@ -310,7 +298,7 @@ public class Operation {
 			/*
 			 * do we have errors?
 			 */
-			if(messages.size() > 0){
+			if (messages.size() > 0) {
 				return null;
 			}
 		}
@@ -379,41 +367,31 @@ public class Operation {
 	 * @param data
 	 * @throws IOException
 	 */
-	public void writeResponse(HttpServletResponse resp, ServiceData data) throws IOException {
-		/*
-		 * TODO: implement spec based extraction from out data. We are now
-		 * assuming payload is all ready
-		 */
-		String text;
-		if (data.hasErrors()) {
-			text = this.getResponseForError(data.getMessages());
-		} else {
-			Object obj = data.getPayLoad();
-			if (obj == null || obj instanceof JSONObject == false) {
-				text = "{}";
-			} else {
-				text = ((JSONObject) obj).toString();
-			}
-		}
-		resp.getWriter().write(text);
+	public void writeResponse(HttpServletResponse resp, JSONObject data) throws IOException {
+		Response response = this.selectResponse(this.successResponses, data);
+		response.writeResponse(resp, data, this.bodyFieldName, this.sendAll);
 	}
 
-	/**
-	 * get the JSON to be sent back to client in case of errors
-	 *
-	 * @param messages
-	 *            Messages
-	 * @return JSON string for the supplied errors
-	 */
-	private String getResponseForError(FormattedMessage[] messages) {
-		JSONWriter writer = new JSONWriter();
-		writer.object();
-		writer.key(ServiceProtocol.REQUEST_STATUS);
-		writer.value(ServiceProtocol.STATUS_ERROR);
-		writer.key(ServiceProtocol.MESSAGES);
-		JsonUtil.addObject(writer, messages);
-		writer.endObject();
-		return writer.toString();
+	private Response selectResponse(Response[] responses, JSONObject data) {
+		if (responses == null) {
+			return this.defaultResponse;
+		}
+
+		if (responses.length == 1) {
+			return responses[0];
+		}
+		if (data != null) {
+			int code = data.optInt(ServiceProtocol.HTTP_RESP_CODE_FIELD_NAME, 0);
+			if (code != 0) {
+				for (Response response : responses) {
+					if (response.getCode() == code) {
+						return response;
+					}
+				}
+			}
+		}
+		Tracer.trace("We are unable to pick a response from multiple choices, and hence choosing the first one");
+		return responses[0];
 	}
 
 	/**
@@ -422,8 +400,8 @@ public class Operation {
 	 * @throws IOException
 	 */
 	public void writeResponse(HttpServletResponse resp, FormattedMessage[] messages) throws IOException {
-		String text = this.getResponseForError(messages);
-		resp.getWriter().write(text);
+		Response response = this.selectResponse(this.failureResponses, null);
+		response.writeResponse(resp, messages);
 	}
 
 }

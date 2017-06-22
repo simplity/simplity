@@ -24,8 +24,11 @@ package org.simplity.rest.param;
 
 import java.util.List;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.simplity.json.JSONArray;
 import org.simplity.json.JSONObject;
+import org.simplity.json.JSONWriter;
 import org.simplity.kernel.ApplicationError;
 import org.simplity.kernel.FormattedMessage;
 import org.simplity.kernel.Tracer;
@@ -117,7 +120,7 @@ public class ArrayParameter extends Parameter {
 			/*
 			 * this is an array that is serialized into string
 			 */
-			String[] vals = this.colnType.getCollection(value.toString());
+			String[] vals = this.colnType.textToArray(value.toString());
 			arr = new JSONArray();
 			for (String val : vals) {
 				Object obj = this.item.validate(val, messages);
@@ -158,6 +161,72 @@ public class ArrayParameter extends Parameter {
 		return arr;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see
+	 * org.simplity.rest.param.Parameter#toWriter(org.simplity.json.JSONWriter,
+	 * org.simplity.json.JSONObject, boolean)
+	 */
+	@Override
+	public void toWriter(JSONWriter writer, Object data, boolean asAttribute) {
+		if (asAttribute) {
+			writer.key(this.name);
+		}
+		if (this.colnType == null) {
+			/*
+			 * this is an array of values
+			 */
+			writer.array();
+			if (data instanceof JSONArray) {
+				for (Object ele : (JSONArray) data) {
+					this.item.toWriter(writer, ele, false);
+				}
+			} else {
+				this.item.toWriter(writer, data, false);
+			}
+			writer.endArray();
+			return;
+		}
+		/**
+		 * this is a serialized text field
+		 */
+		String text;
+		if (data instanceof JSONArray) {
+			text = this.colnType.arrayToText((JSONArray) data);
+		} else {
+			text = data.toString();
+		}
+		writer.value(text);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see org.simplity.rest.param.Parameter#setHeader(javax.servlet.http.
+	 * HttpServletResponse, org.simplity.json.JSONObject)
+	 */
+	@Override
+	public void setHeader(HttpServletResponse resp, Object data) {
+		if (data == null) {
+			return;
+		}
+		String text;
+		if (data instanceof JSONArray) {
+			JSONArray arr = (JSONArray) data;
+			if (this.colnType == null) {
+				Tracer.trace("Field " + this.name
+						+ " is an array, and is being used to write to header, but it has no collectionType. comma separation is assumed");
+				text = CollectionType.csv.arrayToText(arr);
+			} else {
+				text = this.colnType.arrayToText(arr);
+			}
+		} else {
+			text = data.toString();
+		}
+		resp.setHeader(this.name, text);
+	}
+
 	enum CollectionType {
 		csv(","), ssv(" "), tsv("\t"), pipes("|"), multi("&");
 		private String sep = ",";
@@ -166,8 +235,20 @@ public class ArrayParameter extends Parameter {
 			this.sep = sep;
 		}
 
-		String[] getCollection(String txt) {
+		String[] textToArray(String txt) {
 			return txt.split(this.sep);
+		}
+
+		String arrayToText(JSONArray arr) {
+			if (arr == null || arr.length() == 0) {
+				return "";
+			}
+			StringBuilder sbf = new StringBuilder();
+			for (Object ele : arr) {
+				sbf.append(ele.toString()).append(this.sep);
+			}
+			sbf.setLength(sbf.length() - 1);
+			return sbf.toString();
 		}
 	}
 }

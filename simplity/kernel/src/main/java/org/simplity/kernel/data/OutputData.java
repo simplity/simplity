@@ -122,7 +122,6 @@ public class OutputData {
 			 */
 			writer.key(ServiceProtocol.REQUEST_STATUS).value(ServiceProtocol.STATUS_OK);
 
-			writer.end();
 			outData.setPayLoad(writer.getResponse());
 			return;
 		}
@@ -265,7 +264,6 @@ public class OutputData {
 		writer.object();
 		this.dataToJson(writer, ctx);
 		writer.endObject();
-		writer.end();
 		return writer.toString();
 	}
 	/**
