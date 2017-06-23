@@ -214,6 +214,10 @@ public class Tags {
 	 * value of in attribute for headers
 	 */
 	public static final String HEADERS_ATTR = "headers";
+	/**
+	 * properties in a schema for object
+	 */
+	public static final String PROPERTIES_ATTR = "properties";
 
 	/*
 	 * custom tags defined and used by Simplity
@@ -265,6 +269,10 @@ public class Tags {
 	 * path part delimiter as char
 	 */
 	public static final char PATH_SEP_CHAR = '/';
+	/**
+	 * all of data type
+	 */
+	public static final String ALL_OF_ATTR = "allOf";
 
 	private Tags() {
 		// as an indication that this is a static class

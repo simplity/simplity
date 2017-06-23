@@ -24,10 +24,10 @@ package org.simplity.rest;
 
 import java.io.File;
 
-import org.simplity.json.JSONArray;
 import org.simplity.json.JSONObject;
 import org.simplity.kernel.Tracer;
 import org.simplity.kernel.file.FileManager;
+import org.simplity.kernel.util.JsonUtil;
 
 /**
  * static class that gets swagger/openApi for a given url
@@ -194,21 +194,7 @@ public class Operations {
 		/*
 		 * for run-time efficiency, we substitute refs with actual JSON
 		 */
-		JSONObject defs = json.optJSONObject(Tags.DEFS_ATTR);
-		if (defs != null) {
-			Tracer.trace("We found " + defs.length() + " definitions");
-			/*
-			 * defs may contain refs. substitute the first
-			 */
-			replaceRefs(defs, defs);
-			/*
-			 * replace refs in rest of the api
-			 */
-			replaceRefs(json, defs);
-		} else {
-			Tracer.trace("No definitions in this api");
-		}
-
+		JsonUtil.dereference(json);
 		String basePath = json.optString(Tags.BASE_PATH_ATTR, null);
 		String moduleName = json.optString(Tags.MODULE_ATTR, null);
 		loadAnApi(paths, basePath, moduleName);
@@ -269,111 +255,15 @@ public class Operations {
 		return result;
 	}
 
-	/**
-	 * find internal references and replace them with actual objects
-	 *
-	 * @param json
-	 * @param definitions
-	 *
-	 */
-	private static void replaceRefs(JSONObject json, JSONObject definitions) {
-		if (json == null || json.length() == 0) {
-			return;
-		}
-
-		for (String key : json.keySet()) {
-			Object obj = json.get(key);
-			if (obj instanceof JSONObject) {
-				JSONObject jsonObj = (JSONObject) obj;
-				String ref = getRef(jsonObj);
-				if (ref == null) {
-					/*
-					 * normal JSON. Recurse to inspect it further
-					 */
-					replaceRefs(jsonObj, definitions);
-				} else {
-					/*
-					 * needs replacement
-					 */
-					jsonObj = definitions.optJSONObject(ref);
-					if (jsonObj == null) {
-						Tracer.trace("defintion for " + ref + " not found. reference replaced with an empty object");
-						jsonObj = new JSONObject();
-					}
-					Tracer.trace("Replacing " + ref);
-					json.put(key, jsonObj);
-				}
-			} else if (obj instanceof JSONArray) {
-				replaceRefs((JSONArray) obj, definitions);
-			}
-		}
-	}
 
 	/**
-	 * find internal references and replace them with actual objects
 	 *
-	 * @param array
-	 * @param definitions
-	 *
+	 * @param args
 	 */
-	private static void replaceRefs(JSONArray array, JSONObject definitions) {
-		if (array == null) {
-			return;
-		}
-		int nbr = array.length();
-		for (int i = 0; i < nbr; i++) {
-			Object obj = array.get(i);
-			if (obj instanceof JSONObject) {
-				JSONObject jsonObj = (JSONObject) obj;
-				String ref = getRef(jsonObj);
-				if (ref == null) {
-					/*
-					 * it is a normal JSON object. recurse and replace
-					 */
-					replaceRefs(jsonObj, definitions);
-				} else {
-					/*
-					 * it is a ref object. replace this with its actual josn
-					 * object
-					 */
-					jsonObj = definitions.optJSONObject(ref);
-					if (jsonObj == null) {
-						Tracer.trace("defintion for " + ref + " not found. reference replaced with an empty object");
-						jsonObj = new JSONObject();
-					}
-					Tracer.trace("Replacing " + ref + " at position " + i);
-					array.put(i, jsonObj);
-				}
-			} else if (obj instanceof JSONArray) {
-				replaceRefs((JSONArray) obj, definitions);
-			}
-		}
-	}
-
-	/**
-	 * @param jsonObj
-	 * @return attribute name to be referred to, if this is a ref-object. FOr
-	 *         example if this object is {"$ref": "#/definitions/pets"} this
-	 *         method returns "pets"
-	 */
-	private static String getRef(JSONObject jsonObj) {
-		if (jsonObj == null || jsonObj.length() != 1) {
-			return null;
-		}
-		String ref = jsonObj.optString(Tags.REF_ATTR, null);
-		if (ref == null) {
-			return null;
-		}
-		if (ref.indexOf(Tags.REF_START) != 0) {
-			Tracer.trace("$ref is to be set to a value starting with " + Tags.REF_START);
-			return null;
-		}
-		Tracer.trace("Found a ref entry for " + ref);
-		return ref.substring(Tags.REF_START.length());
-	}
-
 	public static void main(String[] args) {
 		String rootFolder = "C:/repos/simplity/test/WebContent/WEB-INF/api/";
+		loadFromFile(rootFolder+"junk.json");
+		/*
 		loadAll(rootFolder);
 		JSONObject params = new JSONObject();
 		Operation spec = getServiceSpec("/app/troubleTicket/1234", "get", params);
@@ -382,7 +272,7 @@ public class Operations {
 		} else {
 			System.out.println("ServiceName is " + spec.getServiceName());
 			System.out.println("params is " + params.toString(2));
-		}
+		}*/
 	}
 	/*
 	 * 1. parameters and responses at the root level to be used as reference

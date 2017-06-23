@@ -22,7 +22,9 @@
 
 package org.simplity.rest.param;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -64,16 +66,28 @@ public class ObjectParameter extends Parameter {
 		 * just a safety. valid values is not valid for this type
 		 */
 		this.validValues = null;
-
-		JSONObject obj = paramSpec.optJSONObject(Tags.SCHEMA_ATTR);
-		if (obj == null) {
-			throw new ApplicationError("schema specification is missing for " + this.name);
+		String text = paramSpec.optString(Tags.REQUIRED_ATTR, null);
+		Set<String> requiredParams = null;
+		if(text != null && text.isEmpty() == false){
+			requiredParams = new HashSet<String>();
+			for(String part : text.split(",")){
+				requiredParams.add(part.trim());
+			}
 		}
-		int nbrItems = obj.length();
+
+		JSONObject props = paramSpec.optJSONObject(Tags.PROPERTIES_ATTR);
+		if (props == null) {
+			throw new ApplicationError("Attributes are mssing for object-parameter " + this.name + " with josn as " + paramSpec.toString());
+		}
+		int nbrItems = props.length();
 		this.items = new Parameter[nbrItems];
 		int i = 0;
-		for (String key : obj.keySet()) {
-			this.items[i] = Parameter.parse(key, obj.getJSONObject(key));
+		for (String key : props.keySet()) {
+			Parameter p  = Parameter.parse(key, props.getJSONObject(key));
+			if(requiredParams != null && requiredParams.contains(key)){
+				p.enableRequired();
+			}
+			this.items[i] = p;
 			i++;
 		}
 		this.minItems = paramSpec.optInt(Tags.MIN_ITEMS_ATT, 0);

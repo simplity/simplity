@@ -67,7 +67,14 @@ public abstract class Parameter {
 	private static ParameterType getParameterType(JSONObject obj) {
 		String text = obj.optString(Tags.TYPE_ATTR, null);
 		if (text == null) {
-			throw new ApplicationError("Missing type attribute for a parameter");
+			/*
+			 * is this all-of
+			 */
+			JSONArray allOf = obj.optJSONArray(Tags.ALL_OF_ATTR);
+			if(allOf == null){
+				throw new ApplicationError("Missing type/schema attribute for a data item");
+			}
+			throw new ApplicationError("We are yet to implement allOf feature. Please contact support team");
 		}
 		ParameterType tp = ParameterType.valueOf(text.toUpperCase());
 		if (tp == null) {
@@ -225,5 +232,13 @@ public abstract class Parameter {
 			writer.key(this.name);
 		}
 		writer.value(data);
+	}
+
+	/**
+	 * make this parameter mandatory
+	 */
+	public void enableRequired() {
+		this.isRequired = true;
+
 	}
 }

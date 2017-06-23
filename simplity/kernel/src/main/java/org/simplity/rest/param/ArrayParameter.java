@@ -65,7 +65,7 @@ public class ArrayParameter extends Parameter {
 			}
 			if (this.colnType == CollectionType.multi) {
 				Tracer.trace(
-						"We handle multi-format array in query and form fields while forming input Json, and hence this attribute is ignored and an array value is assumed");
+						"We handle multi-format array in query and form fields while form input Json, and hence this attribute is ignored and an array value is assumed");
 				this.colnType = null;
 			}
 		}

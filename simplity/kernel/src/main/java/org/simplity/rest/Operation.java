@@ -64,7 +64,6 @@ public class Operation {
 	private Parameter[] qryParameters;
 	private Parameter[] headerParameters;
 	private Parameter[] pathParameters;
-	private boolean bodyIsFormData;
 	private String bodyFieldName;
 	private ServiceTranslator translator;
 
@@ -143,20 +142,32 @@ public class Operation {
 
 		for (Object obj : params) {
 			JSONObject json = (JSONObject) obj;
+			String fieldName = json.optString(Tags.PARAM_NAME_ATTR, null);
+			Parameter parm;
 			String pin = json.optString(Tags.IN_ATTR);
-			Parameter parm = Parameter.parse(json);
-			if (Tags.IN_BODY.equals(pin) || Tags.IN_FORM.equals(pin)) {
-				if (this.bodyParameter == null) {
-					this.bodyIsFormData = Tags.IN_FORM.equals(pin);
-					if (RestContext.getContext().retainBodyAsObject()) {
-						this.bodyFieldName = parm.getName();
-					}
-
-					this.bodyParameter = parm;
-				} else {
+			if (Tags.IN_BODY.equals(pin)) {
+				if (this.bodyParameter != null) {
 					throw new ApplicationError("More than one body field defined for operation " + this.serviceName);
 				}
-			} else if (Tags.IN_QUERY.equals(pin)) {
+				/*
+				 * body has schema, and not a parameter
+				 */
+				json = json.getJSONObject(Tags.SCHEMA_ATTR);
+				if (json == null) {
+					throw new ApplicationError(
+							"schema attribute missing for body parameter in operation " + this.serviceName);
+				}
+
+				if (RestContext.getContext().retainBodyAsObject()) {
+					this.bodyFieldName = fieldName;
+				}
+
+				this.bodyParameter = Parameter.parse(fieldName, json);
+				continue;
+			}
+
+			parm = Parameter.parse(json);
+			if (Tags.IN_QUERY.equals(pin)) {
 				if (qry == null) {
 					qry = new ArrayList<Parameter>();
 				}
@@ -266,8 +277,6 @@ public class Operation {
 		JSONObject bodyData = null;
 		if (this.bodyParameter == null) {
 			bodyData = new JSONObject();
-		} else if (this.bodyIsFormData) {
-			bodyData = HttpUtil.getFormAsJson(req, null);
 		} else {
 			bodyData = HttpUtil.getPayloadAsJson(req, null);
 		}

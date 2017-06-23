@@ -1070,4 +1070,148 @@ public class JsonUtil {
 		return toJson;
 	}
 
+	/**
+	 * look for internal $ref attributes and de-reference them inside the json
+	 *
+	 * @param json
+	 *            a json object that may contain schema references within the
+	 *            doc.
+	 */
+	public static void dereference(JSONObject json) {
+		if (json == null) {
+			return;
+		}
+
+		JSONObject defs = json.optJSONObject("definitions");
+		if (defs == null) {
+			Tracer.trace("No definitions in this json");
+			return;
+		}
+		/*
+		 * defs may contain refs. substitute them first
+		 */
+		replaceRefs(defs, defs, true);
+		/*
+		 * replace refs in rest of the api
+		 */
+		replaceRefs(json, defs, false);
+	}
+
+	private static final String REF = "$ref";
+	private static final String REF_PREFIX = "#/definitions/";
+	private static final int REF_PREFIX_LEN = REF_PREFIX.length();
+
+	/**
+	 * find internal references in json and de-reference them from definitions
+	 *
+	 * @param parentJson
+	 *            that may have "$ref" keys
+	 * @param definitions
+	 *            object that has all the definitions for de-referencing
+	 *
+	 */
+	private static void replaceRefs(JSONObject parentJson, JSONObject definitions, boolean forRefs) {
+		if (parentJson.length() == 0) {
+			return;
+		}
+
+		for (String key : parentJson.keySet()) {
+			Object obj = parentJson.get(key);
+			if (obj == null) {
+				continue;
+			}
+			if (obj instanceof JSONObject) {
+				Object sub = getSubstitution((JSONObject) obj, definitions, forRefs);
+				if (sub != null) {
+					parentJson.put(key, sub);
+				}
+				continue;
+			}
+			if (obj instanceof JSONArray) {
+				replaceRefs((JSONArray) obj, definitions, forRefs);
+			}
+		}
+	}
+
+	/**
+	 * find internal references and replace them with actual objects
+	 *
+	 * @param array
+	 * @param definitions
+	 * @param forRefs
+	 *            if we are substituting within refs, we have to go recursively
+	 *            inside defs
+	 *
+	 */
+	private static void replaceRefs(JSONArray array, JSONObject definitions, boolean forRefs) {
+		int nbr = array.length();
+		for (int i = 0; i < nbr; i++) {
+			Object obj = array.get(i);
+			if (obj == null) {
+				continue;
+			}
+
+			if (obj instanceof JSONObject) {
+				Object sub = getSubstitution((JSONObject) obj, definitions, forRefs);
+				if (sub != null) {
+					array.put(i, sub);
+				}
+				continue;
+			}
+
+			if (obj instanceof JSONArray) {
+				replaceRefs((JSONArray) obj, definitions, forRefs);
+			}
+		}
+	}
+
+	private static Object getSubstitution(JSONObject childJson, JSONObject definitions, boolean forRefs) {
+		String ref = getRef(childJson);
+		if (ref == null) {
+			/*
+			 * normal JSON. Recurse to inspect it further
+			 */
+			replaceRefs(childJson, definitions, forRefs);
+			return null;
+		}
+		/*
+		 * get the object to substitute
+		 */
+		Object subObj = definitions.opt(ref);
+		if (subObj == null) {
+			Tracer.trace("defintion for " + ref + " not found. reference replaced with an empty object");
+			subObj = new JSONObject();
+		} else if (forRefs) {
+			/*
+			 * we may have $refs within this as well!!
+			 */
+			if (subObj instanceof JSONObject) {
+				replaceRefs((JSONObject) subObj, definitions, forRefs);
+			} else if (subObj instanceof JSONObject) {
+				replaceRefs((JSONArray) subObj, definitions, forRefs);
+			}
+		}
+		Tracer.trace("Replacing " + ref);
+		return subObj;
+	}
+
+	/**
+	 * @param jsonObj
+	 * @return attribute name to be referred to, if this is a ref-object. FOr
+	 *         example if this object is {"$ref": "#/definitions/pets"} this
+	 *         method returns "pets"
+	 */
+	private static String getRef(JSONObject jsonObj) {
+		String ref = jsonObj.optString(REF, null);
+		if (ref == null) {
+			return null;
+		}
+		if (ref.indexOf(REF_PREFIX) != 0) {
+			Tracer.trace("$ref is to be set to a value starting with " + REF_PREFIX);
+			return null;
+		}
+		Tracer.trace("Found a ref entry for " + ref);
+		return ref.substring(REF_PREFIX_LEN);
+	}
+
 }
