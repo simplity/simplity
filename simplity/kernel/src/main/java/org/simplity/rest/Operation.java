@@ -36,19 +36,22 @@ import org.simplity.kernel.FormattedMessage;
 import org.simplity.kernel.Tracer;
 import org.simplity.kernel.util.HttpUtil;
 import org.simplity.kernel.util.JsonUtil;
+import org.simplity.rest.param.ArrayParameter;
+import org.simplity.rest.param.ObjectParameter;
 import org.simplity.rest.param.Parameter;
 import org.simplity.service.ServiceProtocol;
 
 /**
- * service specification based on Open API for a given operation.
- * This is a dummy wrapper on the JSON object returned by api
+ * specification for an operation based on Open API/swgger.
+ *
  *
  * @author simplity.org
  *
  */
 public class Operation {
 	/**
-	 * service name that this operation maps to.
+	 * service name that this operation maps to. This is calculated/determined
+	 * based on logic, if it is not explicitly set
 	 */
 	private String serviceName;
 	/**
@@ -142,7 +145,8 @@ public class Operation {
 
 		for (Object obj : params) {
 			JSONObject json = (JSONObject) obj;
-			String fieldName = json.optString(Tags.PARAM_NAME_ATTR, null);
+			String parmName = json.optString(Tags.PARAM_NAME_ATTR, null);
+			String fieldName = json.optString(Tags.FIELD_NAME_ATTR, parmName);
 			Parameter parm;
 			String pin = json.optString(Tags.IN_ATTR);
 			if (Tags.IN_BODY.equals(pin)) {
@@ -150,7 +154,7 @@ public class Operation {
 					throw new ApplicationError("More than one body field defined for operation " + this.serviceName);
 				}
 				/*
-				 * body has schema, and not a parameter
+				 * body has schema, and not type attribue
 				 */
 				json = json.getJSONObject(Tags.SCHEMA_ATTR);
 				if (json == null) {
@@ -158,11 +162,15 @@ public class Operation {
 							"schema attribute missing for body parameter in operation " + this.serviceName);
 				}
 
-				if (RestContext.getContext().retainBodyAsObject()) {
+				this.bodyParameter = Parameter.parse(parmName, fieldName, json);
+				if (this.bodyParameter instanceof ObjectParameter == false
+						|| RestContext.getContext().retainBodyAsObject()) {
+					/*
+					 * At run time, this parameter is to be added as an attribute of root data object
+					 */
 					this.bodyFieldName = fieldName;
 				}
 
-				this.bodyParameter = Parameter.parse(fieldName, json);
 				continue;
 			}
 
@@ -219,15 +227,12 @@ public class Operation {
 				throw new ApplicationError("Response object is null for " + code);
 			}
 			char c = code.charAt(0);
-			if (c == '5' || c == '4') {
-				failures.add(new Response(code, obj));
-			} else if (c == '2') {
+			if (c == '2' || c == '3') {
 				successes.add(new Response(code, obj));
 			} else if (code.equals("default")) {
 				this.defaultResponse = new Response(null, obj);
 			} else {
-				Tracer.trace("Operation " + this.serviceName + "will ignore response code " + code
-						+ ", assuming that it will be managed by the controller/agent.");
+				failures.add(new Response(code, obj));
 			}
 		}
 		int nbr = successes.size();
@@ -272,24 +277,31 @@ public class Operation {
 			List<FormattedMessage> messages) throws IOException {
 		/*
 		 * get body/form data into a json first. Of course it would be empty if
-		 * there is no body
+		 * there is no body. As per Swagger, body data can even be a
+		 * primitive.Hence we make no assumption about its type
 		 */
-		JSONObject bodyData = null;
-		if (this.bodyParameter == null) {
-			bodyData = new JSONObject();
-		} else {
-			bodyData = HttpUtil.getPayloadAsJson(req, null);
-		}
-
+		String payload = HttpUtil.readBody(req);
 		if (this.acceptAll) {
-			Tracer.trace("We are to accept all data. we assume there are no data in hrader");
+			Tracer.trace("We are to accept all data. we assume there are no data in header");
+			if (payload != null) {
+				try {
+					JSONObject bodyJson = new JSONObject(payload);
+					if (this.bodyFieldName != null) {
+						serviceData.put(this.bodyFieldName, bodyJson);
+					} else {
+						JsonUtil.copyAll(serviceData, bodyJson);
+					}
+				} catch (Exception e) {
+					Tracer.trace("payload is not a valid json. ignored");
+				}
+			}
 			HttpUtil.parseQueryString(req, serviceData);
 			if (pathData != null) {
 				JsonUtil.copyAll(serviceData, pathData);
 			}
 		} else {
 			if (this.bodyParameter != null) {
-				bodyData = (JSONObject) this.bodyParameter.validate(bodyData, messages);
+				this.parseBody(serviceData, payload, messages);
 			}
 			if (this.qryParameters != null) {
 				this.parseAndValidate(this.qryParameters, HttpUtil.parseQueryString(req, null), serviceData, messages);
@@ -298,29 +310,68 @@ public class Operation {
 				if (pathData == null) {
 					this.parseAndValidate(this.pathParameters, new JSONObject(), serviceData, messages);
 				} else {
-					this.parseAndValidate(this.pathParameters, bodyData, serviceData, messages);
+					this.parseAndValidate(this.pathParameters, pathData, serviceData, messages);
 				}
 			}
 			if (this.headerParameters != null) {
 				this.parseAndValidateHeaderFields(req, serviceData, messages);
 			}
-			/*
-			 * do we have errors?
-			 */
-			if (messages.size() > 0) {
-				return null;
-			}
 		}
-		if (this.bodyFieldName == null) {
-			JsonUtil.copyAll(serviceData, bodyData);
-		} else {
-			serviceData.put(this.bodyFieldName, serviceData);
+		/*
+		 * do we have errors?
+		 */
+		if (messages.size() > 0) {
+			return null;
 		}
 
 		if (this.translator == null) {
 			return this.serviceName;
 		}
 		return this.translator.translateInput(this.serviceName, serviceData);
+	}
+
+	/**
+	 * parse pay load into data
+	 *
+	 * @param serviceData
+	 * @param payload
+	 * @param messages
+	 */
+	private void parseBody(JSONObject serviceData, String payload, List<FormattedMessage> messages) {
+		Object body = payload;
+		String obj = "Object";
+		try {
+			/*
+			 * parse body if required into object/array
+			 */
+			if (this.bodyParameter instanceof ObjectParameter) {
+				Tracer.trace("body is being parsed as json object");
+				body = new JSONObject(payload);
+			} else if (this.bodyParameter instanceof ArrayParameter) {
+				if (((ArrayParameter) this.bodyParameter).expectsTextValue() == false) {
+					Tracer.trace("body is being parsed as josn array");
+					obj = "Array";
+					body = new JSONArray(payload);
+				} else {
+					Tracer.trace("payload is treated as serialized text value for an array field");
+				}
+			} else {
+				Tracer.trace("payload is treated as a value for a single field");
+			}
+		} catch (Exception e) {
+			messages.add(new FormattedMessage("Request body is not well-formed JSON " + obj));
+			return;
+		}
+
+		body = this.bodyParameter.validate(body, messages);
+		if (body == null) {
+			return;
+		}
+		if (this.bodyFieldName == null) {
+			JsonUtil.copyAll(serviceData, (JSONObject) body);
+		} else {
+			serviceData.put(this.bodyFieldName, body);
+		}
 	}
 
 	/**
@@ -334,13 +385,11 @@ public class Operation {
 	private void parseAndValidateHeaderFields(HttpServletRequest req, JSONObject outData,
 			List<FormattedMessage> messages) {
 		for (Parameter parm : this.headerParameters) {
-			String fieldName = parm.getName();
-			Object obj = parm.validate(req.getHeader(fieldName), messages);
+			Object obj = parm.validate(req.getHeader(parm.getName()), messages);
 			if (obj != null) {
-				outData.put(fieldName, obj);
+				outData.put(parm.getFieldName(), obj);
 			}
 		}
-
 	}
 
 	/**
@@ -361,24 +410,32 @@ public class Operation {
 	private void parseAndValidate(Parameter[] parms, JSONObject inData, JSONObject outData,
 			List<FormattedMessage> messages) {
 		for (Parameter parm : parms) {
-			String fieldName = parm.getName();
-			Object obj = parm.validate(inData.opt(fieldName), messages);
+			Object obj = parm.validate(inData.opt(parm.getName()), messages);
 			if (obj != null) {
-				outData.put(fieldName, obj);
+				outData.put(parm.getFieldName(), obj);
 			}
 		}
 	}
 
 	/**
-	 * writes response based on service output and service spec
+	 * writes response based on service output and service spec on successful
+	 * service execution
 	 *
 	 * @param resp
 	 * @param data
+	 * @param service
 	 * @throws IOException
 	 */
-	public void writeResponse(HttpServletResponse resp, JSONObject data) throws IOException {
+	public void writeResponse(HttpServletResponse resp, JSONObject data, String service) throws IOException {
+		if (this.translator != null) {
+			this.translator.translateOutput(service, data);
+		}
 		Response response = this.selectResponse(this.successResponses, data);
-		response.writeResponse(resp, data, this.bodyFieldName, this.sendAll);
+		if (response == null) {
+			response = Response.getDefaultForSuccess();
+			Tracer.trace("Default Success Response is used as we could not get any definition for success");
+		}
+		response.writeResponse(resp, data, this.sendAll);
 	}
 
 	private Response selectResponse(Response[] responses, JSONObject data) {
@@ -410,6 +467,10 @@ public class Operation {
 	 */
 	public void writeResponse(HttpServletResponse resp, FormattedMessage[] messages) throws IOException {
 		Response response = this.selectResponse(this.failureResponses, null);
+		if (response == null) {
+			response = Response.getDefaultForFailure();
+			Tracer.trace("Default Failure Response is used as we could not get any definition for failure");
+		}
 		response.writeResponse(resp, messages);
 	}
 

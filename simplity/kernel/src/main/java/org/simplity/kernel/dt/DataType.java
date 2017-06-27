@@ -72,6 +72,10 @@ public abstract class DataType implements Component {
 	public static final String DEFAULT_DATE = "_date";
 
 	/**
+	 * default data type name for date
+	 */
+	public static final String DEFAULT_DATE_TIME = "_dateTime";
+	/**
 	 * default data type name for integral number
 	 */
 	public static final String DEFAULT_NUMBER = "_number";

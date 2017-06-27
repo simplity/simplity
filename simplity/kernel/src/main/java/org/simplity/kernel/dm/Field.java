@@ -70,14 +70,6 @@ public class Field {
 	String dataType;
 
 	/**
-	 *
-	 * @param dataType
-	 */
-	public void setDataType(String dataType) {
-		this.dataType = dataType;
-	}
-
-	/**
 	 * If this is a column in the database, and we use a different naming
 	 * convention for db, this is the way to map field names to column names.
 	 * Defaults to name
@@ -242,6 +234,13 @@ public class Field {
 		return this.updateable;
 	}
 
+	/**
+	 *
+	 * @param dataType
+	 */
+	public void setDataType(String dataType) {
+		this.dataType = dataType;
+	}
 	/**
 	 * @return false if this is one of the standard fields that are not to be
 	 *         touched retained once inserted

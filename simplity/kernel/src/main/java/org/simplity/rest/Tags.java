@@ -133,7 +133,7 @@ public class Tags {
 	/**
 	 * default value. Used only if it is optional
 	 */
-	public static final String DEFAULT_ATT = "default";
+	public static final String DEFAULT_ATTR = "default";
 
 	/**
 	 * regex pattern of a text parameter

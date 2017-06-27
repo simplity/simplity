@@ -44,9 +44,12 @@ public class NumberParameter extends Parameter {
 	 * @param paramSpec
 	 * @param name
 	 */
-	protected NumberParameter(String name, JSONObject paramSpec) {
+	protected NumberParameter(String name, String fieldName, JSONObject paramSpec) {
 		this(paramSpec);
 		this.name = name;
+		if(fieldName != null){
+			this.fieldName = fieldName;
+		}
 	}
 	/**
 	 * construct based on api spec

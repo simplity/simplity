@@ -328,4 +328,9 @@ public abstract class ServiceProtocol {
 	 */
 
 	public static final String HTTP_RESP_CODE_FIELD_NAME = "_httpResponseCode";
+
+	/**
+	 * in case client sends data as non-json object, that would be extracted to inData with this name, unless there is any other name specified using any of the features available with the client agent
+	 */
+	public static final String DEFAULT_BODY_FIELD_NAME = "_body";
 }

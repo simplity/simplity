@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 simplity.org
+ * Copyright (c) 2016 simplity.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,60 +20,31 @@
  * SOFTWARE.
  */
 
-package org.simplity.rest.param;
-
-import java.util.List;
+package org.simplity.rest;
 
 import org.simplity.json.JSONObject;
-import org.simplity.kernel.FormattedMessage;
 
 /**
  * @author simplity.org
  *
  */
-public class BooleanParameter extends Parameter {
-	private static String[] TRUE_VALUES = {"true", "1", "yes"};
-	private static String[] FALSE_VALUES = {"false", "0", "no"};
+public class TestTranslator implements ServiceTranslator {
 
-	/**
-	 * spec when name is not part of it, For example inside a schema
-	 * @param paramSpec
-	 * @param fieldName
-	 * @param name
+	/* (non-Javadoc)
+	 * @see org.simplity.rest.ServiceTranslator#translateInput(java.lang.String, org.simplity.json.JSONObject)
 	 */
-	protected BooleanParameter(String name, String fieldName, JSONObject paramSpec) {
-		super(paramSpec);
-	}
-	/**
-	 * construct based on api spec
-	 * @param paramSpec
-	 */
-	protected BooleanParameter(JSONObject paramSpec){
-		super(paramSpec);
+	@Override
+	public String translateInput(String serviceName, JSONObject params) {
+		return "junk";
 	}
 
 	/* (non-Javadoc)
-	 * @see org.simplity.rest.parm.Parameter#validate(java.lang.Object, java.util.List)
+	 * @see org.simplity.rest.ServiceTranslator#translateOutput(java.lang.String, org.simplity.json.JSONObject)
 	 */
 	@Override
-	public Object doValidate(Object value, List<FormattedMessage> messages) {
-		if(value instanceof Boolean ){
-			return value;
-		}
+	public void translateOutput(String serviceName, JSONObject params) {
+		// TODO Auto-generated method stub
 
-		String val = value.toString();
-		for(String text : TRUE_VALUES){
-			if(text.equals(val)){
-				return Boolean.TRUE;
-			}
-		}
-		for(String text : FALSE_VALUES){
-			if(text.equals(val)){
-				return Boolean.FALSE;
-			}
-		}
-
-		return this.invalidValue(messages);
 	}
 
 }

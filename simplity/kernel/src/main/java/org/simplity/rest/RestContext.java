@@ -63,13 +63,13 @@ public class RestContext {
 	 * http response code to be set when a service returns with success, and the
 	 * operation spec can not determine response code.
 	 */
-	String defaultSuccessResponseCode = null;
+	int defaultSuccessResponseCode = 200;
 
 	/**
 	 * http response code to be set when a service returns with failure, and the
 	 * operation spec can not determine response code.
 	 */
-	String defaultFailureResponseCode = null;
+	int defaultFailureResponseCode = 422;
 
 	/**
 	 * mapping services and input/output between rest definitions and service
@@ -94,14 +94,14 @@ public class RestContext {
 	/**
 	 * @return the defaultFailureResponseCode
 	 */
-	public String getDefaultFailureResponseCode() {
+	public int getDefaultFailureResponseCode() {
 		return this.defaultFailureResponseCode;
 	}
 
 	/**
 	 * @return the defaultSuccessResponseCode
 	 */
-	public String getDefaultSuccessResponseCode() {
+	public int getDefaultSuccessResponseCode() {
 		return this.defaultSuccessResponseCode;
 	}
 

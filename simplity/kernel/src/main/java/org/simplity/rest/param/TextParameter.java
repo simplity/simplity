@@ -40,11 +40,15 @@ public class TextParameter extends Parameter {
 
 	/**
 	 * @param name
+	 * @param fieldName
 	 * @param parameterSpec
 	 */
-	public TextParameter(String name, JSONObject parameterSpec) {
+	public TextParameter(String name, String fieldName, JSONObject parameterSpec) {
 		this(parameterSpec);
 		this.name = name;
+		if(fieldName != null){
+			this.fieldName = fieldName;
+		}
 	}
 	/**
 	 * construct based on api spec

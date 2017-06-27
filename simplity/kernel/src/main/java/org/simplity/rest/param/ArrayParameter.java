@@ -60,8 +60,7 @@ public class ArrayParameter extends Parameter {
 		if (txt != null) {
 			this.colnType = CollectionType.valueOf(txt);
 			if (this.colnType == null) {
-				throw new ApplicationError(
-						"We do not understand array collection type " + txt + " as is used for parameter " + this.name);
+				throw new ApplicationError("Parameter " +this.name + " uses an invalid collectionormat value of " + txt );
 			}
 			if (this.colnType == CollectionType.multi) {
 				Tracer.trace(
@@ -74,7 +73,7 @@ public class ArrayParameter extends Parameter {
 		if (obj == null) {
 			throw new ApplicationError("items specification is missing for array field " + this.name);
 		}
-		this.item = Parameter.parse(this.name + "[item]", obj);
+		this.item = Parameter.parse(this.name + "[item]", null, obj);
 		this.uniqueItem = paramSpec.optBoolean(Tags.UNIQUE_ATT, false);
 		this.minItems = paramSpec.optInt(Tags.MIN_ITEMS_ATT, 0);
 		this.maxItems = paramSpec.optInt(Tags.MAX_ITEMS_ATT, 0);
@@ -82,11 +81,15 @@ public class ArrayParameter extends Parameter {
 
 	/**
 	 * @param name
+	 * @param fieldName
 	 * @param parameterSpec
 	 */
-	public ArrayParameter(String name, JSONObject parameterSpec) {
+	public ArrayParameter(String name, String fieldName, JSONObject parameterSpec) {
 		this(parameterSpec);
 		this.name = name;
+		if(fieldName != null){
+			this.fieldName = fieldName;
+		}
 	}
 
 	/*
@@ -104,7 +107,7 @@ public class ArrayParameter extends Parameter {
 			 * this is a josn object
 			 */
 			if (value instanceof JSONArray == false) {
-				Tracer.trace("Field " + this.name + " expects as an array but got " + value.getClass().getName());
+				Tracer.trace("Field " + this.name + " expects an array but got " + value.getClass().getName());
 				return this.invalidValue(messages);
 			}
 			arr = (JSONArray) value;
@@ -178,12 +181,14 @@ public class ArrayParameter extends Parameter {
 			 * this is an array of values
 			 */
 			writer.array();
-			if (data instanceof JSONArray) {
-				for (Object ele : (JSONArray) data) {
-					this.item.toWriter(writer, ele, false);
+			if (data != null) {
+				if (data instanceof JSONArray) {
+					for (Object ele : (JSONArray) data) {
+						this.item.toWriter(writer, ele, false);
+					}
+				} else {
+					this.item.toWriter(writer, data, false);
 				}
-			} else {
-				this.item.toWriter(writer, data, false);
 			}
 			writer.endArray();
 			return;
@@ -191,11 +196,13 @@ public class ArrayParameter extends Parameter {
 		/**
 		 * this is a serialized text field
 		 */
-		String text;
-		if (data instanceof JSONArray) {
-			text = this.colnType.arrayToText((JSONArray) data);
-		} else {
-			text = data.toString();
+		String text = null;
+		if (data != null) {
+			if (data instanceof JSONArray) {
+				text = this.colnType.arrayToText((JSONArray) data);
+			} else {
+				text = data.toString();
+			}
 		}
 		writer.value(text);
 	}
@@ -228,8 +235,38 @@ public class ArrayParameter extends Parameter {
 	}
 
 	enum CollectionType {
-		csv(","), ssv(" "), tsv("\t"), pipes("|"), multi("&");
-		private String sep = ",";
+		csv(","), ssv(" ") {
+			@Override
+			String[] textToArray(String txt) {
+				/*
+				 * we have to accommodate multiple spaces
+				 */
+				String[] arr = txt.split(this.sep);
+				int nbr = 0;
+				for (String s : arr) {
+					if (s.isEmpty()) {
+						nbr++;
+					}
+				}
+				if (nbr == 0) {
+					return arr;
+				}
+				nbr = arr.length - nbr;
+				String[] newArr = new String[nbr];
+				int i = 0;
+				for (String s : arr) {
+					if (!s.isEmpty()) {
+						newArr[i] = s;
+						i++;
+					}
+				}
+				return newArr;
+
+			}
+
+		},
+		tsv("\t"), pipes("|"), multi("&");
+		protected String sep = ",";
 
 		CollectionType(String sep) {
 			this.sep = sep;
@@ -250,5 +287,21 @@ public class ArrayParameter extends Parameter {
 			sbf.setLength(sbf.length() - 1);
 			return sbf.toString();
 		}
+	}
+
+	/**
+	 * @return true if this parameter expects a serialized text field as value
+	 *         rather than an array of values
+	 */
+	public boolean expectsTextValue() {
+		return this.colnType != null;
+	}
+
+	/**
+	 * @param data
+	 * @return serialized text for entries in the array
+	 */
+	public Object serialize(JSONArray data) {
+		return this.colnType.arrayToText(data);
 	}
 }

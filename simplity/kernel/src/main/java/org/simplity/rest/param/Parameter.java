@@ -56,12 +56,14 @@ public abstract class Parameter {
 	 * parse swagger document node into an appropriate Parameter
 	 *
 	 * @param name
-	 *
+	 *            as used in swagger
+	 * @param fieldName
+	 *            if service uses a different name
 	 * @param param
 	 * @return parameter as per the specification
 	 */
-	public static Parameter parse(String name, JSONObject param) {
-		return getParameterType(param).parseParameter(name, param);
+	public static Parameter parse(String name, String fieldName, JSONObject param) {
+		return getParameterType(param).parseParameter(name, fieldName, param);
 	}
 
 	private static ParameterType getParameterType(JSONObject obj) {
@@ -71,7 +73,7 @@ public abstract class Parameter {
 			 * is this all-of
 			 */
 			JSONArray allOf = obj.optJSONArray(Tags.ALL_OF_ATTR);
-			if(allOf == null){
+			if (allOf == null) {
 				throw new ApplicationError("Missing type/schema attribute for a data item");
 			}
 			throw new ApplicationError("We are yet to implement allOf feature. Please contact support team");
@@ -84,9 +86,16 @@ public abstract class Parameter {
 	}
 
 	/**
-	 * name of this parameter
+	 * name of this parameter as used by swagger for input/output
 	 */
 	protected String name;
+
+	/**
+	 * name as used by actual service. input parameter extracts data into this
+	 * name while output parameter extracts data using this name. Defaults to
+	 * name if this is not specified in the spec
+	 */
+	protected String fieldName;
 	/**
 	 * is this mandatory
 	 */
@@ -114,7 +123,8 @@ public abstract class Parameter {
 		 * for array item, name could be null as we recurse into it.
 		 */
 		this.name = paramSpec.optString(Tags.PARAM_NAME_ATTR, "array-item");
-		this.defaultValue = paramSpec.opt(Tags.DEFAULT_ATT);
+		this.fieldName = paramSpec.optString(Tags.FIELD_NAME_ATTR, this.name);
+		this.defaultValue = paramSpec.opt(Tags.DEFAULT_ATTR);
 		this.isRequired = paramSpec.optBoolean(Tags.REQUIRED_ATTR, false);
 
 		JSONArray vals = paramSpec.optJSONArray(Tags.ENUM_ATT);
@@ -134,9 +144,16 @@ public abstract class Parameter {
 	 * @param paramSpec
 	 * @param name
 	 */
-	protected Parameter(String name, JSONObject paramSpec) {
+	protected Parameter(String name, String fn, JSONObject paramSpec) {
 		this(paramSpec);
+		/*
+		 * passed name real name, but passed field name is used only if it is
+		 * non-null;
+		 */
 		this.name = name;
+		if (fn != null) {
+			this.fieldName = fn;
+		}
 	}
 
 	/**
@@ -144,6 +161,16 @@ public abstract class Parameter {
 	 */
 	public String getName() {
 		return this.name;
+	}
+
+	/**
+	 * @return name of the field. For an input parameter, this is the name with
+	 *         which data is to be written service data after extraction from
+	 *         input. For an output parameter, this is the to be used to extract
+	 *         data from service output.
+	 */
+	public String getFieldName() {
+		return this.fieldName;
 	}
 
 	/**
@@ -165,8 +192,9 @@ public abstract class Parameter {
 			return this.defaultValue;
 		}
 		if (this.validValues != null) {
+			String txt = value.toString();
 			for (Object obj : this.validValues) {
-				if (obj.equals(value)) {
+				if (obj.toString().equals(txt)) {
 					return value;
 				}
 			}
@@ -202,7 +230,8 @@ public abstract class Parameter {
 	 */
 	public void setHeader(HttpServletResponse resp, Object data) {
 		/*
-		 * this method works for all value-types. Array and Object need to over-ride this
+		 * this method works for all value-types. Array and Object need to
+		 * over-ride this
 		 */
 		if (data != null) {
 			resp.setHeader(this.name, data.toString());
@@ -216,17 +245,20 @@ public abstract class Parameter {
 	 * @param writer
 	 * @param data
 	 * @param asAttribute
-	 *            if this is true, then we write key,value pair, else we write just the value
+	 *            if this is true, then we write key,value pair, else we write
+	 *            just the value
 	 *            and not as an attribute.
 	 */
 	public void toWriter(JSONWriter writer, Object data, boolean asAttribute) {
 		/*
-		 * this method works for all value-types. Array and Object need to over-ride this
+		 * this method works for all value-types. Array and Object need to
+		 * over-ride this
 		 */
 
 		/*
 		 * do we write even if it is null? we are saying yes.
-		 * And, we are assuming that server is always right!! Why waste cpu cycles validating data
+		 * And, we are assuming that server is always right!! Why waste cpu
+		 * cycles validating data
 		 */
 		if (asAttribute) {
 			writer.key(this.name);

@@ -71,32 +71,7 @@ public class HttpUtil {
 	/**
 	 * @param req
 	 * @param existingJson
-	 *            if you want the values to be copied to this object. null if
-	 *            you want a new json to be created for the data
-	 * @return if existing json is non-null, it is returned. Else a new,
-	 *         non-null json is returned
-	 * @throws IOException
-	 */
-	public static JSONObject getPayloadAsJson(HttpServletRequest req, JSONObject existingJson) throws IOException {
-		String text = HttpUtil.readBody(req);
-		if (text == null || (text = text.trim()).isEmpty()) {
-			if (existingJson == null) {
-				return new JSONObject();
-			}
-			return existingJson;
-		}
-		JSONObject params = new JSONObject(text);
-		if (existingJson == null) {
-			return params;
-		}
-
-		return JsonUtil.copyAll(existingJson, params);
-	}
-
-	/**
-	 * @param req
-	 * @param existingJson
-	 *            if you want form fields o be copied t an existing json.null if
+	 *            if you want form fields to be copied to an existing json.null if
 	 *            you want a new one to be created for this.
 	 * @return json to which form fields, if any are copied to. it is
 	 *         existingJson if it were non-null. it is a new json object if

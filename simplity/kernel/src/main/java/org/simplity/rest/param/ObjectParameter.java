@@ -47,11 +47,15 @@ public class ObjectParameter extends Parameter {
 
 	/**
 	 * @param name
+	 * @param fieldName
 	 * @param parameterSpec
 	 */
-	public ObjectParameter(String name, JSONObject parameterSpec) {
+	public ObjectParameter(String name, String fieldName, JSONObject parameterSpec) {
 		this(parameterSpec);
 		this.name = name;
+		if(fieldName != null){
+			this.fieldName = fieldName;
+		}
 	}
 
 	/**
@@ -77,13 +81,13 @@ public class ObjectParameter extends Parameter {
 
 		JSONObject props = paramSpec.optJSONObject(Tags.PROPERTIES_ATTR);
 		if (props == null) {
-			throw new ApplicationError("Attributes are mssing for object-parameter " + this.name + " with josn as " + paramSpec.toString());
+			throw new ApplicationError("Attributes are missing for object-parameter " + this.name + " with josn as " + paramSpec.toString());
 		}
 		int nbrItems = props.length();
 		this.items = new Parameter[nbrItems];
 		int i = 0;
 		for (String key : props.keySet()) {
-			Parameter p  = Parameter.parse(key, props.getJSONObject(key));
+			Parameter p  = Parameter.parse(key, null, props.getJSONObject(key));
 			if(requiredParams != null && requiredParams.contains(key)){
 				p.enableRequired();
 			}
@@ -108,11 +112,10 @@ public class ObjectParameter extends Parameter {
 		JSONObject data = (JSONObject) value;
 		JSONObject result = new JSONObject();
 		for (Parameter item : this.items) {
-			String key = item.getName();
-			Object val = item.validate(data.opt(key), messages);
+			Object val = item.validate(data.opt(item.getName()), messages);
 
 			if (val != null) {
-				result.put(key, val);
+				result.put(item.getFieldName(), val);
 			}
 		}
 		/*
@@ -160,7 +163,7 @@ public class ObjectParameter extends Parameter {
 			}
 			JSONObject childData = (JSONObject) data;
 			for(Parameter item : this.items){
-				item.toWriter(writer, childData.opt(item.getName()), true);
+				item.toWriter(writer, childData.opt(item.getFieldName()), true);
 			}
 		}
 		writer.endObject();
@@ -182,7 +185,7 @@ public class ObjectParameter extends Parameter {
 			if(item instanceof ObjectParameter){
 				throw new ApplicationError("Field " + this.name + " is an object with an attribute named " + item.getName() + " as a child objecy in it. Such an embedded object data can not be used to set header values.");
 			}
-			item.setHeader(resp, json.opt(item.getName()));
+			item.setHeader(resp, json.opt(item.getFieldName()));
 		}
 	}
 

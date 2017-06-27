@@ -1,0 +1,93 @@
+
+A REST agent is developed that works as the agent/controller/gate-way between a RESTful client and standard simplity serviceAgent. Primary objective of this agent is to serve RESTful services/operations to client as per Swagger/open-api standards with no changes to services that may have already been implemented using sumplity features.
+
+For example, if we have all the services for pet-store example used by an Angulr-2 client using simplity by Following features are implemented for swagger/open-api.
+
+Swagger assumes modelling of APIs around entities and operation on entities. Also, the standard dwells heavily on HTTP protocol.
+
+Simplity assumes modelling at a much higher level. Higher as in "not assuming any specific protocol like HTTP"
+For example, simplity uses pur Service-oriented modelling. Every request is for a pre-determined service, identified by a service name that is assumed to be known to both client and server. In other words, client would request a service by its name. Simplity specifies input data requirements, in terms of data elements (name of fields) and their validatio requirements (like data type, min/max values etc..) However, it makes no assumption as to how this data is sent to server.
+A  Swagger standard has similr specification on data requiremnts, but it gets in to further details like whether the data is sent as part of query field, or as as part of path etc..
+
+REST agent manages these differences in modeling, and provides a smooth connectivity between a RSETful client and simplity services.
+
+Features are explained below.
+0. A RestContext is designed to set some default features. This is similar to Application.xml, but it is kept separate for the sake of modulrity. Some of these settings can be over-ridden at the swagger specifiction level. These are described at appropriate sub-section in this document.
+0.1 retainBodyAsObject - whether data object as received from client is added to service-input as an attribute, or its attributes are copied as attributes of root object.
+0.2 acceptAllData - if true, data specificaiton is ignored, and all input data is accetpted as it is to form the input for simplity service.
+0.3 sendAllData - if true, data returned by simplity service is sent to the client, ignoring swagger-specification of the response.
+0.4 defaultSuccessResponseCode - http response code to be used when such a code can not be explicitly deduced from swagger and the simplity service has succeeded
+0.5 defaultFailureResponseCode - http response code to be used when such a code can not be explicitly deduced from swagger and the simplity service has failed.
+0.6 serviceTranslator - interface to be used to translate input before and after calling simplity service.
+
+1. Path templating : RESTful client uses a url-convention where the entity that is beiing opertated may be identified with an id that is also part of the path.
+For example "http://blah.blah..../product/12345?a=b&a=c&c=d may be the path used with different methods like put, get, post, delete etc.. Path template for this url is /product/{productId} where productId is a field embedded into teh path. Rest agent has following features to manege this.
+
+1.1 map incoming URL path to a swagger operation id. Using swagger document structure, Rest-Agent first checks whether an operations collection is associted with this path template. If not found, an onvalid-path response is returned to the client.
+
+1.2 while mapping an incoming url to an operations collection, embedded fields are identified, and extracted for subsequent validation.
+
+1.3. operations colelction is checked for an object associated with the HTTP method invoked by the client. If such a method is not specified, then an error is sent back to the client.
+
+1.4 once an operation-object is associated with the incoinf request, input data is validated as per Parameters object (this is described later)
+
+1.5 if data vlidation errors are found, request retruned to client with error code.
+
+1.6 A sservice name is determined using the following logic.
+
+1.6.1 - if a simplity-specific attribute "x-serviceName" is found for this operation, then it is used as the service name. At the root level, a module prefix can be specified for all the service names in the document using simplity-specific attriubute named x-moduleName. So the service name is set as moduleName.serviceName in that case. for example, if "x-moduleName"="app.inventory", and "x-serviceName"="transferGoods", then serviceName is set to app.inventory.transferGoods.
+
+1.6.2 - Else, "operationId" attribute is used as serviceName if "x-serviceName" is absent. This is further qualified with module name as specified in 1.6.1. above. For example, if "operationId"="inventoryPost", then the service name would be "pp.inventory.inventoryPost"
+
+1.6.3 - Else, qualified path (baseBath + path) with method as suffix is used. path character '/' is replaced with '.' as per serviceName convention. for example "basePath"="/app/inventory", and path=/product/{productId}, then service name of rpost method would be "app.inventory.product.post"
+
+1.7 Service names as determined in 1.6 bove, and the service list exposed by simplity may not be one-to-ine. It is possible that the same operatio of swagger may be served by one of four different services, depending on the actual data being sent. To facilitate this, a ServiceTranslator interface is provided. A default is provided at the context, but every operation can specify a custom attribute "x-serviceTranslator" to use a specific class. This interface not only determines the service name, it may manipulate the inpuut data to map it to required input-spec of the simplity service. (The same translator is also used on the way out to modify output data to be responded back with)
+
+2. Input data validation. Rest agent validates input data as per swagger specification. Request is returned with errors without even cheking for a service in case of validation error. 
+
+2.1 top level parameters. Swagger allows specification of fieelds in path, query-string, header, form-data or body. Form-data is actually body that is formtted as per HTTP standards. Support for file is not implemented yet. There are restriction on the type of prameters based on the source.
+
+2.2 Data types supported : string, integer, number, boolean, array and object. file is not supported. int/long format for integer, float/double format for number, date/date-time format for text are supported. With this, we may assume that date and date-time data types re supported. binary and byte formates are not implemented for string. (will be done on a need basis)
+
+2.4 array can be input as a serialized text. All possible values of "collectionFormat" are supported.
+
+2.5 all validation attributes like minimum, maximum, pattern etc are supported for every data type.
+
+2.6 validtion process may be by-passed and all data accepted as they arrive with a custom attribute "x-acceptAllData". This may be set by deafult to all using acceptAllData=true at the restContext level.
+
+3 - data preparation. Simplity service expects a payload that has all the input data, irrespective of their location in the request. Also, swagger specification allows the entire body as a value-parameter like text or number. Simplity expects that the input data is always enclosed in an object. Rest agent manages to create an appropriate object based on swagger input.
+
+3.1 All parameters except body are organized as attributes in the root object with their specified field names. Any clash of names across field source would result in over-riding of values.
+
+3.2 If the field name used by service is different from what is specified in swagger, a custom attribute "x-fieldName" can be used. This attribute can be used for a parameter objetc, or a schema object. If field name is different from name for an input field, then data is expected from client as "name", but it is extracted into inputData as fiedName. Similarly, for an output parameter, service output woudl have used fieldName, but name is used in the http response.
+
+3.3 if a body parameter is not an object, then it is added as a name-value pair at the root object. If it is an object, then the attributes of this aobject are copied to the root object. However, this default behaviour can be changed by setting retainBodyAsObject=true for restContext.
+
+3.4 serviceTransaltor is invoked to re-format this data before calling simplity service.
+
+4. Service Response. Swagger may specify more than one responses for an operation, each response object is identified by teh HTTP response code. A simplity service has no response code concept. A standard field called "_statusRequest" has possible values "ok", or "error". (Another possible value is noLogin, but that is not relevant for swagger). That is, a simplity service has a success/failure code.
+
+4.1 response code of the form 2xx are assumed to be for success and the rest for failure. Also, there can be a "default", which is also assumed to be for success. 
+
+4.2 standard field name "_httpResponseCode" is defined for the service, or the translator to set the response code. If this is available, and if a response is defined for this code, then it is used.
+
+4.3 if the service has failed, then the first available failure-response is used. If no such response is specified, then the default failure response code set at restContext level is used.
+
+4.4 if the service has succeeded, then the first available success-response is used. It is unlikley that such a respoinse is not defined, in which case, the dfault code defaultSuccessResponseCode set at restContext is used.
+
+4.5 response body - swagger specification is used for success responses. If the body parameter is an object, then  retainBodyAsObject is used to determiine if the response parameters are available in the root object, or in an a child object with attribute name mathing the parameter name of the body. x-sendAllData may be used to ignore this specification and send all data as received from simplity service. sendAll is the only option for success if a relevant response object is not located in swagger.
+
+5.0 Authentication - Rest agent does not handle this directly. It is assumed that third-party utilities/libraries areused to set up authentication. At this time, it is assumed that this facility can be utilized by rest agent to get userId as input. We will have standard/recommended ready-to-use set-up for the same.
+
+6.0 caching : Rest agent has no features for this at this time. Simplity services emit cashing possibilities as part of their output. Features will be built to utilize this information to build caching infrastructure using open-source utilities like mem-cache.
+
+7.0 code/stub generation. This is an important features for frame-works that require biler-plate codes like DAO, DTO, entity-bean etc.. Simplity services generally do not require such templates. However, the data/entity model that is defined in a swagger document can be utilize to generate Records in simplity. Suitable toll will be developed for the same.
+
+8.0 Configuring and set-up - 
+
+8.1 rest agent is not a servlet, but a java class with static method that takes HttpServletRequest and HttpServletResponse as parameters. An exmaple servlet named Serve is provided that can be used as the common servlet that is registered with the servletContainer (like Jetty, Tomcat) or an application server like (JBOSS, Websphere) for all path patterns that need to be handled by rest agent.  
+
+8.2 Swagger document need to be loaded on start-up.An example Startup class is provided that can be registered with the container/server.
+
+
+4.2 if there is only one response code for success, then it is use whenever teh service succeeds. 

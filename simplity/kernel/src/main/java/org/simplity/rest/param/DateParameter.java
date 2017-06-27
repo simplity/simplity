@@ -43,9 +43,12 @@ public class DateParameter extends Parameter {
 	 * @param paramSpec
 	 * @param name
 	 */
-	protected DateParameter(String name, JSONObject paramSpec) {
+	protected DateParameter(String name, String fieldName, JSONObject paramSpec) {
 		this(paramSpec);
 		this.name = name;
+		if(fieldName != null){
+			this.fieldName = fieldName;
+		}
 	}
 
 	/**

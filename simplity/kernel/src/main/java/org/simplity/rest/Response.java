@@ -26,12 +26,14 @@ import java.io.IOException;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.simplity.json.JSONArray;
 import org.simplity.json.JSONObject;
 import org.simplity.json.JSONWriter;
 import org.simplity.kernel.ApplicationError;
 import org.simplity.kernel.FormattedMessage;
 import org.simplity.kernel.Tracer;
 import org.simplity.kernel.util.JsonUtil;
+import org.simplity.rest.param.ArrayParameter;
 import org.simplity.rest.param.ObjectParameter;
 import org.simplity.rest.param.Parameter;
 import org.simplity.service.ServiceProtocol;
@@ -43,10 +45,53 @@ import org.simplity.service.ServiceProtocol;
  *
  */
 public class Response {
+	/*
+	 * default success and failure responses in case of emergency!!
+	 */
 	private static final int DEFAULT_ERROR_CODE = 422;
+	private static final String EMPTY_RESPONSE = "{}";
+	private static Response defaultFailueResponse = createDefFail();
+	private static Response defaultSuccessResponse = createDefSuccess();
+
+	private static Response createDefFail() {
+		Response resp = new Response();
+		resp.sendAllData = true;
+		resp.responseCode = RestContext.getContext().getDefaultFailureResponseCode();
+		return resp;
+	}
+
+	private static Response createDefSuccess() {
+		Response resp = new Response();
+		resp.responseCode = RestContext.getContext().getDefaultSuccessResponseCode();
+		resp.sendAllData = true;
+		return resp;
+	}
+
+	/**
+	 * @return a response object instance that is suitable to respond back when
+	 *         there is some error
+	 */
+	public static Response getDefaultForFailure() {
+		return defaultFailueResponse;
+	}
+
+	/**
+	 * @return a response object instance that is suitable to respond back when
+	 *         all-ok
+	 */
+	public static Response getDefaultForSuccess() {
+		return defaultSuccessResponse;
+	}
+
+	private boolean sendAllData;
 	private int responseCode;
 	private Parameter[] headers;
 	private Parameter bodyParameter;
+	private String bodyFieldName;
+
+	private Response() {
+		// for private use only
+	}
 
 	/**
 	 * construct based on spec json
@@ -66,14 +111,14 @@ public class Response {
 			this.headers = new Parameter[keys.length];
 			for (int i = 0; i < keys.length; i++) {
 				String key = keys[i];
-				this.headers[i] = Parameter.parse(keys[i], obj.getJSONObject(key));
+				this.headers[i] = Parameter.parse(keys[i], null, obj.getJSONObject(key));
 			}
 		}
 
+		this.bodyFieldName = responseJson.optString(Tags.FIELD_NAME_ATTR, null);
 		obj = responseJson.optJSONObject(Tags.SCHEMA_ATTR);
 		if (obj != null) {
-			String fieldName = obj.optString(Tags.FIELD_NAME_ATTR, null);
-			this.bodyParameter = new ObjectParameter(fieldName, obj);
+			this.bodyParameter = Parameter.parse(obj);
 		}
 	}
 
@@ -89,33 +134,31 @@ public class Response {
 	 *
 	 * @param resp
 	 * @param data
-	 * @param bodyFieldName
 	 *            name of the field that has the data for body. null if data
 	 *            itself has field values for body
 	 * @param sendAll
 	 *            send everything from input data.DO not go by swagger spec.
 	 * @throws IOException
 	 */
-	public void writeResponse(HttpServletResponse resp, JSONObject data, String bodyFieldName, boolean sendAll)
+	public void writeResponse(HttpServletResponse resp, JSONObject data, boolean sendAll)
 			throws IOException {
-		if (this.responseCode == 0) {
+		if (this.responseCode != 0) {
 			resp.setStatus(this.responseCode);
 		} else {
 			resp.setStatus(HttpServletResponse.SC_OK);
 		}
 		if (this.headers != null) {
 			for (Parameter hdr : this.headers) {
-				hdr.setHeader(resp, data.opt(hdr.getName()));
+				hdr.setHeader(resp, data.opt(hdr.getFieldName()));
 			}
 		}
-		if (sendAll) {
-			String txt;
+
+		if (sendAll || this.sendAllData) {
 			if (data == null) {
-				txt = "{}";
+				resp.getWriter().write(EMPTY_RESPONSE);
 			} else {
-				txt = data.toString();
+				resp.getWriter().write(data.toString());
 			}
-			resp.getWriter().write(txt);
 			return;
 		}
 
@@ -124,27 +167,38 @@ public class Response {
 		}
 
 		if (data == null) {
-			Tracer.trace("No response object suplied for response. sending an empty object");
-			resp.getWriter().write("{}");
+			Tracer.trace("No response object suplied for response. no body response.");
 			return;
 		}
 
-		JSONWriter writer = new JSONWriter(resp.getWriter());
-		writer.object();
-		/*
-		 * body parameter is always an ObjectParameter
-		 */
-		JSONObject bodyData = data;
-		if (bodyFieldName != null) {
-			bodyData = data.optJSONObject(bodyFieldName);
-			if (bodyData == null) {
-				Tracer.trace("We expected a JSON an attribute named " + bodyFieldName
-						+ " with object value, but got null. We will use parent object itself as body object object ");
-				bodyData = data;
+		Object bodyData = data;
+		if(this.bodyFieldName != null){
+			bodyData = data.opt(this.bodyFieldName);
+			if(bodyData == null){
+				Tracer.trace("Response field " + this.bodyFieldName + " has no value. No response sent.");
+				return;
 			}
 		}
-		this.bodyParameter.toWriter(writer, bodyData, false);
-		writer.endObject();
+		if(this.bodyParameter instanceof ObjectParameter){
+			if(bodyData instanceof JSONObject){
+				this.bodyParameter.toWriter(new JSONWriter(resp.getWriter()), bodyData, false);
+			}else{
+				Tracer.trace("We expected a JSON Object as response value with bodyFieldName=" + this.bodyFieldName + " but we got " + bodyData.getClass().getName() + " as value. Null value assumed for response.");
+			}
+			return;
+		}
+
+		if(this.bodyParameter instanceof ArrayParameter){
+			ArrayParameter ap = (ArrayParameter)this.bodyParameter;
+			if(bodyData instanceof JSONArray){
+				if(ap.expectsTextValue() == false){
+					this.bodyParameter.toWriter(new JSONWriter(resp.getWriter()), bodyData, false);
+					return;
+				}
+				bodyData = ap.serialize((JSONArray)bodyData);
+			}
+		}
+		resp.getWriter().write(bodyData.toString());
 	}
 
 	/**

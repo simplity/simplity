@@ -43,8 +43,8 @@ public enum ParameterType {
 		}
 
 		@Override
-		public Parameter parseParameter(String name, JSONObject parameterSpec) {
-			return new ArrayParameter(name, parameterSpec);
+		public Parameter parseParameter(String name, String fieldName, JSONObject parameterSpec) {
+			return new ArrayParameter(name, fieldName, parameterSpec);
 		}
 	},
 	/**
@@ -57,8 +57,8 @@ public enum ParameterType {
 		}
 
 		@Override
-		public Parameter parseParameter(String name, JSONObject parameterSpec) {
-			return new BooleanParameter(name, parameterSpec);
+		public Parameter parseParameter(String name, String fieldName, JSONObject parameterSpec) {
+			return new BooleanParameter(name, fieldName, parameterSpec);
 		}
 	},
 	/**
@@ -71,7 +71,7 @@ public enum ParameterType {
 		}
 
 		@Override
-		public Parameter parseParameter(String name, JSONObject parameterSpec) {
+		public Parameter parseParameter(String name, String fieldName, JSONObject parameterSpec) {
 			throw new ApplicationError("Paramater type 'file' is not yet implemented");
 		}
 	},
@@ -85,8 +85,8 @@ public enum ParameterType {
 		}
 
 		@Override
-		public Parameter parseParameter(String name, JSONObject parameterSpec) {
-			return new IntParameter(name, parameterSpec);
+		public Parameter parseParameter(String name, String fieldName, JSONObject parameterSpec) {
+			return new IntParameter(name, fieldName, parameterSpec);
 		}
 	},
 	/**
@@ -99,8 +99,8 @@ public enum ParameterType {
 		}
 
 		@Override
-		public Parameter parseParameter(String name, JSONObject parameterSpec) {
-			return new NumberParameter(name, parameterSpec);
+		public Parameter parseParameter(String name, String fieldName, JSONObject parameterSpec) {
+			return new NumberParameter(name, fieldName, parameterSpec);
 		}
 	},
 	/**
@@ -113,8 +113,8 @@ public enum ParameterType {
 		}
 
 		@Override
-		public Parameter parseParameter(String name, JSONObject parameterSpec) {
-			return new ObjectParameter(name, parameterSpec);
+		public Parameter parseParameter(String name, String fieldName, JSONObject parameterSpec) {
+			return new ObjectParameter(name, fieldName, parameterSpec);
 		}
 	},
 	/**
@@ -130,11 +130,11 @@ public enum ParameterType {
 		}
 
 		@Override
-		public Parameter parseParameter(String name, JSONObject parameterSpec) {
+		public Parameter parseParameter(String name, String fieldName, JSONObject parameterSpec) {
 			if (this.isDate(parameterSpec)) {
-				return new DateParameter(name, parameterSpec);
+				return new DateParameter(name, fieldName, parameterSpec);
 			}
-			return new TextParameter(name, parameterSpec);
+			return new TextParameter(name, fieldName, parameterSpec);
 		}
 
 		private boolean isDate(JSONObject param) {
@@ -158,8 +158,12 @@ public enum ParameterType {
 	 * create a Parameter instance based on the spec
 	 *
 	 * @param name
+	 *            as used by swagger
+	 * @param fieldName
+	 *            as used by service, if it is different from name. null implies
+	 *            that it is same as name
 	 * @param parameterSpec
 	 * @return Parameter instance
 	 */
-	public abstract Parameter parseParameter(String name, JSONObject parameterSpec);
+	public abstract Parameter parseParameter(String name, String fieldName, JSONObject parameterSpec);
 }

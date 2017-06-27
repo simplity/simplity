@@ -105,7 +105,7 @@ public class RestAgent {
 		 * parse body and query string into json object
 		 */
 		JSONObject pathJson = new JSONObject();
-		Operation operation = Operations.getServiceSpec(path, req.getMethod().toLowerCase(), pathJson);
+		Operation operation = Operations.getOperation(path, req.getMethod().toLowerCase(), pathJson);
 		if (operation == null) {
 			respondWithError(resp, "We do not serve that request path");
 			return;
@@ -119,7 +119,7 @@ public class RestAgent {
 		String serviceName = operation.prepareRequest(req, json, pathJson, messages);
 
 		if(messages.size() > 0){
-			Tracer.trace("Input data has validation errors. Responding back without clliing the service");
+			Tracer.trace("Input data has validation errors. Responding back without calling the service");
 			operation.writeResponse(resp, messages.toArray(new FormattedMessage[0]));
 			return;
 		}
@@ -129,6 +129,7 @@ public class RestAgent {
 		//TODO : get user ID
 		Value userId = Value.newTextValue("100");
 		ServiceData inData = new ServiceData(userId, serviceName);
+		Tracer.trace("Parsed JSON is \n" + json.toString(2));
 		inData.setPayLoad(json.toString());
 		/*
 		 * discard heavy objects as early as possible
@@ -148,13 +149,12 @@ public class RestAgent {
 		}
 
 		if (outData == null) {
-			outData = inData;
 			if (message == null) {
 				message = INTERNAL_ERROR;
 			}
-			outData.addMessage(message);
-		}
-		if(outData.hasErrors()){
+			FormattedMessage[] msgs = {message};
+			operation.writeResponse(resp, msgs);
+		}else if(outData.hasErrors()){
 			operation.writeResponse(resp, outData.getMessages());
 		}else{
 			String payload = outData.getPayLoad();
@@ -163,7 +163,7 @@ public class RestAgent {
 			}else{
 				json = new JSONObject(payload);
 			}
-			operation.writeResponse(resp, json);
+			operation.writeResponse(resp, json, outData.getServiceName());
 		}
 	}
 

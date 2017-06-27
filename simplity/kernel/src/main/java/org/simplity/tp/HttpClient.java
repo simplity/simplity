@@ -245,7 +245,7 @@ public class HttpClient extends Action {
 			 */
 			conn.setRequestMethod(this.httpMethod);
 			conn.setRequestProperty("Accept", this.contentType);
-			conn.setRequestProperty("Conent-Type", this.contentType);
+			conn.setRequestProperty("Content-Type", this.contentType);
 			conn.setDoOutput(true);
 			String req = this.getRequestText(ctx);
 			if (req != null) {
@@ -385,6 +385,9 @@ public class HttpClient extends Action {
 		}
 		if (this.urlString != null) {
 			this.parsedUrlString = TextUtil.getFieldName(this.urlString);
+		}
+		if(this.requestData!=null){
+			this.requestData.getReady();
 		}
 	}
 

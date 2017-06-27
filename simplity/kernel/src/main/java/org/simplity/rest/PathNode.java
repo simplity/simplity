@@ -56,7 +56,7 @@ public class PathNode {
 	 * That
 	 * is, this path is valid and sub-paths are also valid
 	 */
-	private Map<String, Operation> serviceSpecs;
+	private Map<String, Operation> operations;
 	/**
 	 * path without the field-part. Also it is in "." notation. for example
 	 * inv.item
@@ -85,12 +85,13 @@ public class PathNode {
 	 * @return if this path has a spec to accept methods
 	 */
 	public boolean isValidPath() {
-		return this.serviceSpecs != null;
+		return this.operations != null;
 	}
 
 	/**
 	 * @param fieldName
 	 *            the fieldName to set
+	 * @param moduleName
 	 * @return child-node associated with this field
 	 */
 	public PathNode setFieldName(String fieldName, String moduleName) {
@@ -173,12 +174,12 @@ public class PathNode {
 	 * @param methods
 	 */
 	public void setPathSpec(JSONObject methods) {
-		if (this.serviceSpecs != null) {
+		if (this.operations != null) {
 			Tracer.trace("Duplicate spec for path /" + this.pathPrefix);
 			return;
 		}
 
-		this.serviceSpecs = new HashMap<String, Operation>();
+		this.operations = new HashMap<String, Operation>();
 		for (String method : methods.keySet()) {
 			JSONObject obj = methods.getJSONObject(method);
 			String serviceName = obj.optString(Tags.SERVICE_NAME_ATTR, null);
@@ -195,7 +196,7 @@ public class PathNode {
 					serviceName = this.moduleName + Tags.SERVICE_SEP_CHAR + serviceName;
 				}
 			}
-			this.serviceSpecs.put(method, new Operation(obj, serviceName));
+			this.operations.put(method, new Operation(obj, serviceName));
 			Tracer.trace(
 					"Service spec added at prefix=" + this.pathPrefix + " for method=" + method + " and service name="
 							+ serviceName + (this.parent != null ? (" and parent at " + this.parent.pathPrefix) : ""));
@@ -207,11 +208,11 @@ public class PathNode {
 	 * @param method
 	 * @return service spec associated with this method, or null if no such spec
 	 */
-	public Operation getServiceSpec(String method) {
-		if (this.serviceSpecs == null) {
+	public Operation getOpertion(String method) {
+		if (this.operations == null) {
 			return null;
 		}
-		return this.serviceSpecs.get(method);
+		return this.operations.get(method);
 	}
 
 	/**

@@ -46,9 +46,12 @@ public class IntParameter extends Parameter {
 	 * @param paramSpec
 	 * @param name
 	 */
-	protected IntParameter(String name, JSONObject paramSpec) {
+	protected IntParameter(String name, String fieldName, JSONObject paramSpec) {
 		this(paramSpec);
 		this.name = name;
+		if(fieldName != null){
+			this.fieldName = fieldName;
+		}
 	}
 	/**
 	 * construct based on api spec
