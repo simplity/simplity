@@ -149,7 +149,7 @@ public abstract class AbstractService implements ServiceInterface {
 	 * @see org.simplity.service.ServiceInterface#okToCache()
 	 */
 	@Override
-	public boolean okToCache() {
+	public boolean okToCache(ServiceData inData) {
 		return false;
 	}
 

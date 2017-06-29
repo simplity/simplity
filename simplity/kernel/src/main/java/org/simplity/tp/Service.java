@@ -202,8 +202,12 @@ public class Service implements ServiceInterface {
 	}
 
 	@Override
-	public boolean okToCache() {
-		return true;
+	public boolean okToCache(ServiceData inData) {
+		if (this.canBeCachedByFields != null) {
+			inData.setCacheForInput(this.canBeCachedByFields);
+			return true;
+		}
+		return false;
 	}
 
 	@Override
@@ -223,8 +227,8 @@ public class Service implements ServiceInterface {
 		ServiceContext ctx = new ServiceContext(this.name, inData.getUserId());
 
 		/*
-		 * copy values and data sheets sent by the client agent.
-		 * These are typically session-stored, but not necessarily that
+		 * copy values and data sheets sent by the client agent. These are
+		 * typically session-stored, but not necessarily that
 		 */
 		for (String key : inData.getFieldNames()) {
 			Object val = inData.get(key);
@@ -312,9 +316,8 @@ public class Service implements ServiceInterface {
 				worker.act(null);
 			} else {
 				/*
-				 * Also, sub-Service means we open a read-only, and then
-				 * call sub-service and complex-logic to manage their own
-				 * connections
+				 * Also, sub-Service means we open a read-only, and then call
+				 * sub-service and complex-logic to manage their own connections
 				 */
 				if (access == DbAccessType.SUB_SERVICE) {
 					access = DbAccessType.READ_ONLY;
@@ -590,9 +593,8 @@ public class Service implements ServiceInterface {
 			this.indexedActions.put(action.getName(), new Integer(i));
 			i++;
 			/*
-			 * programmers routinely forget to set the dbaccess type..
-			 * we think it is worth this run-time over-head to validate it
-			 * again
+			 * programmers routinely forget to set the dbaccess type.. we think
+			 * it is worth this run-time over-head to validate it again
 			 */
 			if (delegated && (action instanceof SubService)) {
 				continue;

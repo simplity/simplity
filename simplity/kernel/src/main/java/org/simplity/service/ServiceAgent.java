@@ -222,21 +222,21 @@ public class ServiceAgent {
 	}
 
 	/**
-		 * @param inputData
-		 *            fields are assumed to be session data, and payLoad is the
-		 *            request string from client
+	 * @param inputData
+	 *            fields are assumed to be session data, and payLoad is the
+	 *            request string from client
 	 * @param payloadType
-		 * @return response to be returned to client payLoad is response text, while
-		 *         fields collection is data to be set to session. Null if the
-		 *         service not found or the logged-in user is not entitled for the
-		 *         service
-		 *
-		 */
+	 * @return response to be returned to client payLoad is response text, while
+	 *         fields collection is data to be set to session. Null if the
+	 *         service not found or the logged-in user is not entitled for the
+	 *         service
+	 *
+	 */
 	public ServiceData executeService(ServiceData inputData, PayloadType payloadType) {
 		/*
 		 * this is the entry point for the app-side. This method may be invoked
-		 * either remotely, or with HttpAgent on the same JVM. This
-		 * distinction need not be detected
+		 * either remotely, or with HttpAgent on the same JVM. This distinction
+		 * need not be detected
 		 */
 
 		String serviceName = inputData.getServiceName();
@@ -275,9 +275,11 @@ public class ServiceAgent {
 			 * is it cached?
 			 */
 			if (this.cacheManager != null) {
-				response = this.cacheManager.respond(inputData);
-				if (response != null) {
-					break;
+				if (service.okToCache(inputData)) {
+					response = this.cacheManager.respond(inputData);
+					if (response != null) {
+						break;
+					}
 				}
 			}
 			/*

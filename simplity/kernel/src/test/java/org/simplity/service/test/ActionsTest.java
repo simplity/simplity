@@ -712,6 +712,9 @@ public class ActionsTest extends Mockito {
 	public void jmsQueueConsumerTest() {
 		try {
 			Destination destination = (Destination) initialContext.lookup("jms/Queue01");
+			String payLoad = "{'id':'1'," + "'personId':'personid123'," + "'comments':'comments123',"
+					+ "'tokens':'token123'}";
+			ServiceData producerData = JavaAgent.getAgent("100",null).serve("jms.jmsProducer", payLoad,PayloadType.JSON);
 			QueueBrowser queueBrowser = jmsSession.createBrowser((Queue) destination);
 			int numOfTries = 3;
 			Enumeration queueBrowserEnumeration = null;
