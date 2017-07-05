@@ -61,10 +61,12 @@ public interface ServiceInterface extends Component {
 	 * only during production. During development, caching is disabled to ensure
 	 * that the developer gets to execute the latest version of the service
 	 * always
+	 * @param inputData 
 	 *
 	 * @return true if caching is ok, false otherwise
 	 */
-	public boolean okToCache(ServiceData inData);
+
+	public boolean okToCache(ServiceData inputData);
 
 	/**
 	 * @return data base access required by this service
