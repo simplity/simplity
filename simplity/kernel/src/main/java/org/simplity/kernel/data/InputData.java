@@ -322,4 +322,12 @@ public class InputData {
 	public void setInputFields(InputField[] inFields){
 		this.inputFields = inFields;
 	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public InputField[] getInputFields() {
+		return inputFields;
+	}
 }

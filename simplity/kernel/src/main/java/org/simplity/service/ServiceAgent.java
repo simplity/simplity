@@ -25,7 +25,9 @@ package org.simplity.service;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import org.simplity.json.JSONWriter;
 import org.simplity.kernel.Application;
@@ -282,6 +284,8 @@ public class ServiceAgent {
 					}
 				}
 			}
+			
+			
 			/*
 			 * is this to be run in the background always?
 			 */
@@ -300,6 +304,13 @@ public class ServiceAgent {
 					Tracer.trace(serviceName + " returned with errors.");
 				} else {
 					Tracer.trace(serviceName + " responded with all OK signal");
+					String invalidateCache = (String) inputData.get("invalidateCache");
+					if(invalidateCache != null){
+						String[] servicesToInvalidate = invalidateCache.split(",");
+						for(String servName: servicesToInvalidate){
+							invalidateCache(servName, inputData);
+						}
+					}
 				}
 				if (this.cacheManager != null && hasErrors == false) {
 					this.cacheManager.cache(inputData, response);
@@ -362,9 +373,9 @@ public class ServiceAgent {
 	 *
 	 * @param serviceName
 	 */
-	public static void invalidateCache(String serviceName) {
+	public static void invalidateCache(String serviceName,ServiceData inData) {
 		if (instance.cacheManager != null) {
-			instance.cacheManager.invalidate(serviceName);
+			instance.cacheManager.invalidate(serviceName,inData);
 		}
 	}
 

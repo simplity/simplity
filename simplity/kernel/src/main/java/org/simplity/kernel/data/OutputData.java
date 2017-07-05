@@ -563,4 +563,8 @@ public class OutputData {
 		this.outputFromWriter = true;
 
 	}
+
+	public void setOutputFields(String[] fields) {
+		this.fieldNames = fields;
+	}
 }

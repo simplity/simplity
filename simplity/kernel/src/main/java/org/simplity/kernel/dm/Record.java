@@ -29,6 +29,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Struct;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -1931,7 +1932,7 @@ public class Record implements Component {
 		int nbrPrimaries = 0;
 		int nbrParents = 0;
 		int nbrEncrypted = 0;
-
+		List<Field> pkeys = new ArrayList<Field>();
 		for (int i = 0; i < this.fields.length; i++) {
 			Field field = this.fields[i];
 			if (this.forFixedWidthRow) {
@@ -1949,6 +1950,7 @@ public class Record implements Component {
 			}
 			FieldType ft = field.getFieldType();
 			if (FieldType.isPrimaryKey(ft)) {
+				pkeys.add(field);
 				nbrPrimaries++;
 			}
 			if (FieldType.isParentKey(ft)) {
@@ -1967,6 +1969,8 @@ public class Record implements Component {
 				this.isComplexStruct = true;
 			}
 		}
+		if(pkeys.size()>0)
+			this.allPrimaryKeys = pkeys.toArray(new Field[pkeys.size()]);
 		/*
 		 * last field is allowed to be flexible in a fixed width record
 		 */
@@ -3740,7 +3744,7 @@ public class Record implements Component {
 	 *            moduleName.recordNme
 	 * @return record, or null in case the schema is not valid.
 	 */
-	public static Record fromSwagger(JSONObject schema, String recordName, String moduleName) {
+	public static Record fromSwagger(JSONObject schema, String recordName, String moduleName,String[] defNames) {
 		if (schema == null) {
 			Tracer.trace("schema for record " + recordName + " is null");
 			return null;
@@ -3765,8 +3769,10 @@ public class Record implements Component {
 		Record record = new Record();
 		record.name = recordName;
 		record.moduleName = moduleName;
+		List<String> childRecs = new ArrayList<String>();
 		String[] names = JSONObject.getNames(attrs);
 		int nbr = names.length;
+		List<Field> fieldsList = new ArrayList<Field>();
 		Field[] fields = new Field[nbr];
 		for (int i = 0; i < fields.length; i++) {
 			String fn = names[i];
@@ -3775,8 +3781,7 @@ public class Record implements Component {
 				Tracer.trace("Schema has improper details for field " + fn);
 				return null;
 			}
-			Field field = new Field();
-			fields[i] = field;
+			Field field = new Field();			
 			field.name = attr.optString(FIELD_NAME_ATTR, fn);
 			field.isRequired = reqs !=null && reqs.contains(fn);
 			Object def = attr.opt(DEFAULT_ATTR);
@@ -3787,12 +3792,35 @@ public class Record implements Component {
 			/*
 			 * if this is an object, we have to recurse
 			 */
-			if(field.fieldType == FieldType.RECORD){
+			if(field.fieldType == FieldType.RECORD || field.fieldType == FieldType.VALUE_ARRAY){
 				/*
 				 * good practice is to define all records at the root level, and refer them anywhere. Hence we will not do this recursion
 				 */
+	
+				for(String s: defNames){
+					String refDefinition = attr.optJSONObject("items").optString(REF_ATTR);
+					if(s.equalsIgnoreCase(refDefinition.substring(refDefinition.lastIndexOf('/')+1))){
+						if(moduleName != null){
+							childRecs.add(moduleName+"."+s);
+						}else{
+							childRecs.add(s);
+						}
+						break;
+					}
+				}
+				continue;
 			}
+			fieldsList.add(field);
 		}
+		int nbrOfChildRecs = childRecs.size();
+		if(nbrOfChildRecs > 0){
+			record.childrenToBeSaved = new String[nbrOfChildRecs];
+			record.childrenToBeRead = new String[nbrOfChildRecs];
+			record.childrenToBeSaved = childRecs.toArray(record.childrenToBeSaved);
+			record.childrenToBeRead = childRecs.toArray(record.childrenToBeRead);
+		}
+		fields = fieldsList.toArray(new Field[0]);
+		record.okToSelectAll = true;
 		record.fields = fields;
 		return record;
 	}
@@ -3800,7 +3828,7 @@ public class Record implements Component {
 	/**
 	 * @param parm
 	 */
-	private static void setTypeForSwaggerType(Field field, JSONObject parm) {
+	public static void setTypeForSwaggerType(Field field, JSONObject parm) {
 		String type = parm.optString(TYPE_ATTR, null);
 		String format = parm.optString(FORMAT_ATT, null);
 		/*
@@ -3876,7 +3904,7 @@ public class Record implements Component {
 
 		List<Record> records = new ArrayList<Record>();
 		for (String recName : names) {
-			parseSchema(recName, moduleName, defs.getJSONObject(recName), records);
+			parseSchema(recName, moduleName, defs.getJSONObject(recName), records,names);
 		}
 
 		if (records.size() == 0) {
@@ -3892,12 +3920,12 @@ public class Record implements Component {
 	 * @param records
 	 */
 
-	private static void parseSchema(String recName, String moduleName, JSONObject schema, List<Record> records) {
+	private static void parseSchema(String recName, String moduleName, JSONObject schema, List<Record> records,String[] defNames) {
 		if (schema.opt(REF_ATTR) != null) {
 			Tracer.trace("schema " + recName + " is referencing another schema, and hence ignored.");
 			return;
 		}
-		Record record = fromSwagger(schema, recName, moduleName);
+		Record record = fromSwagger(schema, recName, moduleName,defNames);
 		if (record != null) {
 			records.add(record);
 		}
@@ -3907,8 +3935,8 @@ public class Record implements Component {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		String rootFolder = "C:/repos/simplity/test/WebContent/WEB-INF/api/";
-		String txt = FileManager.readFile(new File(rootFolder + "troubleTicket.json.txt"));
+		String rootFolder = "D:/";
+		String txt = FileManager.readFile(new File(rootFolder + "troubleTicket.json"));
 		JSONObject swagger = new JSONObject(txt);
 		JSONObject defs = swagger.optJSONObject(DEFS_ATTR);
 		if(defs == null){

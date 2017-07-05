@@ -52,6 +52,6 @@ public interface ServiceCacheManager {
 	 * 
 	 * @param serviceName
 	 */
-	public void invalidate(String serviceName);
+	public void invalidate(String serviceName,ServiceData inData);
 
 }

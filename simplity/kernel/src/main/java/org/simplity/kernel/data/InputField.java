@@ -328,4 +328,26 @@ public class InputField {
 		}
 		return count;
 	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public boolean isRequired() {
+		return isRequired;
+	}
+
+	public void setRequired(boolean isRequired) {
+		this.isRequired = isRequired;
+	}
+
+	public void setDataType(String dataType) {
+		this.dataType = dataType;
+	}
+	
+	
 }

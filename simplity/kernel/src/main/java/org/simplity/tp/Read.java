@@ -85,6 +85,13 @@ public class Read extends DbAction {
 		this.actionName = "read_" + record.getSimpleName();
 		this.cascadeFilterForChildren = true;
 	}
+	
+	public Read(Record record,RelatedRecord[] children) {
+		this.recordName = record.getQualifiedName();
+		this.actionName = "read_" + record.getSimpleName();
+		this.cascadeFilterForChildren = true;
+		this.childRecords = children;
+	}
 
 	@Override
 	protected int doDbAct(ServiceContext ctx, DbDriver driver) {
