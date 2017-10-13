@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence-diagram version="1.2.1" icons="true" automaticImage="PNG" generate-combined-fragments="true">  
+  <object id="1" language="java" name="org.simplity.rest.RestInboundAgent" project="kernel" 
+    file="/kernel/src/main/java/org/simplity/rest/RestInboundAgent.java" binary="false" label="restInboundAgent" 
+    type="class" autoSize="true">    
+    <position height="-1" width="-1" x="68" y="0"/>    
+    <execution id="2">      
+      <position height="84" width="0" x="0" y="78"/>    
+    </execution>    
+    <execution id="4">      
+      <position height="21" width="0" x="0" y="120"/>    
+    </execution>  
+  </object>  
+  <object id="5" language="java" name="org.simplity.service.ServiceAgent" project="kernel" 
+    file="/kernel/src/main/java/org/simplity/service/ServiceAgent.java" binary="false" label="serviceAgent" type="class" 
+    autoSize="true">    
+    <position height="-1" width="-1" x="243" y="0"/>    
+    <execution id="6">      
+      <position height="84" width="0" x="0" y="152"/>    
+    </execution>    
+    <execution id="8">      
+      <position height="21" width="0" x="0" y="194"/>    
+    </execution>  
+  </object>  
+  <object id="9" language="java" name="org.simplity.tp.Service" project="kernel" 
+    file="/kernel/src/main/java/org/simplity/tp/Service.java" binary="false" label="service" type="class" 
+    autoSize="true">    
+    <position height="-1" width="-1" x="448" y="0"/>  
+  </object>  
+  <message id="3" operation="serve(javax.servlet.http.HttpServletRequest,javax.servlet.http.HttpServletResponse):void" 
+    asynchronous="false">    
+    <end type="SOURCE" refId="2"/>    
+    <end type="TARGET" refId="4"/>  
+  </message>  
+  <message id="7" operation="getAgent():org.simplity.service.ServiceAgent" asynchronous="false">    
+    <end type="SOURCE" refId="6"/>    
+    <end type="TARGET" refId="8"/>  
+  </message>
+</sequence-diagram>

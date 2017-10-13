@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence-diagram version="1.2.1" icons="true" automaticImage="PNG" generate-combined-fragments="true">  
+  <object id="1" language="java" name="org.simplity.rest.RestInboundAgent" project="kernel" 
+    file="/kernel/src/main/java/org/simplity/rest/RestInboundAgent.java" binary="false" label="restInboundAgent" 
+    type="class" autoSize="true">    
+    <position height="-1" width="-1" x="68" y="0"/>  
+  </object>  
+  <object id="2" language="java" name="org.simplity.service.ServiceAgent" project="kernel" 
+    file="/kernel/src/main/java/org/simplity/service/ServiceAgent.java" binary="false" label="serviceAgent" type="class" 
+    autoSize="true">    
+    <position height="-1" width="-1" x="243" y="0"/>  
+  </object>
+</sequence-diagram>

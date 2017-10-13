@@ -1,0 +1,389 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence-diagram version="1.2.1" icons="true" automaticImage="PNG" generate-combined-fragments="true">  
+  <object id="1" language="java" name="org.simplity.rest.RestInboundAgent" project="kernel" 
+    file="/kernel/src/main/java/org/simplity/rest/RestInboundAgent.java" binary="false" label="restInboundAgent" 
+    type="class" autoSize="true">    
+    <position height="-1" width="-1" x="97" y="0"/>    
+    <execution id="2">      
+      <position height="2043" width="0" x="0" y="78"/>    
+    </execution>    
+    <execution id="4">      
+      <position height="1980" width="0" x="0" y="120"/>    
+    </execution>    
+    <execution id="16">      
+      <position height="21" width="0" x="0" y="588"/>    
+    </execution>    
+    <execution id="50">      
+      <position height="21" width="0" x="0" y="1621"/>    
+    </execution>    
+    <execution id="58">      
+      <position height="21" width="0" x="0" y="1895"/>    
+    </execution>    
+    <execution id="62">      
+      <position height="21" width="0" x="0" y="2058"/>    
+    </execution>  
+  </object>  
+  <object id="63" language="java" name="javax.servlet.http.HttpServletRequest" project="kernel" 
+    file="D:/Repo/.m2/javax/servlet/javax.servlet-api/3.0.1/javax.servlet-api-3.0.1.jar" binary="true" label="req" 
+    type="interface" autoSize="true">    
+    <position height="0" width="0" x="0" y="0"/>    
+    <execution id="6">      
+      <position height="21" width="0" x="0" y="319"/>    
+    </execution>    
+    <execution id="8">      
+      <position height="21" width="0" x="0" y="361"/>    
+    </execution>    
+    <execution id="14">      
+      <position height="21" width="0" x="0" y="487"/>    
+    </execution>  
+  </object>  
+  <object id="64" language="java" name="org.simplity.json.JSONObject" project="kernel" 
+    file="/kernel/src/main/java/org/simplity/json/JSONObject.java" binary="false" label="pathJson" type="class" 
+    autoSize="true">    
+    <position height="0" width="0" x="0" y="0"/>    
+    <execution id="10">      
+      <position height="21" width="0" x="0" y="403"/>    
+    </execution>  
+  </object>  
+  <object id="65" language="java" name="org.simplity.rest.Operations" project="kernel" 
+    file="/kernel/src/main/java/org/simplity/rest/Operations.java" binary="false" label="&lt;static&gt;" type="class" 
+    autoSize="true">    
+    <position height="0" width="0" x="0" y="0"/>    
+    <execution id="12">      
+      <position height="21" width="0" x="0" y="445"/>    
+    </execution>    
+    <execution id="20">      
+      <position height="21" width="0" x="0" y="730"/>    
+    </execution>  
+  </object>  
+  <object id="66" language="java" name="org.simplity.rest.Operation" project="kernel" 
+    file="/kernel/src/main/java/org/simplity/rest/Operation.java" binary="false" label="operation" type="class" 
+    autoSize="true">    
+    <position height="0" width="0" x="0" y="0"/>    
+    <execution id="18">      
+      <position height="21" width="0" x="0" y="650"/>    
+    </execution>    
+    <execution id="28">      
+      <position height="21" width="0" x="0" y="908"/>    
+    </execution>    
+    <execution id="30">      
+      <position height="21" width="0" x="0" y="988"/>    
+    </execution>    
+    <execution id="44">      
+      <position height="21" width="0" x="0" y="1406"/>    
+    </execution>    
+    <execution id="60">      
+      <position height="21" width="0" x="0" y="1957"/>    
+    </execution>  
+  </object>  
+  <object id="67" language="java" name="org.simplity.auth.AuthRequirement" project="kernel" 
+    file="/kernel/src/main/java/org/simplity/auth/AuthRequirement.java" binary="false" type="class" autoSize="true">    
+    <position height="0" width="0" x="0" y="0"/>    
+    <execution id="22">      
+      <position height="21" width="0" x="0" y="772"/>    
+    </execution>  
+  </object>  
+  <object id="68" language="java" name="org.simplity.json.JSONObject" project="kernel" 
+    file="/kernel/src/main/java/org/simplity/json/JSONObject.java" binary="false" label="json" type="class" 
+    autoSize="true">    
+    <position height="0" width="0" x="0" y="0"/>    
+    <execution id="24">      
+      <position height="21" width="0" x="0" y="824"/>    
+    </execution>  
+  </object>  
+  <object id="69" language="java" name="java.util.ArrayList" project="kernel" 
+    file="C:/Program Files/Java/jre1.8.0_101/lib/rt.jar" binary="true" label="messages" type="class" autoSize="true">    
+    <position height="0" width="0" x="0" y="0"/>    
+    <execution id="26">      
+      <position height="21" width="0" x="0" y="866"/>    
+    </execution>    
+    <execution id="32">      
+      <position height="21" width="0" x="0" y="1030"/>    
+    </execution>  
+  </object>  
+  <object id="70" language="java" name="org.simplity.kernel.value.Value" project="kernel" 
+    file="/kernel/src/main/java/org/simplity/kernel/value/Value.java" binary="false" label="&lt;static&gt;" type="class" 
+    autoSize="true">    
+    <position height="0" width="0" x="0" y="0"/>    
+    <execution id="34">      
+      <position height="21" width="0" x="0" y="1082"/>    
+    </execution>  
+  </object>  
+  <object id="71" language="java" name="org.simplity.gateway.JsonReqReader" project="kernel" 
+    file="/kernel/src/main/java/org/simplity/gateway/JsonReqReader.java" binary="false" label="reader" type="class" 
+    autoSize="true">    
+    <position height="0" width="0" x="0" y="0"/>    
+    <execution id="36">      
+      <position height="21" width="0" x="0" y="1124"/>    
+    </execution>  
+  </object>  
+  <object id="72" language="java" name="org.simplity.service.ServiceAgent" project="kernel" 
+    file="/kernel/src/main/java/org/simplity/service/ServiceAgent.java" binary="false" label="&lt;static&gt;" 
+    type="class" autoSize="true">    
+    <position height="0" width="0" x="0" y="0"/>    
+    <execution id="38">      
+      <position height="21" width="0" x="0" y="1166"/>    
+    </execution>  
+  </object>  
+  <object id="73" language="java" name="org.simplity.service.ServiceAgent" project="kernel" 
+    file="/kernel/src/main/java/org/simplity/service/ServiceAgent.java" binary="false" label="agent" type="class" 
+    autoSize="true">    
+    <position height="0" width="0" x="0" y="0"/>    
+    <execution id="40">      
+      <position height="21" width="0" x="0" y="1246"/>    
+    </execution>    
+    <execution id="48">      
+      <position height="21" width="0" x="0" y="1520"/>    
+    </execution>  
+  </object>  
+  <object id="74" language="java" name="org.simplity.gateway.Cacher" project="kernel" 
+    file="/kernel/src/main/java/org/simplity/gateway/Cacher.java" binary="false" label="cacher" type="interface" 
+    autoSize="true">    
+    <position height="0" width="0" x="0" y="0"/>    
+    <execution id="42">      
+      <position height="21" width="0" x="0" y="1326"/>    
+    </execution>  
+  </object>  
+  <object id="75" language="java" name="org.simplity.gateway.JsonObjectRespWriter" project="kernel" 
+    file="/kernel/src/main/java/org/simplity/gateway/JsonObjectRespWriter.java" binary="false" label="writer" 
+    type="class" autoSize="true">    
+    <position height="0" width="0" x="0" y="0"/>    
+    <execution id="46">      
+      <position height="21" width="0" x="0" y="1478"/>    
+    </execution>    
+    <execution id="54">      
+      <position height="21" width="0" x="0" y="1704"/>    
+    </execution>  
+  </object>  
+  <object id="76" language="java" name="org.simplity.kernel.FormattedMessage" project="kernel" 
+    file="/kernel/src/main/java/org/simplity/kernel/FormattedMessage.java" binary="false" label="&lt;static&gt;" 
+    type="class" autoSize="true">    
+    <position height="0" width="0" x="0" y="0"/>    
+    <execution id="52">      
+      <position height="21" width="0" x="0" y="1652"/>    
+    </execution>  
+  </object>  
+  <object id="77" language="java" name="org.simplity.json.JSONObject" project="kernel" 
+    file="/kernel/src/main/java/org/simplity/json/JSONObject.java" binary="false" label="response" type="class" 
+    autoSize="true">    
+    <position height="0" width="0" x="0" y="0"/>    
+    <execution id="56">      
+      <position height="21" width="0" x="0" y="1784"/>    
+    </execution>  
+  </object>  
+  <combined-fragment id="78" interaction-operator="OPT">    
+    <interaction-operand id="79" constraint="cacheKey != null"/>  
+  </combined-fragment>  
+  <combined-fragment id="80" interaction-operator="OPT">    
+    <interaction-operand id="81" constraint="keys == null"/>  
+  </combined-fragment>  
+  <combined-fragment id="82" interaction-operator="LOOP">    
+    <interaction-operand id="83" constraint="for:i &lt; keys.length">      
+      <fragment refId="84"/>    
+    </interaction-operand>  
+  </combined-fragment>  
+  <combined-fragment id="78" interaction-operator="OPT">    
+    <interaction-operand id="79" constraint="cacheKey != null"/>  
+  </combined-fragment>  
+  <combined-fragment id="80" interaction-operator="OPT">    
+    <interaction-operand id="81" constraint="keys == null"/>  
+  </combined-fragment>  
+  <combined-fragment id="82" interaction-operator="LOOP">    
+    <interaction-operand id="83" constraint="for:i &lt; keys.length">      
+      <fragment refId="84"/>    
+    </interaction-operand>  
+  </combined-fragment>  
+  <combined-fragment id="85" interaction-operator="OPT">    
+    <interaction-operand id="86" constraint="operation == null">      
+      <fragment refId="15"/>    
+    </interaction-operand>  
+  </combined-fragment>  
+  <combined-fragment id="87" interaction-operator="OPT">    
+    <interaction-operand id="88" constraint="auths != null &amp;&amp; auths.length &gt; 0">      
+      <fragment refId="21"/>      
+      <fragment refId="19"/>    
+    </interaction-operand>  
+  </combined-fragment>  
+  <combined-fragment id="89" interaction-operator="OPT">    
+    <interaction-operand id="90" constraint="!messages.isEmpty()">      
+      <fragment refId="31"/>      
+      <fragment refId="29"/>    
+    </interaction-operand>  
+  </combined-fragment>  
+  <combined-fragment id="91" interaction-operator="OPT">    
+    <interaction-operand id="92" constraint="cacher != null">      
+      <fragment refId="39"/>      
+      <fragment refId="93"/>    
+    </interaction-operand>    
+    <combined-fragment id="93" interaction-operator="OPT">      
+      <interaction-operand id="94" constraint="cacheKey != null">        
+        <fragment refId="41"/>        
+        <fragment refId="95"/>      
+      </interaction-operand>      
+      <combined-fragment id="95" interaction-operator="OPT">        
+        <interaction-operand id="96" constraint="cache != null">          
+          <fragment refId="43"/>        
+        </interaction-operand>      
+      </combined-fragment>    
+    </combined-fragment>  
+  </combined-fragment>  
+  <combined-fragment id="97" interaction-operator="OPT">    
+    <interaction-operand id="98" constraint="msgs != null">      
+      <fragment refId="51"/>      
+      <fragment refId="49"/>    
+    </interaction-operand>  
+  </combined-fragment>  
+  <combined-fragment id="99" interaction-operator="OPT">    
+    <interaction-operand id="100" constraint="logger.isInfoEnabled()">      
+      <fragment refId="55"/>    
+    </interaction-operand>  
+  </combined-fragment>  
+  <combined-fragment id="101" interaction-operator="OPT">    
+    <interaction-operand id="102" constraint="cacher != null">      
+      <fragment refId="57"/>    
+    </interaction-operand>  
+  </combined-fragment>  
+  <combined-fragment id="103" interaction-operator="NEG">    
+    <interaction-operand id="104" constraint="Exception e">      
+      <fragment refId="61"/>    
+    </interaction-operand>  
+  </combined-fragment>  
+  <message id="3" operation="serve(javax.servlet.http.HttpServletRequest,javax.servlet.http.HttpServletResponse):void" 
+    asynchronous="false">    
+    <end type="SOURCE" refId="2"/>    
+    <end type="TARGET" refId="4"/>  
+  </message>  
+  <message id="5" operation="getRequestURI():java.lang.String" asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="6"/>  
+  </message>  
+  <message id="7" operation="getContextPath():java.lang.String" asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="8"/>  
+  </message>  
+  <message id="9" operation="JSONObject()" asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="10"/>  
+  </message>  
+  <message id="11" 
+    operation="getOperation(java.lang.String,java.lang.String,org.simplity.json.JSONObject):org.simplity.rest.Operation" 
+    asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="12"/>  
+  </message>  
+  <message id="13" operation="getMethod():java.lang.String" asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="14"/>  
+  </message>  
+  <message id="15" operation="respondWithError(javax.servlet.http.HttpServletResponse,java.lang.String):void" 
+    asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="16"/>  
+  </message>  
+  <message id="17" operation="getAuthSchemes():org.simplity.auth.AuthRequirement[]" asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="18"/>  
+  </message>  
+  <message id="19" operation="getSecurityAgent(java.lang.String):org.simplity.auth.SecurityAgent" asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="20"/>  
+  </message>  
+  <message id="21" operation="getAuthName():java.lang.String" asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="22"/>  
+  </message>  
+  <message id="23" operation="JSONObject()" asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="24"/>  
+  </message>  
+  <message id="25" operation="ArrayList()" asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="26"/>  
+  </message>  
+  <message id="27" 
+    operation="prepareRequest(javax.servlet.http.HttpServletRequest,org.simplity.json.JSONObject,org.simplity.json.JSONObject,java.util.List&lt;org.simplity.kernel.FormattedMessage&gt;):java.lang.String" 
+    asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="28"/>  
+  </message>  
+  <message id="29" 
+    operation="writeResponse(javax.servlet.http.HttpServletResponse,org.simplity.kernel.FormattedMessage[]):void" 
+    asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="30"/>  
+  </message>  
+  <message id="31" operation="toArray(T[]):T[]" asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="32"/>  
+  </message>  
+  <message id="33" operation="newTextValue(java.lang.String):org.simplity.kernel.value.TextValue" asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="34"/>  
+  </message>  
+  <message id="35" operation="JsonReqReader(org.simplity.json.JSONObject)" asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="36"/>  
+  </message>  
+  <message id="37" operation="getAgent():org.simplity.service.ServiceAgent" asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="38"/>  
+  </message>  
+  <message id="39" 
+    operation="getCachingKey(java.lang.String,org.simplity.gateway.ReqReader,org.simplity.kernel.value.Value):java.lang.String" 
+    asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="40"/>  
+  </message>  
+  <message id="41" operation="get(java.lang.String):java.lang.Object" asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="42"/>  
+  </message>  
+  <message id="43" 
+    operation="writeResponse(javax.servlet.http.HttpServletResponse,org.simplity.json.JSONObject,java.lang.String):void" 
+    asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="44"/>  
+  </message>  
+  <message id="45" operation="JsonObjectRespWriter()" asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="46"/>  
+  </message>  
+  <message id="47" 
+    operation="executeService(java.lang.String,org.simplity.kernel.value.Value,org.simplity.gateway.ReqReader,org.simplity.gateway.RespWriter):org.simplity.kernel.FormattedMessage[]" 
+    asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="48"/>  
+  </message>  
+  <message id="49" operation="respondWithError(javax.servlet.http.HttpServletResponse,java.lang.String):void" 
+    asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="50"/>  
+  </message>  
+  <message id="51" operation="toString(org.simplity.kernel.FormattedMessage[]):java.lang.String" asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="52"/>  
+  </message>  
+  <message id="53" operation="getFinalResponseObject():java.lang.Object" asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="54"/>  
+  </message>  
+  <message id="55" operation="toString():java.lang.String" asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="56"/>  
+  </message>  
+  <message id="57" operation="handleCaching(org.simplity.gateway.RespWriter,java.lang.Object):void" asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="58"/>  
+  </message>  
+  <message id="59" 
+    operation="writeResponse(javax.servlet.http.HttpServletResponse,org.simplity.json.JSONObject,java.lang.String):void" 
+    asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="60"/>  
+  </message>  
+  <message id="61" operation="respondWithError(javax.servlet.http.HttpServletResponse,java.lang.String):void" 
+    asynchronous="false">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="62"/>  
+  </message>
+</sequence-diagram>

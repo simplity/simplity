@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence-diagram version="1.2.1" icons="true" automaticImage="PNG" generate-combined-fragments="true">  
+  <combined-fragment id="1" interaction-operator="OPT">    
+    <interaction-operand id="2" constraint="cacheKey != null"/>  
+  </combined-fragment>  
+  <combined-fragment id="3" interaction-operator="OPT">    
+    <interaction-operand id="4" constraint="keys == null"/>  
+  </combined-fragment>  
+  <combined-fragment id="5" interaction-operator="LOOP">    
+    <interaction-operand id="6" constraint="for:i &lt; keys.length">      
+      <fragment refId="7"/>    
+    </interaction-operand>  
+  </combined-fragment>  
+  <combined-fragment id="1" interaction-operator="OPT">    
+    <interaction-operand id="2" constraint="cacheKey != null"/>  
+  </combined-fragment>  
+  <combined-fragment id="3" interaction-operator="OPT">    
+    <interaction-operand id="4" constraint="keys == null"/>  
+  </combined-fragment>  
+  <combined-fragment id="5" interaction-operator="LOOP">    
+    <interaction-operand id="6" constraint="for:i &lt; keys.length">      
+      <fragment refId="7"/>    
+    </interaction-operand>  
+  </combined-fragment>
+</sequence-diagram>
