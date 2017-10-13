@@ -1,0 +1,5 @@
+org.simplity.kernel.util.test
+org.simplity.service.test
+org.simplity.test
+org.simplity.test.mail
+org.simplity.test.mock.ldap

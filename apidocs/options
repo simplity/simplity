@@ -1,0 +1,24 @@
+-classpath
+'D:/Repo/.m2/javax/mail/mail/1.4/mail-1.4.jar;D:/Repo/.m2/org/mockito/mockito-all/1.10.19/mockito-all-1.10.19.jar;D:/Repo/.m2/com/google/protobuf/protobuf-java/3.3.1/protobuf-java-3.3.1.jar;D:/Repo/.m2/javax/jms/javax.jms-api/2.0.1/javax.jms-api-2.0.1.jar;D:/Repo/.m2/xerces/xercesImpl/2.11.0/xercesImpl-2.11.0.jar;D:/Repo/.m2/javax/activation/activation/1.1/activation-1.1.jar;D:/Repo/.m2/xml-apis/xml-apis/1.4.01/xml-apis-1.4.01.jar;D:/Repo/.m2/org/freemarker/freemarker/2.3.20/freemarker-2.3.20.jar;D:/Repo/.m2/org/slf4j/slf4j-api/1.7.25/slf4j-api-1.7.25.jar;D:/Repo/.m2/com/oracle/ojdbc6/11.2.0.3/ojdbc6-11.2.0.3.jar;D:/Repo/.m2/javax/servlet/javax.servlet-api/3.0.1/javax.servlet-api-3.0.1.jar;D:/Repo/.m2/javax/transaction/jta/1.1/jta-1.1.jar'
+-encoding
+'Cp1252'
+-protected
+-sourcepath
+'D:/Workspace/simplity/simplity/simplity/kernel/src/main/java'
+-author
+-bottom
+'Copyright &#169; 2017. All rights reserved.'
+-charset
+'UTF-8'
+-d
+'D:/Workspace/simplity/simplity/simplity/kernel/target/site/apidocs'
+-docencoding
+'UTF-8'
+-doctitle
+'kernel 1.2.1-SNAPSHOT API'
+-linkoffline
+'http://docs.oracle.com/javase/8/docs/api' 'D:/Workspace/simplity/simplity/simplity/kernel/target/javadoc-bundle-options'
+-use
+-version
+-windowtitle
+'kernel 1.2.1-SNAPSHOT API'
