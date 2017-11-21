@@ -497,7 +497,7 @@ public class ProcedureParameter {
 			CallableStatement stmt) throws SQLException {
 		JSONWriter writer = new JSONWriter();
 		record.toJsonObjectFromStruct(struct, writer);
-		return new JSONObject(writer);
+		return new JSONObject(writer.toString());
 
 	}
 
@@ -513,7 +513,7 @@ public class ProcedureParameter {
 			CallableStatement stmt) throws SQLException {
 		JSONWriter writer = new JSONWriter();
 		record.toJsonArrayFromStruct(array, writer);
-		return new JSONArray(writer);
+		return new JSONArray(writer.toString());
 	}
 
 	/**

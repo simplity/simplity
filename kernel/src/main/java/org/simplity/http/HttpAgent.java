@@ -24,6 +24,7 @@ package org.simplity.http;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -276,9 +277,14 @@ public class HttpAgent {
 					+ (response == null ? "no " : (response.length())
 							+ " chars ") + " payload");
 		}
-		ServletOutputStream out = resp.getOutputStream();
-		out.print(response);
-		out.close();
+        /* Set Content Type to allow all characters */
+        resp.setContentType("text/html;charset=UTF-8");
+        
+        /* Instead we are using PrintWriter */
+        PrintWriter out = resp.getWriter();
+        out.write(response);
+        out.close();
+
 		String trace = Tracer.stopAccumulation();
 		if (tracesToBeCached) {
 			cacheTraces(session, trace);
