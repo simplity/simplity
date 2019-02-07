@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<service xmlns="http://www.simplity.org/schema" 
-	moduleName="fileactions"
-	name="processInvalidRow">
-	<actions>
-		<log actionName="processInvalidRow" names="_rowText,_lineNum"/>
-	</actions>
-</service>

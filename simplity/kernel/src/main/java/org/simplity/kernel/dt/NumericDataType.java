@@ -22,7 +22,8 @@
  */
 package org.simplity.kernel.dt;
 
-import org.simplity.kernel.comp.ValidationContext;
+import org.simplity.kernel.comp.IValidationContext;
+import org.simplity.kernel.comp.ValidationMessage;
 import org.simplity.kernel.value.DecimalValue;
 import org.simplity.kernel.value.IntegerValue;
 import org.simplity.kernel.value.InvalidValueException;
@@ -39,148 +40,152 @@ import org.slf4j.LoggerFactory;
 public class NumericDataType extends DataType {
 	private static final Logger logger = LoggerFactory.getLogger(NumericDataType.class);
 
-  /** min digits before decimal places required for this value */
-  long minValue = Long.MIN_VALUE;
+	/** min digits before decimal places required for this value */
+	long minValue = Long.MIN_VALUE;
 
-  /** maximum number of whole digits (excluding decimal digits) */
-  long maxValue = Long.MAX_VALUE;
+	/** maximum number of whole digits (excluding decimal digits) */
+	long maxValue = Long.MAX_VALUE;
 
-  /** maximum number of fractional digits. Anything more than this is rounded off */
-  int nbrFractionDigits = 0;
+	/**
+	 * maximum number of fractional digits. Anything more than this is rounded
+	 * off
+	 */
+	int nbrFractionDigits = 0;
 
-  @Override
-  public Value validateValue(Value value) {
-    if (this.nbrFractionDigits == 0) {
-      return this.validateInt(value);
-    }
-    return this.validateDecimal(value);
-  }
+	@Override
+	public Value validateValue(Value value) {
+		if (this.nbrFractionDigits == 0) {
+			return this.validateInt(value);
+		}
+		return this.validateDecimal(value);
+	}
 
-  private Value validateInt(Value value) {
-    ValueType valueType = value.getValueType();
-    long longValue = 0L;
+	private Value validateInt(Value value) {
+		ValueType valueType = value.getValueType();
+		long longValue = 0L;
 
-    /*
-     * check for numeric type
-     */
-    if (valueType == ValueType.INTEGER) {
-      longValue = ((IntegerValue) value).getLong();
-    } else if (valueType == ValueType.DECIMAL) {
-      longValue = ((DecimalValue) value).getLong();
-    } else {
-      return null;
-    }
-    /*
-     * min-max check
-     */
-    if (longValue > this.maxValue || longValue < this.minValue) {
-      return null;
-    }
-    /*
-     * create new value if required
-     */
-    if (valueType == ValueType.INTEGER) {
-      return value;
-    }
-    return Value.newIntegerValue(longValue);
-  }
+		/*
+		 * check for numeric type
+		 */
+		if (valueType == ValueType.INTEGER) {
+			longValue = ((IntegerValue) value).getLong();
+		} else if (valueType == ValueType.DECIMAL) {
+			longValue = ((DecimalValue) value).getLong();
+		} else {
+			return null;
+		}
+		/*
+		 * min-max check
+		 */
+		if (longValue > this.maxValue || longValue < this.minValue) {
+			return null;
+		}
+		/*
+		 * create new value if required
+		 */
+		if (valueType == ValueType.INTEGER) {
+			return value;
+		}
+		return Value.newIntegerValue(longValue);
+	}
 
-  private Value validateDecimal(Value value) {
-    ValueType valueType = value.getValueType();
-    double dbl = 0;
+	private Value validateDecimal(Value value) {
+		ValueType valueType = value.getValueType();
+		double dbl = 0;
 
-    /*
-     * check for numeric type
-     */
-    if (valueType == ValueType.INTEGER) {
-      dbl = ((IntegerValue) value).getDouble();
-    } else if (valueType == ValueType.DECIMAL) {
-      dbl = ((DecimalValue) value).getDouble();
-    } else {
-      return null;
-    }
-    /*
-     * min-max check
-     */
-    if (dbl > this.maxValue || dbl < this.minValue) {
-      return null;
-    }
-    /*
-     * create new value if required
-     */
-    if (valueType == ValueType.DECIMAL) {
-      return value;
-    }
-    return Value.newDecimalValue(dbl);
-  }
+		/*
+		 * check for numeric type
+		 */
+		if (valueType == ValueType.INTEGER) {
+			dbl = ((IntegerValue) value).getDouble();
+		} else if (valueType == ValueType.DECIMAL) {
+			dbl = ((DecimalValue) value).getDouble();
+		} else {
+			return null;
+		}
+		/*
+		 * min-max check
+		 */
+		if (dbl > this.maxValue || dbl < this.minValue) {
+			return null;
+		}
+		/*
+		 * create new value if required
+		 */
+		if (valueType == ValueType.DECIMAL) {
+			return value;
+		}
+		return Value.newDecimalValue(dbl);
+	}
 
-  @Override
-  public ValueType getValueType() {
-    if (this.nbrFractionDigits == 0) {
-      return ValueType.INTEGER;
-    }
-    return ValueType.DECIMAL;
-  }
+	@Override
+	public ValueType getValueType() {
+		if (this.nbrFractionDigits == 0) {
+			return ValueType.INTEGER;
+		}
+		return ValueType.DECIMAL;
+	}
 
-  @Override
-  public int getMaxLength() {
-    return Long.toString(this.maxValue).length() + this.nbrFractionDigits + 1;
-  }
+	@Override
+	public int getMaxLength() {
+		return Long.toString(this.maxValue).length() + this.nbrFractionDigits + 1;
+	}
 
-  @Override
-  public int getScale() {
-    return this.nbrFractionDigits;
-  }
+	@Override
+	public int getScale() {
+		return this.nbrFractionDigits;
+	}
 
-  @Override
-  protected int validateSpecific(ValidationContext ctx) {
-    int count = 0;
-    if (this.minValue > this.maxValue) {
-    	String msg = "Invalid number range. Min vaue of "
-                + this.minValue
-                + " is greater that max value of "
-                + this.maxValue;
-      ctx.addError(msg, null, "minValue");
-      ctx.addError(msg, null, "maxValue");
-      count = 2;
-    }
-    if (this.nbrFractionDigits < 0) {
-      ctx.addError("nbrFractionDigits is set to a negative value of " + this.nbrFractionDigits, null, "nbrFractionDigits");
-      count++;
-    }
-    return count;
-  }
+	@Override
+	protected void validateSpecific(IValidationContext vtx) {
+		if (this.minValue > this.maxValue) {
+			String msg = "Invalid number range. Min vaue of "
+					+ this.minValue
+					+ " is greater that max value of "
+					+ this.maxValue;
+			vtx.message(new ValidationMessage(this, ValidationMessage.SEVERITY_ERROR, msg, "minValue"));
+			vtx.message(new ValidationMessage(this, ValidationMessage.SEVERITY_ERROR, msg, "maxValue"));
+		}
+		if (this.nbrFractionDigits < 0) {
+			vtx.message(new ValidationMessage(this, ValidationMessage.SEVERITY_ERROR,
+					"nbrFractionDigits is set to a negative value of " + this.nbrFractionDigits, "nbrFractionDigits"));
+		}
+	}
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.simplity.kernel.dt.DataType#synthesiseDscription()
-   */
-  @Override
-  protected String synthesiseDscription() {
-    StringBuilder sbf = new StringBuilder("Expecting ");
-    if (this.nbrFractionDigits == 0) {
-      sbf.append("an integer ");
-    } else {
-      sbf.append("a decimal number ");
-    }
-    sbf.append("between ").append(this.minValue).append(" and ").append(this.maxValue);
-    return sbf.toString();
-  }
-  /* (non-Javadoc)
-   * @see org.simplity.kernel.dt.DataType#formatVal(org.simplity.kernel.value.Value)
-   */
-  @Override
-  public String formatVal(Value value) {
-    try {
-      if (this.nbrFractionDigits == 0) {
-        return "" + value.toInteger();
-      }
-      return String.format("%." + this.nbrFractionDigits + "f", new Double(value.toDecimal()));
-    } catch (InvalidValueException e) {
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see org.simplity.kernel.dt.DataType#synthesiseDscription()
+	 */
+	@Override
+	protected String synthesiseDscription() {
+		StringBuilder sbf = new StringBuilder("Expecting ");
+		if (this.nbrFractionDigits == 0) {
+			sbf.append("an integer ");
+		} else {
+			sbf.append("a decimal number ");
+		}
+		sbf.append("between ").append(this.minValue).append(" and ").append(this.maxValue);
+		return sbf.toString();
+	}
 
-      logger.info("Numeric data type is asked to format " + value.getValueType());
-    }
-    return Value.FALSE_TEXT_VALUE;
-  }
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see org.simplity.kernel.dt.DataType#formatVal(org.simplity.kernel.value.
+	 * Value)
+	 */
+	@Override
+	public String formatVal(Value value) {
+		try {
+			if (this.nbrFractionDigits == 0) {
+				return "" + value.toInteger();
+			}
+			return String.format("%." + this.nbrFractionDigits + "f", new Double(value.toDecimal()));
+		} catch (InvalidValueException e) {
+
+			logger.info("Numeric data type is asked to format " + value.getValueType());
+		}
+		return Value.FALSE_TEXT_VALUE;
+	}
 }

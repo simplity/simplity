@@ -21,11 +21,7 @@
  */
 package org.simplity.kernel.data;
 
-import java.lang.reflect.Array;
-import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -35,10 +31,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.simplity.kernel.ApplicationError;
-import org.simplity.kernel.dm.Field;
+import org.simplity.kernel.dm.field.Field;
 import org.simplity.kernel.util.ArrayUtil;
-import org.simplity.kernel.util.ReflectUtil;
-import org.simplity.kernel.value.InvalidValueException;
 import org.simplity.kernel.value.Value;
 import org.simplity.kernel.value.ValueType;
 import org.slf4j.Logger;
@@ -49,16 +43,14 @@ import org.slf4j.LoggerFactory;
  *
  * @author simplity.org
  */
-public class MultiRowsSheet implements DataSheet {
+public class MultiRowsSheet implements IDataSheet {
 	private static final Logger logger = LoggerFactory.getLogger(MultiRowsSheet.class);
 
 	/**
 	 * data is organized as a list (rows) of column values(array). This is
-	 * because we expect rows to
-	 * be added dynamically, and not columns. Of course, user can add columns as
-	 * well as rows, but
-	 * adding rows is expected to be quite frequent, and adding column is more
-	 * of an exception
+	 * because we expect rows to be added dynamically, and not columns. Of
+	 * course, user can add columns as well as rows, but adding rows is expected
+	 * to be quite frequent, and adding column is more of an exception
 	 */
 	private List<Value[]> data = new ArrayList<Value[]>();
 
@@ -92,8 +84,7 @@ public class MultiRowsSheet implements DataSheet {
 	 *
 	 * @param rawData
 	 *            rows of text data, with a header row for column names. All
-	 *            columns are treated
-	 *            as text.
+	 *            columns are treated as text.
 	 */
 	public MultiRowsSheet(String[][] rawData) {
 		String[] names = rawData[0];
@@ -115,8 +106,7 @@ public class MultiRowsSheet implements DataSheet {
 	 *            columnNames
 	 * @param dataRows
 	 *            rows of text data, with a header row for column names. All
-	 *            columns are treated
-	 *            as text.
+	 *            columns are treated as text.
 	 */
 	public MultiRowsSheet(String[] names, String[][] dataRows) {
 		ValueType[] types = new ValueType[names.length];
@@ -155,12 +145,10 @@ public class MultiRowsSheet implements DataSheet {
 
 	/**
 	 * Most of the time, dynamic sheet is created internally and are guaranteed
-	 * to be ok. We avoid the
-	 * over-head, especially when this may have several rows. Any caller who
-	 * suspects that the rows
-	 * may not be in order should call this method after creating the sheet.
-	 * check whether rows have
-	 * same number of columns, and cells across a column are of same type
+	 * to be ok. We avoid the over-head, especially when this may have several
+	 * rows. Any caller who suspects that the rows may not be in order should
+	 * call this method after creating the sheet. check whether rows have same
+	 * number of columns, and cells across a column are of same type
 	 */
 	public void validate() {
 		if (this.columnIndexes.size() != this.columnNames.length) {
@@ -246,18 +234,6 @@ public class MultiRowsSheet implements DataSheet {
 			this.columnValueTypes[n] = field.getValueType();
 			this.columnIndexes.put(fieldName, new Integer(n));
 			n++;
-		}
-		/*
-		 * do we have field widths?. we did not put this inside the loop with an
-		 * if becuase this is a very very very rare case.
-		 */
-		if (fields[0].getFieldWidth() != 0) {
-			this.columnWidths = new int[fields.length];
-			n = 0;
-			for (Field field : fields) {
-				this.columnWidths[n] = field.getFieldWidth();
-				n++;
-			}
 		}
 	}
 
@@ -385,7 +361,7 @@ public class MultiRowsSheet implements DataSheet {
 	}
 
 	@Override
-	public Iterator<FieldsInterface> iterator() {
+	public Iterator<IFieldsCollection> iterator() {
 		return new DataRows(this);
 	}
 
@@ -544,7 +520,7 @@ public class MultiRowsSheet implements DataSheet {
 	 * DataSheet)
 	 */
 	@Override
-	public int appendRows(DataSheet sheet) {
+	public int appendRows(IDataSheet sheet) {
 		if (sheet == null) {
 			return 0;
 		}
@@ -607,7 +583,7 @@ public class MultiRowsSheet implements DataSheet {
 	 */
 	@Override
 	public String toSerializedText(DataSerializationType serializationType) {
-		throw new ApplicationError("Sorry, serialization is not yet implemented for Dynamic sheet");
+		throw new ApplicationError("Sorry, serialization is not yet implemented for MultiRowsShwwt");
 		// TODO to be built
 	}
 
@@ -620,7 +596,7 @@ public class MultiRowsSheet implements DataSheet {
 	 */
 	@Override
 	public void fromSerializedText(String text, DataSerializationType serializationType, boolean replaceExistingRows) {
-		throw new ApplicationError("Sorry, de-serialization is not yet implemented for Dynamic sheet");
+		throw new ApplicationError("Sorry, de-serialization is not yet implemented for MultiRowsShwwt");
 		// TODO to be built
 	}
 
@@ -644,341 +620,27 @@ public class MultiRowsSheet implements DataSheet {
 		return this.columnWidths;
 	}
 
-	/**
-	 * @param <T>
-	 * @param sheet
-	 *            sheet
-	 * @param columnName
-	 *            columnName
-	 * @return array of column values of primitive data type
-	 */
-	@SuppressWarnings("unchecked")
-	public <T> T[] columnAsArray(String columnName, T[] array) {
-		Value[] columnValues = this.getColumnValues(columnName);
-		Class<?> genericType = array.getClass().getComponentType();
-		array = (T[]) Array.newInstance(genericType, columnValues.length);
-		for (int i = 0; i < columnValues.length; i++) {
-			Value value = columnValues[i];
-			try {
-				if (genericType.equals(Integer.class)) {
-					array[i] = (T) new Integer((int) value.toInteger());
-					continue;
-				}
-				if (genericType.equals(Float.class)) {
-					array[i] = (T) new Float((float) value.toDecimal());
-					continue;
-				}
-			} catch (InvalidValueException e) {
-				throw new ApplicationError(e.getMessage());
-			}
-			array[i] = (T) value.toObject();
+	@Override
+	public int appendEmptyRows(int nbrRowsToAdd) {
+		int nbr = this.width();
+		for (int i = 0; i < nbrRowsToAdd; i++) {
+			this.data.add(new Value[nbr]);
 		}
-		return array;
+		return this.data.size();
 	}
 
 	/**
-	 * @param <T>
-	 * @param sheet
-	 *            sheet
-	 * @param columnName
-	 *            columnName
-	 * @return list of column values
-	 */
-	@SuppressWarnings("unchecked")
-	public <T> Collection<T> columnAsCollection(String columnName, Collection<T> c, Class<?> T) {
-		Value[] columnValues = this.getColumnValues(columnName);
-		for (Value value : columnValues) {
-			if (value.getValueType() == ValueType.INTEGER) {
-				if (T == Integer.class) {
-					c.add((T) (Integer) ((Long) value.toObject()).intValue());
-					continue;
-				}
-				if (T == Float.class) {
-					c.add((T) (Float) ((Double) value.toObject()).floatValue());
-					continue;
-				}
-			}
-			c.add((T) value.toObject());
-		}
-		return c;
-	}
-
-	/**
-	 * @param sheet
-	 * @param keyColumnName
-	 * @param valueColumnName
-	 * @return 2 column values as a map with 1 column data as keys and other
-	 *         column data as values
-	 */
-	@SuppressWarnings("unchecked")
-	public <K, V> Map<K, V> columnsAsMap(String keyColumnName, String valueColumnName, Map<K, V> map, Class<?> keyType,
-			Class<?> valueType) {
-		Value[] keys = this.getColumnValues(keyColumnName);
-		Value[] values = this.getColumnValues(valueColumnName);
-		for (int i = 0; i < keys.length; i++) {
-			K key = null;
-			V value = null;
-			try {
-				if (keyType.equals(Integer.class)) {
-					key = (K) new Integer((int) keys[i].toInteger());
-				} else if (keyType.equals(Float.class)) {
-					key = (K) new Float((float) keys[i].toDecimal());
-				} else if (valueType.equals(Integer.class)) {
-					value = (V) new Integer((int) values[i].toInteger());
-				} else if (valueType.equals(Float.class)) {
-					value = (V) new Float((float) values[i].toDecimal());
-				} else {
-					key = (K) keys[i].toObject();
-					value = (V) values[i].toObject();
-				}
-			} catch (InvalidValueException e) {
-				throw new ApplicationError(e.getMessage());
-			}
-			map.put(key, value);
-		}
-		return map;
-	}
-
-	/**
-	 * @param <T>
-	 * @param sheet
-	 * @param className
-	 *            fully qualified class name
-	 * @return List of entity objects
-	 */
-	@SuppressWarnings("unchecked")
-	public <T> List<T> toList(List<T> listObject, Class<T> clazz) {
-		List<Value[]> rowList = this.getAllRows();
-		for (Value[] row : rowList) {
-			T obj = (T) this.rowToObject(clazz, row);
-			listObject.add(obj);
-		}
-		return listObject;
-	}
-
-	/**
-	 * @param sheet
-	 * @param className
-	 *            fully qualified class name
-	 * @return Set of entity objects
-	 */
-	@SuppressWarnings("unchecked")
-	public <T> Set<T> toSet(Set<T> setObject, Class<T> clazz) {
-		List<Value[]> rowList = this.getAllRows();
-		for (Value[] row : rowList) {
-			T obj = (T) this.rowToObject(clazz, row);
-			setObject.add(obj);
-		}
-		return setObject;
-	}
-
-	/**
-	 * @param arr
-	 * @param columnName
-	 * @return MultiRowsSheet
-	 */
-	public static <T> MultiRowsSheet toDatasheet(T[] arr) {
-		if (arr != null && arr.length > 0) {
-			Class<?> cls = arr[0].getClass();
-			if (cls.isPrimitive() || cls.getName().startsWith("java.lang") || cls.equals(String.class)
-					|| cls.equals(Date.class) || cls.equals(Timestamp.class)) {
-				String[] header = { "array" };
-				ValueType[] valueTypes = { getType(cls) };
-				MultiRowsSheet sheet = new MultiRowsSheet(header, valueTypes);
-				for (T value : arr) {
-					Value[] valarray = new Value[1];
-					valarray[0] = Value.parseObject(value);
-					sheet.addRow(valarray);
-				}
-				return sheet;
-			}
-			java.lang.reflect.Field[] fields = cls.getDeclaredFields();
-			String[] header = new String[fields.length];
-			ValueType[] valueTypes = new ValueType[fields.length];
-			int i = 0;
-			for (java.lang.reflect.Field field : fields) {
-				header[i] = field.getName();
-				valueTypes[i] = getType(field.getType());
-				i++;
-			}
-			MultiRowsSheet sheet = new MultiRowsSheet(header, valueTypes);
-			for (Object obj : arr) {
-				Value[] valarray = objectToValueArray(obj, fields);
-				sheet.addRow(valarray);
-			}
-			return sheet;
-		}
-		return null;
-	}
-
-	/**
-	 * @param <T>
-	 * @param list
-	 * @param columnName
-	 * @return MultiRowsSheet
-	 */
-	@SuppressWarnings("unchecked")
-	public static <T> MultiRowsSheet toDatasheet(Collection<T> c) {
-		Iterator<T> iterator = c.iterator();
-		Class<?> clazz = null;
-		while (iterator.hasNext()) {
-			clazz = iterator.next().getClass();
-			break;
-		}
-		T[] array = (T[]) Array.newInstance(clazz, c.size());
-		array = c.toArray(array);
-		return toDatasheet(array);
-	}
-
-	/**
-	 * writes map data to a MultiRowsSheet
+	 * remove a row and shift any rows after that, if any. sheet.length() will
+	 * reduce by if the row was indeed removed
 	 *
-	 * @param map
-	 *            map
-	 * @param transpose
-	 *            If transpose = true, the output data sheet will be a
-	 *            SingleRowDataSheet with
-	 *            keys as the column and values as the row. If transpose =
-	 *            false, the output data sheet will
-	 *            be MultiRowDatasheet with columns as "Key","Value" and
-	 *            corresponding rows.
-	 * @return DataSheet
+	 * @param zeroBasedIdx
+	 * @return existing row. null if no row
 	 */
-	public static <K, V> DataSheet toDatasheet(Map<K, V> map, boolean transpose) {
-		if (!map.isEmpty() && map != null) {
-			if (transpose) {
-				String[] columnNames = new String[map.size()];
-				ValueType[] valueTypes = new ValueType[map.size()];
-				Value[] row = new Value[map.size()];
-				int i = 0;
-				for (K key : map.keySet()) {
-					columnNames[i] = key.toString();
-					valueTypes[i] = getType(map.get(key).getClass());
-					row[i] = Value.parseObject(map.get(key));
-					i++;
-				}
-				SingleRowSheet singleRowSheet = new SingleRowSheet(columnNames, valueTypes);
-				singleRowSheet.addRow(row);
-				return singleRowSheet;
-			}
-			String[] columnNames = { "key", "value" };
-			ValueType[] valueTypes = new ValueType[2];
-			for (Object key : map.keySet()) {
-				valueTypes[0] = getType(key.getClass());
-				valueTypes[1] = getType(map.get(key).getClass());
-				break;
-			}
-
-			MultiRowsSheet multirowsSheet = new MultiRowsSheet(columnNames, valueTypes);
-			for (Object key : map.keySet()) {
-				Value[] row = new Value[2];
-				row[0] = Value.parseObject(key);
-				row[1] = Value.parseObject(map.get(key));
-				multirowsSheet.addRow(row);
-			}
-			return multirowsSheet;
-		}
-		return null;
+	public Value[] deleteRow(int zeroBasedIdx) {
+		return this.data.remove(zeroBasedIdx);
 	}
 
-	private static ValueType getType(Class<?> type) {
-		if (type.equals(String.class)) {
-			return ValueType.TEXT;
-		}
-
-		if (type.isPrimitive()) {
-			if (type.equals(int.class)) {
-				return ValueType.INTEGER;
-			}
-
-			if (type.equals(long.class)) {
-				return ValueType.INTEGER;
-			}
-
-			if (type.equals(short.class)) {
-				return ValueType.INTEGER;
-			}
-
-			if (type.equals(byte.class)) {
-				return ValueType.INTEGER;
-			}
-
-			if (type.equals(char.class)) {
-				return ValueType.TEXT;
-			}
-
-			if (type.equals(boolean.class)) {
-				return ValueType.BOOLEAN;
-			}
-
-			if (type.equals(float.class)) {
-				return ValueType.DECIMAL;
-			}
-
-			if (type.equals(double.class)) {
-				return ValueType.DECIMAL;
-			}
-		}
-		if (type.equals(Date.class)) {
-			return ValueType.DATE;
-		}
-		if (type.equals(Timestamp.class)) {
-			return ValueType.TIMESTAMP;
-		}
-		return ValueType.TEXT;
-	}
-
-	private static Value[] objectToValueArray(Object obj, java.lang.reflect.Field[] fields) {
-		Value[] valarray = new Value[fields.length];
-		int j = 0;
-		for (java.lang.reflect.Field field : fields) {
-			try {
-				field.setAccessible(true);
-				valarray[j] = Value.parseObject(field.get(obj));
-				j++;
-			} catch (Exception e) {
-				throw new ApplicationError(e.getMessage());
-			}
-		}
-		return valarray;
-	}
-
-	/**
-	 * sets all row values to object of provided class
-	 *
-	 * @param <T>
-	 * @param className
-	 * @param row
-	 * @return provided class object
-	 */
-	private <T> Object rowToObject(Class<T> clazz, Value[] row) {
-		T obj = null;
-		try {
-			obj = clazz.newInstance();
-			java.lang.reflect.Field[] fields = obj.getClass().getDeclaredFields();
-			String[] columnNames = this.getColumnNames();
-			for (java.lang.reflect.Field field : fields) {
-				for (int j = 0; j < columnNames.length; j++) {
-					/*
-					 * sets value to corresponding field of class instance
-					 */
-					if (field.getName().equalsIgnoreCase(columnNames[j])) {
-						/*
-						 * We expects the caller to make sure the field names of
-						 * the class and data sheet column names to be same
-						 */
-						field.setAccessible(true);
-						ReflectUtil.setAttribute(obj, field.getName(), row[j].toString(), false, true);
-					}
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return obj;
-	}
-
-	class RowAsFields implements FieldsInterface {
+	class RowAsFields implements IFieldsCollection {
 		private final int idx;
 
 		RowAsFields(int idx) {
@@ -1051,7 +713,8 @@ public class MultiRowsSheet implements DataSheet {
 	 * @param rowIdx
 	 * @return simulator, or null if the idx is out of range.
 	 */
-	public FieldsInterface getRowAsFields(int rowIdx) {
+	@Override
+	public IFieldsCollection getRowAsFields(int rowIdx) {
 		if (rowIdx >= this.length()) {
 			return null;
 		}
@@ -1072,5 +735,4 @@ public class MultiRowsSheet implements DataSheet {
 		}
 		return result;
 	}
-
 }

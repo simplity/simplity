@@ -27,6 +27,8 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.text.DecimalFormat;
 
+import org.simplity.json.JSONWriter;
+
 /**
  * a numeric value with possible fraction
  *
@@ -122,7 +124,8 @@ public class DecimalValue extends Value {
     return new Double(this.value);
   }
 
-  @Override
+  @SuppressWarnings("unchecked")
+@Override
   public Object[] toArray(Value[] values) {
     int n = values.length;
     Double[] arr = new Double[n];
@@ -132,4 +135,14 @@ public class DecimalValue extends Value {
     }
     return arr;
   }
+
+	/* (non-Javadoc)
+	 * @see org.simplity.json.Jsonable#writeJsonValue(org.simplity.json.JSONWriter)
+	 */
+	@Override
+	public void writeJsonValue(JSONWriter writer) {
+		writer.value(this.value);
+	}
+
+
 }

@@ -37,11 +37,11 @@ import java.util.regex.Pattern;
 import org.apache.xerces.impl.dv.util.Base64;
 import org.simplity.kernel.ApplicationError;
 
-import org.simplity.kernel.data.FieldsInterface;
+import org.simplity.kernel.data.IFieldsCollection;
 import org.simplity.kernel.expr.Expression;
 import org.simplity.kernel.expr.InvalidExpressionException;
+import org.simplity.kernel.service.ServiceContext;
 import org.simplity.kernel.value.Value;
-import org.simplity.service.ServiceContext;
 
 /**
  * utility methods relating to text handling and manipulation
@@ -435,7 +435,7 @@ public class TextUtil {
    * @param fieldValues
    * @return resultant text
    */
-  public static String substituteFields(String textWithFieldNames, FieldsInterface fieldValues) {
+  public static String substituteFields(String textWithFieldNames, IFieldsCollection fieldValues) {
     /*
      * if there is no $?
      */
@@ -475,7 +475,7 @@ public class TextUtil {
    * @param fieldValues
    * @return resultant text
    */
-  public static String substituteFields(String[] textParts, FieldsInterface fieldValues) {
+  public static String substituteFields(String[] textParts, IFieldsCollection fieldValues) {
     StringBuilder sbf = new StringBuilder(textParts[0]);
     int done = textParts.length;
     int idx = 1;
@@ -524,7 +524,7 @@ public class TextUtil {
    * @param fields
    * @return file name after replacing place-holders, if any
    */
-  public static String getFileName(String filePattern, String inName, FieldsInterface fields) {
+  public static String getFileName(String filePattern, String inName, IFieldsCollection fields) {
     String result;
     if (filePattern.startsWith(DOLLAR_STR)) {
       Value val = null;

@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author simplity.org
  */
-public class DynamicSheet implements DataSheet {
+public class DynamicSheet implements IDataSheet {
 	private static final Logger logger = LoggerFactory.getLogger(DynamicSheet.class);
 
 	private final Map<String, Value> fieldValues = new HashMap<String, Value>();
@@ -134,7 +134,7 @@ public class DynamicSheet implements DataSheet {
 	}
 
 	@Override
-	public Iterator<FieldsInterface> iterator() {
+	public Iterator<IFieldsCollection> iterator() {
 		return new DataRows(this);
 	}
 
@@ -215,7 +215,7 @@ public class DynamicSheet implements DataSheet {
 	 * DataSheet)
 	 */
 	@Override
-	public int appendRows(DataSheet sheet) {
+	public int appendRows(IDataSheet sheet) {
 		throw new ApplicationError(
 				"Dynamic sheet can not have more than one rows, and hence appendRows operation is invalid");
 	}
@@ -285,5 +285,21 @@ public class DynamicSheet implements DataSheet {
 			result[i] = this.getColIdx(names[i]);
 		}
 		return result;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.simplity.kernel.data.DataSheet#getRowAsFields(int)
+	 */
+	@Override
+	public IFieldsCollection getRowAsFields(int zeroBasedRow) {
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.simplity.kernel.data.DataSheet#appendEmptyRows()
+	 */
+	@Override
+	public int appendEmptyRows(int n) {
+		throw new ApplicationError("Rows can not be added to a Dynamic sheet");
 	}
 }

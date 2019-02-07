@@ -30,7 +30,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.simplity.kernel.data.DynamicSheet;
-import org.simplity.kernel.data.FieldsInterface;
+import org.simplity.kernel.data.IFieldsCollection;
 import org.simplity.kernel.util.DateUtil;
 import org.simplity.kernel.value.InvalidValueException;
 import org.simplity.kernel.value.Value;
@@ -176,7 +176,7 @@ public class Expression {
    * @return value of this expression
    * @throws InvalidOperationException
    */
-  public Value evaluate(FieldsInterface data) throws InvalidOperationException {
+  public Value evaluate(IFieldsCollection data) throws InvalidOperationException {
     /*
      * this is just a safety. As per our current design, this should not
      * happen
@@ -202,7 +202,7 @@ public class Expression {
    * @return
    * @throws InvalidValueException
    */
-  Value[] getValueList(FieldsInterface data) throws InvalidOperationException {
+  Value[] getValueList(IFieldsCollection data) throws InvalidOperationException {
     if (this.operands == null) {
       return new Value[0];
     }
@@ -240,7 +240,7 @@ public class Expression {
    * @param data
    * @throws InvalidOperationException
    */
-  private void takeSteps(Value[] values, FieldsInterface data) throws InvalidOperationException {
+  private void takeSteps(Value[] values, IFieldsCollection data) throws InvalidOperationException {
     /*
      * steps involving commas (for functions) would be at the end. We comma
      * operators would be at the end. We will take them outside of the loop

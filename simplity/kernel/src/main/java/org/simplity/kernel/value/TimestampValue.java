@@ -27,6 +27,8 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.Date;
 
+import org.simplity.json.JSONWriter;
+
 /**
  * Very special value, and should not be used except for specific timestap field
  * defined in an
@@ -157,4 +159,12 @@ public class TimestampValue extends Value {
 		}
 		return arr;
 	}
+	/* (non-Javadoc)
+	 * @see org.simplity.json.Jsonable#writeJsonValue(org.simplity.json.JSONWriter)
+	 */
+	@Override
+	public void writeJsonValue(JSONWriter writer) {
+		writer.value(this.value);
+	}
+
 }

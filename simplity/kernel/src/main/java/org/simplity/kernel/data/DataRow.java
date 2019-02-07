@@ -31,12 +31,12 @@ import org.simplity.kernel.value.Value;
  *
  * @author simplity.org
  */
-public class DataRow implements FieldsInterface {
+public class DataRow implements IFieldsCollection {
 
-  private final DataSheet dataSheet;
+  private final IDataSheet dataSheet;
   private final int myIdx;
 
-  DataRow(DataSheet dataSheet, int rowIdx) {
+  DataRow(IDataSheet dataSheet, int rowIdx) {
     this.dataSheet = dataSheet;
     this.myIdx = rowIdx;
   }

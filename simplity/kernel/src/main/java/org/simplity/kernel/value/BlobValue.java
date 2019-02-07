@@ -21,9 +21,6 @@
  */
 package org.simplity.kernel.value;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -35,7 +32,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.simplity.kernel.ApplicationError;
-
 import org.simplity.kernel.file.FileManager;
 
 /**
@@ -91,8 +87,7 @@ public class BlobValue extends TextValue {
 		File file = FileManager.getTempFile(this.value);
 		if (file == null) {
 
-			logger.info("Unable to get temp file content for key {} RDBMS will have null for this Blob.",
-					this.value);
+			logger.info("Unable to get temp file content for key {} RDBMS will have null for this Blob.", this.value);
 
 			return null;
 		}

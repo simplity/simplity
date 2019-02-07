@@ -26,6 +26,8 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.simplity.json.JSONWriter;
+
 /**
  * represents whole number
  *
@@ -111,7 +113,8 @@ public class IntegerValue extends Value {
     return new Long(this.value);
   }
 
-  @Override
+  @SuppressWarnings("unchecked")
+@Override
   public Object[] toArray(Value[] values) {
     int n = values.length;
     Long[] arr = new Long[n];
@@ -121,4 +124,13 @@ public class IntegerValue extends Value {
     }
     return arr;
   }
+	/* (non-Javadoc)
+	 * @see org.simplity.json.Jsonable#writeJsonValue(org.simplity.json.JSONWriter)
+	 */
+	@Override
+	public void writeJsonValue(JSONWriter writer) {
+		writer.value(this.value);
+	}
+
+
 }

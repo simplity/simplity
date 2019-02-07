@@ -21,7 +21,7 @@
  */
 package org.simplity.kernel.data;
 
-import org.simplity.kernel.FormattedMessage;
+import org.simplity.kernel.msg.FormattedMessage;
 
 /**
  * exception thrown in case of parse errors. we want the parse() methods to return valid values, and

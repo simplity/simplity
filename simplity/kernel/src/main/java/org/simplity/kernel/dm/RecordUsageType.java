@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2015 EXILANT Technologies Private Limited (www.exilant.com)
- * Copyright (c) 2016 simplity.org
+ * Copyright (c) 2019 simplity.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,16 +21,32 @@
  */
 package org.simplity.kernel.dm;
 
-/** why do we define this record? */
+/**
+ * context where a pre-defined record is meant to be used
+ */
 public enum RecordUsageType {
-  /** represents a row of a table being stored in an rdbms */
-  STORAGE
+	/**
+	 * a data structure of primitive fields. Helps in grouping set of fields
+	 * that are used in more than one occasion. represented
+	 * by<code>Record</code>
+	 */
+	DATA_STRUCTURE,
 
-  /** a view involving one or more storage records */
-  ,
-  VIEW
+	/**
+	 * represents a row of a table being stored in an rdbms. represented
+	 * by<code>DbTable</code>
+	 */
+	TABLE,
 
-  /** this is a record structure used by the application, but is not linked to any stored data */
-  ,
-  STRUCTURE
+	/**
+	 * a view involving one or more tables. represented by<code>DbView</code>
+	 */
+
+	VIEW,
+
+	/**
+	 * data structure that allows arrays and object as member. Arbitrary data
+	 * structure represented by<code>ComplexRecord</code>
+	 */
+	OBJECT_STRUCTURE
 }

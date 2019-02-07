@@ -22,69 +22,73 @@
  */
 package org.simplity.kernel;
 
-import org.simplity.service.ServiceProtocol;
+import org.simplity.kernel.app.AppConventions;
 
 /** @author rg bhandi */
 public enum FilterCondition {
-  /** equal */
-  Equal(ServiceProtocol.EQUAL),
-  /** not equal */
-  NotEqual(ServiceProtocol.NOT_EQUAL),
-  /** greater. remember it is greater and not "more" */
-  Greater(ServiceProtocol.GREATER),
-  /** greater or equal */
-  GreaterOrEqual(ServiceProtocol.GREATER_OR_EQUAL),
-  /** we prefer to call small rather than less because we say greater and not more :-) */
-  Smaller(ServiceProtocol.LESS),
-  /** we prefer to smaller to less than more :-) */
-  SmallerOrEqual(ServiceProtocol.LESS_OR_EQUAL),
-  /** like */
-  Like(ServiceProtocol.LIKE, FilterCondition.LIKE),
-  /** starts with */
-  StartsWith(ServiceProtocol.STARTS_WITH, FilterCondition.LIKE),
-  /** between */
-  Between(ServiceProtocol.BETWEEN, FilterCondition.BETWEEN),
-  /** one in the list */
-  In(ServiceProtocol.IN_LIST, FilterCondition.IN);
-  private static final String IN = " IN ";
-  private static final String LIKE = " LIKE ";
-  private static final String BETWEEN = " BETWEEN ";
-  private String textValue;
-  private String sql;
+	/** equal */
+	Equal(AppConventions.Comparator.EQUAL),
+	/** not equal */
+	NotEqual(AppConventions.Comparator.NOT_EQUAL),
+	/** greater. remember it is greater and not "more" */
+	Greater(AppConventions.Comparator.GREATER),
+	/** greater or equal */
+	GreaterOrEqual(AppConventions.Comparator.GREATER_OR_EQUAL),
+	/**
+	 * we prefer to call small rather than less because we say greater and not
+	 * more :-)
+	 */
+	Smaller(AppConventions.Comparator.LESS),
+	/** we prefer to smaller to less than more :-) */
+	SmallerOrEqual(AppConventions.Comparator.LESS_OR_EQUAL),
+	/** like */
+	Like(AppConventions.Comparator.LIKE, FilterCondition.LIKE),
+	/** starts with */
+	StartsWith(AppConventions.Comparator.STARTS_WITH, FilterCondition.LIKE),
+	/** between */
+	Between(AppConventions.Comparator.BETWEEN, FilterCondition.BETWEEN),
+	/** one in the list */
+	In(AppConventions.Comparator.IN_LIST, FilterCondition.IN);
+	private static final String IN = " IN ";
+	private static final String LIKE = " LIKE ";
+	private static final String BETWEEN = " BETWEEN ";
+	private String textValue;
+	private String sql;
 
-  private FilterCondition(String text) {
-    this.textValue = text;
-    this.sql = text;
-  }
+	private FilterCondition(String text) {
+		this.textValue = text;
+		this.sql = text;
+	}
 
-  private FilterCondition(String text, String sqlText) {
-    this.textValue = text;
-    this.sql = sqlText;
-  }
+	private FilterCondition(String text, String sqlText) {
+		this.textValue = text;
+		this.sql = sqlText;
+	}
 
-  /**
-   * parse a text into enum
-   *
-   * @param text text to be parsed into enum
-   * @return filter condition, or null if there is no filter for this text
-   */
-  public static FilterCondition parse(String text) {
-    if (text == null || text.length() == 0) {
-      return Equal;
-    }
-    for (FilterCondition f : FilterCondition.values()) {
-      if (f.textValue.equals(text)) {
-        return f;
-      }
-    }
-    return null;
-  }
+	/**
+	 * parse a text into enum
+	 *
+	 * @param text
+	 *            text to be parsed into enum
+	 * @return filter condition, or null if there is no filter for this text
+	 */
+	public static FilterCondition parse(String text) {
+		if (text == null || text.length() == 0) {
+			return Equal;
+		}
+		for (FilterCondition f : FilterCondition.values()) {
+			if (f.textValue.equals(text)) {
+				return f;
+			}
+		}
+		return null;
+	}
 
-  /**
-   * @return text to be used in a sql for this condition. like, startWith and between require custom
-   *     logic by caller
-   */
-  public String getSql() {
-    return this.sql;
-  }
+	/**
+	 * @return text to be used in a sql for this condition. like, startWith and
+	 *         between require custom logic by caller
+	 */
+	public String getSql() {
+		return this.sql;
+	}
 }

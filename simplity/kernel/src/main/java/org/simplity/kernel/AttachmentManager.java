@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 
+import org.simplity.kernel.app.IAttachmentAssistant;
 import org.simplity.kernel.file.FileManager;
 
 /**
@@ -71,7 +72,7 @@ public class AttachmentManager {
   private static final String MSG =
       "No assistant is assigned to AttachmentManager. Manager expressed her regret that she is unable to manage media.";
   /** store room assistant instance. */
-  private static AttachmentAssistant assistant = null;
+  private static IAttachmentAssistant assistant = null;
 
   /**
    * Save media into a temp/buffer area and return a Media data structure for the same. This is
@@ -168,7 +169,7 @@ public class AttachmentManager {
    * @param ast a thread-safe assistant who would be cached and used for all media storage
    *     operations
    */
-  public static void setAssistant(AttachmentAssistant ast) {
+  public static void setAssistant(IAttachmentAssistant ast) {
     assistant = ast;
 
     logger.info(

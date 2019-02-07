@@ -28,12 +28,12 @@ import java.util.Iterator;
  *
  * @author simplity.org
  */
-public class DataRows implements Iterator<FieldsInterface> {
-  private final DataSheet dataSheet;
+public class DataRows implements Iterator<IFieldsCollection> {
+  private final IDataSheet dataSheet;
   private int nextIdx = 0;
   private final int endIdx;
 
-  DataRows(DataSheet dataSheet) {
+  DataRows(IDataSheet dataSheet) {
     this.dataSheet = dataSheet;
     this.endIdx = dataSheet.length();
   }
@@ -44,7 +44,7 @@ public class DataRows implements Iterator<FieldsInterface> {
   }
 
   @Override
-  public FieldsInterface next() {
+  public IFieldsCollection next() {
     if (this.nextIdx >= this.endIdx) {
       return null;
     }

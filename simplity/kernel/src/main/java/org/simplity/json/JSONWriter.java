@@ -5,8 +5,6 @@ import java.io.StringWriter;
 import java.io.Writer;
 
 import org.simplity.kernel.value.Value;
-import org.simplity.service.ResponseWriter;
-import org.simplity.service.ResponseWriterException;
 
 /*
 Copyright (c) 2006 JSON.org
@@ -64,7 +62,7 @@ SOFTWARE.
  * @version 2015-12-09
  * @author simplity.org //added toString() and a convenient default constructor
  */
-public class JSONWriter implements ResponseWriter {
+public class JSONWriter {
   private static final int maxdepth = 200;
 
   /** The comma flag determines if a comma should be output before the next value. */
@@ -138,7 +136,6 @@ public class JSONWriter implements ResponseWriter {
    * @throws JSONException If the nesting is too deep, or if the object is started in the wrong
    *     place (for example as a key or after the end of the outermost array or object).
    */
-  @Override
   public JSONWriter array() throws JSONException {
     if (this.mode == 'i' || this.mode == 'o' || this.mode == 'a') {
       this.push(null);
@@ -177,7 +174,6 @@ public class JSONWriter implements ResponseWriter {
    * @return this
    * @throws JSONException If incorrectly nested.
    */
-  @Override
   public JSONWriter endArray() throws JSONException {
     return this.end('a', ']');
   }
@@ -188,7 +184,6 @@ public class JSONWriter implements ResponseWriter {
    * @return this
    * @throws JSONException If incorrectly nested.
    */
-  @Override
   public JSONWriter endObject() throws JSONException {
     return this.end('k', '}');
   }
@@ -202,7 +197,6 @@ public class JSONWriter implements ResponseWriter {
    * @throws JSONException If the key is out of place. For example, keys do not belong in arrays or
    *     if the key is null.
    */
-  @Override
   public JSONWriter key(String string) throws JSONException {
     if (string == null) {
       throw new JSONException("Null key.");
@@ -234,7 +228,6 @@ public class JSONWriter implements ResponseWriter {
    * @throws JSONException If the nesting is too deep, or if the object is started in the wrong
    *     place (for example as a key or after the end of the outermost array or object).
    */
-  @Override
   public JSONWriter object() throws JSONException {
     if (this.mode == 'i') {
       this.mode = 'o';
@@ -288,7 +281,6 @@ public class JSONWriter implements ResponseWriter {
    * @return this
    * @throws JSONException Exception
    */
-  @Override
   public JSONWriter value(boolean b) throws JSONException {
     return this.append(b ? "true" : "false");
   }
@@ -300,7 +292,6 @@ public class JSONWriter implements ResponseWriter {
    * @return this
    * @throws JSONException If the number is not finite.
    */
-  @Override
   public JSONWriter value(double d) throws JSONException {
     return this.value(new Double(d));
   }
@@ -312,7 +303,6 @@ public class JSONWriter implements ResponseWriter {
    * @return this
    * @throws JSONException Exception
    */
-  @Override
   public JSONWriter value(long l) throws JSONException {
     return this.append(Long.toString(l));
   }
@@ -325,8 +315,11 @@ public class JSONWriter implements ResponseWriter {
    * @return this
    * @throws JSONException If the value is out of sequence.
    */
-  @Override
   public JSONWriter value(Object object) throws JSONException {
+	  if(object instanceof JsonWritable) {
+		  ((JsonWritable)object).writeJsonValue(this);
+		  return this;
+	  }
     return this.append(JSONObject.valueToString(object));
   }
 
@@ -337,13 +330,13 @@ public class JSONWriter implements ResponseWriter {
    * @return this
    * @throws JSONException If the value is out of sequence.
    */
-  @Override
   public JSONWriter value(Value value) throws JSONException {
-    Object obj = null;
-    if (Value.isNull(value) == false) {
-      obj = value.toObject();
-    }
-    return this.append(JSONObject.valueToString(obj));
+	  if(value == null) {
+		  this.append(JSONObject.valueToString(null));
+	  }else {
+		  value.writeJsonValue(this);
+	  }
+	  return this;
   }
   /*
    * (non-Javadoc)
@@ -356,28 +349,5 @@ public class JSONWriter implements ResponseWriter {
       return "{}";
     }
     return this.writer.toString();
-  }
-
-  /* (non-Javadoc)
-   * @see org.simplity.service.ResponseWriter#init()
-   */
-  @Override
-  public void init() {
-    this.object();
-  }
-  /* (non-Javadoc)
-   * @see org.simplity.service.ResponseWriter#init()
-   */
-  @Override
-  public void end() {
-    this.endObject();
-  }
-
-  /* (non-Javadoc)
-   * @see org.simplity.service.ResponseWriter#getResponse()
-   */
-  @Override
-  public String getResponse() throws ResponseWriterException {
-    return this.toString();
   }
 }

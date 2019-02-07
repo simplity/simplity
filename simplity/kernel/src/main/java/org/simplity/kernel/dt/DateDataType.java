@@ -24,7 +24,8 @@ package org.simplity.kernel.dt;
 
 import java.util.Date;
 
-import org.simplity.kernel.comp.ValidationContext;
+import org.simplity.kernel.comp.IValidationContext;
+import org.simplity.kernel.comp.ValidationMessage;
 import org.simplity.kernel.util.DateUtil;
 import org.simplity.kernel.value.DateValue;
 import org.simplity.kernel.value.InvalidValueException;
@@ -37,153 +38,150 @@ import org.slf4j.LoggerFactory;
 public class DateDataType extends DataType {
 	private static final Logger logger = LoggerFactory.getLogger(DateDataType.class);
 
-  /** do we keep time as well? */
-  boolean hasTime;
+	/** do we keep time as well? */
+	boolean hasTime;
 
-  /**
-   * how far back into past is this date valid? -n means a min of n days into future (as if
-   * minDaysIntoFuture = n)
-   */
-  int maxDaysIntoPast = Integer.MAX_VALUE;
-  /**
-   * how far into future can this date go? In case the date has to have a min days into past, use -n
-   * here
-   */
-  int maxDaysIntoFuture = Integer.MAX_VALUE;
+	/**
+	 * how far back into past is this date valid? -n means a min of n days into
+	 * future (as if minDaysIntoFuture = n)
+	 */
+	int maxDaysIntoPast = Integer.MAX_VALUE;
+	/**
+	 * how far into future can this date go? In case the date has to have a min
+	 * days into past, use -n here
+	 */
+	int maxDaysIntoFuture = Integer.MAX_VALUE;
 
-  @Override
-  public Value validateValue(Value value) {
-    if (value.getValueType() != ValueType.DATE) {
-      return null;
-    }
-    /*
-     * If this is just date, then we assume that the milli-second represents
-     * the date in UTC
-     */
-    long date = ((DateValue) value).getDate();
-    int nbrDays = DateUtil.daysFromToday(date);
-    if (nbrDays >= 0) {
-      /*
-       * it is a date into the future
-       */
-      if (nbrDays > this.maxDaysIntoFuture) {
-        /*
-         * it is too far into future
-         */
-        return null;
-      }
-      if (this.maxDaysIntoPast < 0 && nbrDays < -this.maxDaysIntoPast) {
-        /*
-         * it should have been farther into future
-         */
-        return null;
-      }
-    } else {
-      /*
-       * it is a date in the past
-       */
-      nbrDays = -nbrDays;
-      if (nbrDays > this.maxDaysIntoPast) {
-        /*
-         * it is too far into the past
-         */
-        return null;
-      }
-      if (this.maxDaysIntoFuture < 0 && nbrDays < -this.maxDaysIntoFuture) {
-        /*
-         * it should have been farther into past
-         */
-        return null;
-      }
-    }
+	@Override
+	public Value validateValue(Value value) {
+		if (value.getValueType() != ValueType.DATE) {
+			return null;
+		}
+		/*
+		 * If this is just date, then we assume that the milli-second represents
+		 * the date in UTC
+		 */
+		long date = ((DateValue) value).getDate();
+		int nbrDays = DateUtil.daysFromToday(date);
+		if (nbrDays >= 0) {
+			/*
+			 * it is a date into the future
+			 */
+			if (nbrDays > this.maxDaysIntoFuture) {
+				/*
+				 * it is too far into future
+				 */
+				return null;
+			}
+			if (this.maxDaysIntoPast < 0 && nbrDays < -this.maxDaysIntoPast) {
+				/*
+				 * it should have been farther into future
+				 */
+				return null;
+			}
+		} else {
+			/*
+			 * it is a date in the past
+			 */
+			nbrDays = -nbrDays;
+			if (nbrDays > this.maxDaysIntoPast) {
+				/*
+				 * it is too far into the past
+				 */
+				return null;
+			}
+			if (this.maxDaysIntoFuture < 0 && nbrDays < -this.maxDaysIntoFuture) {
+				/*
+				 * it should have been farther into past
+				 */
+				return null;
+			}
+		}
 
-    if (this.hasTime) {
-      return value;
-    }
+		if (this.hasTime) {
+			return value;
+		}
 
-    return Value.newDateValue(DateUtil.trimDate(date));
-  }
+		return Value.newDateValue(DateUtil.trimDate(date));
+	}
 
-  @Override
-  public ValueType getValueType() {
-    return ValueType.DATE;
-  }
+	@Override
+	public ValueType getValueType() {
+		return ValueType.DATE;
+	}
 
-  @Override
-  public int getMaxLength() {
-    return 15;
-  }
+	@Override
+	public int getMaxLength() {
+		return 15;
+	}
 
-  /**
-   * does this include time also
-   *
-   * @return true if this contains time, false otherwise
-   */
-  public boolean includesTime() {
-    return this.hasTime;
-  }
+	/**
+	 * does this include time also
+	 *
+	 * @return true if this contains time, false otherwise
+	 */
+	public boolean includesTime() {
+		return this.hasTime;
+	}
 
-  @Override
-  protected int validateSpecific(ValidationContext ctx) {
-    if (this.maxDaysIntoFuture != Integer.MAX_VALUE && this.maxDaysIntoPast != Integer.MAX_VALUE) {
-      if (-this.maxDaysIntoPast > this.maxDaysIntoFuture) {
-    	  String msg = "Invalid date range. Earliest possible date is specified to be after the latest possibe date.";
-        ctx.addError(msg, null, "maxDaysIntoFuture");
-        ctx.addError(msg, null, "maxDaysIntoPast");
-        return 2;
-      }
-    }
-    return 0;
-  }
+	@Override
+	protected void validateSpecific(IValidationContext vtx) {
+		if (this.maxDaysIntoFuture != Integer.MAX_VALUE && this.maxDaysIntoPast != Integer.MAX_VALUE) {
+			if (-this.maxDaysIntoPast > this.maxDaysIntoFuture) {
+				String msg = "Invalid date range. Earliest possible date is specified to be after the latest possibe date.";
+				vtx.message(new ValidationMessage(this, ValidationMessage.SEVERITY_ERROR, msg, "maxDaysIntoPast"));
+				vtx.message(new ValidationMessage(this, ValidationMessage.SEVERITY_ERROR, msg, "maxDaysIntoFuture"));
+			}
+		}
+	}
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.simplity.kernel.dt.DataType#synthesiseDscription()
-   */
-  @Override
-  protected String synthesiseDscription() {
-    Date minDate = null;
-    Date maxDate = null;
-    Date date = new Date();
-    if (this.maxDaysIntoFuture != Integer.MAX_VALUE) {
-      maxDate = DateUtil.addDays(date, this.maxDaysIntoFuture);
-    }
-    if (this.maxDaysIntoPast != Integer.MAX_VALUE) {
-      minDate = DateUtil.addDays(date, -this.maxDaysIntoPast);
-    }
-    if (minDate != null) {
-      if (maxDate != null) {
-        return "Expecting a date between "
-            + DateUtil.formatDate(minDate)
-            + " and "
-            + DateUtil.formatDate(maxDate);
-      }
-      return "Expecting a date after " + DateUtil.formatDate(minDate);
-    }
-    if (maxDate != null) {
-      return "Expecting a date before " + DateUtil.formatDate(maxDate);
-    }
-    return "Expecting a valid date";
-  }
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see org.simplity.kernel.dt.DataType#synthesiseDscription()
+	 */
+	@Override
+	protected String synthesiseDscription() {
+		Date minDate = null;
+		Date maxDate = null;
+		Date date = new Date();
+		if (this.maxDaysIntoFuture != Integer.MAX_VALUE) {
+			maxDate = DateUtil.addDays(date, this.maxDaysIntoFuture);
+		}
+		if (this.maxDaysIntoPast != Integer.MAX_VALUE) {
+			minDate = DateUtil.addDays(date, -this.maxDaysIntoPast);
+		}
+		if (minDate != null) {
+			if (maxDate != null) {
+				return "Expecting a date between "
+						+ DateUtil.formatDate(minDate)
+						+ " and "
+						+ DateUtil.formatDate(maxDate);
+			}
+			return "Expecting a date after " + DateUtil.formatDate(minDate);
+		}
+		if (maxDate != null) {
+			return "Expecting a date before " + DateUtil.formatDate(maxDate);
+		}
+		return "Expecting a valid date";
+	}
 
-  /* (non-Javadoc)
-   * @see org.simplity.kernel.dt.DataType#formtValue(org.simplity.kernel.value.Value)
-   */
-  @Override
-  public String formatVal(Value value) {
-    Date date;
-    try {
-      date = value.toDate();
-    } catch (InvalidValueException e) {
-
-      logger.info("Value of type " + value.getValueType() + " passed for frmatting as date.");
-
-      return "";
-    }
-    if (this.hasTime) {
-      return DateUtil.formatDateTime(date);
-    }
-    return DateUtil.formatDate(date);
-  }
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see
+	 * org.simplity.kernel.dt.DataType#formtValue(org.simplity.kernel.value.
+	 * Value)
+	 */
+	@Override
+	public String formatVal(Value value) {
+		Date date;
+		try {
+			date = value.toDate();
+		} catch (InvalidValueException e) {
+			logger.error("Value of type " + value.getValueType() + " passed for frmatting as date.");
+			return "";
+		}
+		return DateUtil.formatDateTime(date);
+	}
 }

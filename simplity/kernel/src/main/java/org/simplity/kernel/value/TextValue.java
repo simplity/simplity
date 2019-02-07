@@ -26,6 +26,8 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.simplity.json.JSONWriter;
+
 /**
  * represents a value that has string/text value
  *
@@ -81,7 +83,8 @@ public class TextValue extends Value {
     return this.value;
   }
 
-  @Override
+  @SuppressWarnings("unchecked")
+@Override
   public String[] toArray(Value[] values) {
     int n = values.length;
     String[] arr = new String[n];
@@ -91,4 +94,12 @@ public class TextValue extends Value {
     }
     return arr;
   }
+	/* (non-Javadoc)
+	 * @see org.simplity.json.Jsonable#writeJsonValue(org.simplity.json.JSONWriter)
+	 */
+	@Override
+	public void writeJsonValue(JSONWriter writer) {
+		writer.value(this.value);
+	}
+
 }

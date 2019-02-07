@@ -26,41 +26,39 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
+import org.simplity.json.JsonWritable;
 import org.simplity.kernel.ApplicationError;
+import org.simplity.kernel.app.AppConventions;
 import org.simplity.kernel.util.DateUtil;
-import org.simplity.service.ServiceProtocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Represents value of a field or data element. Text, Integer, Decimal. Boolean
- * and Date are the
- * five types we support.
+ * and Date are the five types we support.
  *
  * <p>
  * If we have to carry values like int/long, any ways we have to wrap them in
- * Integer/Long etc..
- * class. Value class not only wraps the data, it provides the foundation on
- * which generic
- * utilities, like expression evaluation, can be built.
+ * Integer/Long etc.. class. Value class not only wraps the data, it provides
+ * the foundation on which generic utilities, like expression evaluation, can be
+ * built.
  *
  * <p>
  * Text-value of boolean and date :
  *
  * <p>
  * Important consideration. we expect that Value is internal to programming, and
- * any conversion
- * to/from text would be within programming paradigm. For example
- * serialization/de-serialization. It
- * need not be human-readable. Hence we have chosen "1"/"0" for boolean and the
- * number-of-milli-seconds-from-epoch for date.
+ * any conversion to/from text would be within programming paradigm. For example
+ * serialization/de-serialization. It need not be human-readable. Hence we have
+ * chosen "1"/"0" for boolean and the number-of-milli-seconds-from-epoch for
+ * date.
  *
  * @author simplity.org
  */
-public abstract class Value implements Serializable {
+public abstract class Value implements Serializable, JsonWritable {
 	protected static final Logger logger = LoggerFactory.getLogger(Value.class);
 
 	/** */
@@ -72,8 +70,7 @@ public abstract class Value implements Serializable {
 
 	/**
 	 * what is the text value of null? As we are focusing more on serialization,
-	 * rather than human
-	 * readable, we use empty string
+	 * rather than human readable, we use empty string
 	 */
 	public static final String NULL_TEXT_VALUE = "";
 	/** text value of a true boolean value :-) */
@@ -245,8 +242,7 @@ public abstract class Value implements Serializable {
 	 * @param valueType
 	 *            value type of the desired Value object instance
 	 * @return Value object of desired value type or null if the text value is
-	 *         not compatible for the
-	 *         desired value type
+	 *         not compatible for the desired value type
 	 */
 	public static Value parseValue(String textValue, ValueType valueType) {
 		if (textValue == null) {
@@ -329,10 +325,9 @@ public abstract class Value implements Serializable {
 
 	/**
 	 * returns text value as per our convention. Intended use is for a
-	 * text-based representation, but
-	 * not for human readability. decimal value will have exactly four decimal
-	 * places always. Date is
-	 * represented as milli-seconds-from-epoch. Boolean becomes "1"/"0"
+	 * text-based representation, but not for human readability. decimal value
+	 * will have exactly four decimal places always. Date is represented as
+	 * milli-seconds-from-epoch. Boolean becomes "1"/"0"
 	 *
 	 * @return text value.
 	 */
@@ -354,8 +349,7 @@ public abstract class Value implements Serializable {
 
 	/**
 	 * true if obj is an instance of a compatible value, and both have non-null
-	 * values and the values
-	 * are equal
+	 * values and the values are equal
 	 */
 	@Override
 	public final boolean equals(Object obj) {
@@ -444,18 +438,15 @@ public abstract class Value implements Serializable {
 	 * @param textList
 	 *            of the form a,b,c or a:alpha,b:beta...
 	 * @param valueType
-	 * @return map of text-value that can be used to get value for text instead
-	 *         of parsing
+	 * @return set of values in this list
 	 */
-	public static Map<String, Value> parseValueList(String textList, ValueType valueType) {
-		Map<String, Value> result = new HashMap<String, Value>();
-		String[] vals = textList.split(ServiceProtocol.LIST_SEPARATOR + "");
+	public static Set<Value> parseValueList(String textList, ValueType valueType) {
+		Set<Value> result = new HashSet<Value>();
+		String[] vals = textList.split(AppConventions.LIST_SEPARATOR + "");
 		for (String val : vals) {
 			val = val.trim();
-			String key = val;
-			int idx = val.indexOf(ServiceProtocol.LIST_VALUE_SEPARATOR);
+			int idx = val.indexOf(AppConventions.LIST_VALUE_SEPARATOR);
 			if (idx != -1) {
-				key = val.substring(0, idx).trim();
 				val = val.substring(idx + 1).trim();
 			}
 			if (val.length() == 0) {
@@ -469,10 +460,9 @@ public abstract class Value implements Serializable {
 			if (value == null) {
 				throw new ApplicationError("Value list " + textList + " has an invalid value of " + val);
 			}
-			if (result.containsKey(key)) {
+			if (result.add(value) == false) {
 				throw new ApplicationError("Value list " + textList + " has duplicate value of " + val);
 			}
-			result.put(key, value);
 		}
 		return result;
 	}
@@ -513,8 +503,7 @@ public abstract class Value implements Serializable {
 
 	/**
 	 * parse a constant as per our convention. true/false for boolean
-	 * /yyyy-mm-dd/ for date, or any
-	 * valid number. else text
+	 * /yyyy-mm-dd/ for date, or any valid number. else text
 	 *
 	 * @param text
 	 * @return parsed value
@@ -574,8 +563,7 @@ public abstract class Value implements Serializable {
 
 	/**
 	 * @return java Object that represents the underlying value. String, Long,
-	 *         Double, Date or Boolean
-	 *         instance.
+	 *         Double, Date or Boolean instance.
 	 */
 	public Object toObject() {
 		if (this.valueIsNull) {
@@ -623,10 +611,13 @@ public abstract class Value implements Serializable {
 		 */
 		String val = object.toString();
 		Date date = DateUtil.parseDateWithOptionalTime(val);
-		if (date == null) {
-			return newTextValue(val);
+		if (date != null) {
+			return newDateValue(date);
 		}
-		return newDateValue(date);
+		/*
+		 * when it is not anything else, it is text
+		 */
+		return newTextValue(val);
 	}
 
 	/**
@@ -655,7 +646,7 @@ public abstract class Value implements Serializable {
 	}
 
 	/**
-	 * time-stamp value is provided mre flexibility to allow implementation
+	 * time-stamp value is provided more flexibility to allow implementation
 	 * specific variations
 	 *
 	 * @param value
@@ -686,5 +677,22 @@ public abstract class Value implements Serializable {
 		}
 		throw new ApplicationError(
 				value.toString() + " is not a valid time stamp value. It has to be eithe rnumeric, or a valid date.");
+	}
+
+	/**
+	 *
+	 * @param objects
+	 *            array of primitive objects to be parsed into values
+	 * @param valueTypes
+	 *            value types to be used for parsing
+	 * @return array in which each element is parsed from the corresponding
+	 *         object array element, based on the vlueType
+	 */
+	public static Value[] toValues(Object[] objects, ValueType[] valueTypes) {
+		Value[] values = new Value[objects.length];
+		for (int i = 0; i < values.length; i++) {
+			values[i] = valueTypes[i].fromObject(objects[i]);
+		}
+		return values;
 	}
 }

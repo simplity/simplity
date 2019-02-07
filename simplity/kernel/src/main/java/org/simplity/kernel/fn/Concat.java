@@ -22,7 +22,7 @@
 
 package org.simplity.kernel.fn;
 
-import org.simplity.kernel.data.FieldsInterface;
+import org.simplity.kernel.data.IFieldsCollection;
 import org.simplity.kernel.value.Value;
 import org.simplity.kernel.value.ValueType;
 
@@ -39,7 +39,7 @@ public class Concat extends AbstractFunction {
    * [], org.simplity.kernel.data.FieldsInterface)
    */
   @Override
-  public Value execute(Value[] arguments, FieldsInterface data) {
+  public Value execute(Value[] arguments, IFieldsCollection data) {
     if (arguments == null || arguments.length == 0) {
       return Value.VALUE_EMPTY;
     }

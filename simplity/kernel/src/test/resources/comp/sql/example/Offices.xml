@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<sql name="Offices" sqlType="update" xmlns="http://www.simplity.org/schema"
-	moduleName="example" preparedStatement="update offices set city = 'Hyd' where officeCode= ? " >
-	<inputParameters>
-		<sqlParameter dataType="id" name="officeCode"
-			defaultValue="2" />
-	</inputParameters>
-	
-</sql>

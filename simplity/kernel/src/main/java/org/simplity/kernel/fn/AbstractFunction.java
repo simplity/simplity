@@ -23,51 +23,51 @@
 package org.simplity.kernel.fn;
 
 import org.simplity.kernel.comp.ComponentType;
-import org.simplity.kernel.comp.ValidationContext;
+import org.simplity.kernel.comp.IValidationContext;
 import org.simplity.kernel.util.TextUtil;
 
 /**
- * use this as the base class if you are developing a function meant only for this. the core
- * function methods for concrete class
+ * use this as the base class if you are developing a function meant only for
+ * this. the core function methods for concrete class
  */
-public abstract class AbstractFunction implements Function {
-  protected static final ComponentType MY_TYPE = ComponentType.FUNCTION;
+public abstract class AbstractFunction implements IFunction {
+	protected static final ComponentType MY_TYPE = ComponentType.FUNCTION;
 
-  @Override
-  public String getSimpleName() {
-    String name = this.getClass().getSimpleName();
-    return TextUtil.classNameToName(name);
-  }
+	@Override
+	public String getSimpleName() {
+		String name = this.getClass().getSimpleName();
+		return TextUtil.classNameToName(name);
+	}
 
-  @Override
-  public String getQualifiedName() {
-    return this.getSimpleName();
-  }
+	@Override
+	public String getQualifiedName() {
+		return this.getSimpleName();
+	}
 
-  @Override
-  public void getReady() {
-    //
-  }
+	@Override
+	public void getReady() {
+		//
+	}
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.simplity.kernel.comp.Component#getComponentType()
-   */
-  @Override
-  public ComponentType getComponentType() {
-    return MY_TYPE;
-  }
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see org.simplity.kernel.comp.Component#getComponentType()
+	 */
+	@Override
+	public ComponentType getComponentType() {
+		return MY_TYPE;
+	}
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see
-   * org.simplity.kernel.comp.Component#validate(org.simplity.kernel.comp.
-   * ValidationContext)
-   */
-  @Override
-  public int validate(ValidationContext ctx) {
-    return 0;
-  }
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see
+	 * org.simplity.kernel.comp.Component#validate(org.simplity.kernel.comp.
+	 * ValidationContext)
+	 */
+	@Override
+	public void validate(IValidationContext ctx) {
+		//
+	}
 }

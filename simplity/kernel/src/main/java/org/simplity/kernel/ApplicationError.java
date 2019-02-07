@@ -65,6 +65,14 @@ public class ApplicationError extends RuntimeException {
 	}
 
 	/**
+	 * error to be raised when an enum type is not handled. Useful as default case in switch-case
+	 * @param e
+	 */
+	public ApplicationError(Enum<?> e) {
+		this("Design Error: Ebun value of " + e + " for type " + e.getClass().getName() + " not yet implemented");
+	}
+
+	/**
 	 * handles SqlException that is likely to be chained to get all messages
 	 *
 	 * @param e

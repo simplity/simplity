@@ -30,10 +30,10 @@ import java.io.InputStream;
 import java.util.UUID;
 
 import org.simplity.kernel.ApplicationError;
-import org.simplity.kernel.AttachmentAssistant;
+import org.simplity.kernel.app.IAttachmentAssistant;
 
 /** we use a designated folder to save all attachments */
-public class FileBasedAssistant implements AttachmentAssistant {
+public class FileBasedAssistant implements IAttachmentAssistant {
 	private static final Logger logger = LoggerFactory.getLogger(FileBasedAssistant.class);
 
   private final File storageRoot;

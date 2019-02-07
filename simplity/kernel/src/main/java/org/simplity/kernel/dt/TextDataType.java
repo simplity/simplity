@@ -24,7 +24,8 @@ package org.simplity.kernel.dt;
 
 import java.util.regex.Pattern;
 
-import org.simplity.kernel.comp.ValidationContext;
+import org.simplity.kernel.comp.IValidationContext;
+import org.simplity.kernel.comp.ValidationMessage;
 import org.simplity.kernel.value.Value;
 import org.simplity.kernel.value.ValueType;
 
@@ -35,94 +36,95 @@ import org.simplity.kernel.value.ValueType;
  */
 public class TextDataType extends DataType {
 
-  /** min number of characters expected. */
-  int minLength;
-  /** max number of characters expected */
-  int maxLength = Integer.MAX_VALUE;
-  /** any pattern that this has to follow. designer is expected to learn Java Pattern!!! */
-  Pattern regex;
+	/** min number of characters expected. */
+	int minLength;
+	/** max number of characters expected */
+	int maxLength = Integer.MAX_VALUE;
+	/**
+	 * any pattern that this has to follow. designer is expected to learn Java
+	 * Pattern!!!
+	 */
+	Pattern regex;
 
-  @Override
-  public Value validateValue(Value value) {
-    String textValue = value.toText();
-    int nbrChars = textValue.length();
-    if (nbrChars < this.minLength || nbrChars > this.maxLength) {
-      return null;
-    }
-    if (this.regex != null && this.regex.matcher(textValue).matches() == false) {
-      return null;
-    }
-    /*
-     * convert it to text value if required
-     */
-    if (value.getValueType() == ValueType.TEXT) {
-      return value;
-    }
-    return Value.newTextValue(textValue);
-  }
+	@Override
+	public Value validateValue(Value value) {
+		String textValue = value.toText();
+		int nbrChars = textValue.length();
+		if (nbrChars < this.minLength || nbrChars > this.maxLength) {
+			return null;
+		}
+		if (this.regex != null && this.regex.matcher(textValue).matches() == false) {
+			return null;
+		}
+		/*
+		 * convert it to text value if required
+		 */
+		if (value.getValueType() == ValueType.TEXT) {
+			return value;
+		}
+		return Value.newTextValue(textValue);
+	}
 
-  @Override
-  public ValueType getValueType() {
-    return ValueType.TEXT;
-  }
+	@Override
+	public ValueType getValueType() {
+		return ValueType.TEXT;
+	}
 
-  @Override
-  public int getMaxLength() {
-    return this.maxLength;
-  }
+	@Override
+	public int getMaxLength() {
+		return this.maxLength;
+	}
 
-  @Override
-  protected int validateSpecific(ValidationContext ctx) {
-    int count = 0;
-    if (this.minLength > this.maxLength) {
-      ctx.addError(
-          "Min length is set to "
-              + this.minLength
-              + " that is greater than max length of "
-              + this.maxLength);
-      count = 1;
-    }
-    if (this.minLength < 0) {
-      ctx.addError("Min length is set to a negative value of " + this.minLength, null, "minLength");
-      count++;
-    }
-    if (this.maxLength < 0) {
-      ctx.addError("Max length is set to a negative value of " + this.maxLength, null, "maxLength");
-      count++;
-    }
-    return count;
-  }
+	@Override
+	protected void validateSpecific(IValidationContext vtx) {
+		if (this.minLength > this.maxLength) {
+			String msg = "Min length is set to "
+					+ this.minLength
+					+ " that is greater than max length of "
+					+ this.maxLength;
+			vtx.message(new ValidationMessage(this, ValidationMessage.SEVERITY_ERROR, msg, "minLength"));
+			vtx.message(new ValidationMessage(this, ValidationMessage.SEVERITY_ERROR, msg, "maxLength"));
+		}
+		if (this.minLength < 0) {
+			String msg = "Min length is set to a negative value of " + this.minLength;
+			vtx.message(new ValidationMessage(this, ValidationMessage.SEVERITY_ERROR, msg, "minLength"));
+		}
+		if (this.maxLength < 0) {
+			String msg = "Max length is set to a negative value of " + this.maxLength;
+			vtx.message(new ValidationMessage(this, ValidationMessage.SEVERITY_ERROR, msg, "maxLength"));
+		}
+	}
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.simplity.kernel.dt.DataType#synthesiseDscription()
-   */
-  @Override
-  protected String synthesiseDscription() {
-    StringBuilder sbf = new StringBuilder("Expecting text ");
-    boolean started = false;
-    if (this.minLength != 0) {
-      sbf.append("with a min of ").append(this.minLength).append(" characters ");
-      started = true;
-    }
-    if (this.maxLength != Integer.MAX_VALUE) {
-      if (!started) {
-        sbf.append("with a max of ");
-        started = true;
-      } else {
-        sbf.append(" and a max of ");
-      }
-      sbf.append(this.maxLength).append(" characters ");
-    }
-    if (this.regex != null) {
-      sbf.append("that conforms to the pattern ").append(this.regex.toString());
-    }
-    return sbf.toString();
-  }
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see org.simplity.kernel.dt.DataType#synthesiseDscription()
+	 */
+	@Override
+	protected String synthesiseDscription() {
+		StringBuilder sbf = new StringBuilder("Expecting text ");
+		boolean started = false;
+		if (this.minLength != 0) {
+			sbf.append("with a min of ").append(this.minLength).append(" characters ");
+			started = true;
+		}
+		if (this.maxLength != Integer.MAX_VALUE) {
+			if (!started) {
+				sbf.append("with a max of ");
+				started = true;
+			} else {
+				sbf.append(" and a max of ");
+			}
+			sbf.append(this.maxLength).append(" characters ");
+		}
+		if (this.regex != null) {
+			sbf.append("that conforms to the pattern ").append(this.regex.toString());
+		}
+		return sbf.toString();
+	}
 
-  /** @return regex */
-  public Object getRegex() {
-    return this.regex;
-  }
+	/** @return regex */
+	public Object getRegex() {
+		return this.regex;
+	}
 }

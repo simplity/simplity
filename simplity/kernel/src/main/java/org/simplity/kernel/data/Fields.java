@@ -35,7 +35,7 @@ import org.simplity.kernel.value.Value;
  *
  * @author simplity.org
  */
-public class Fields implements FieldsInterface {
+public class Fields implements IFieldsCollection {
   private final Map<String, Value> fieldValues = new HashMap<String, Value>();
 
   @Override

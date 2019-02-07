@@ -196,8 +196,7 @@ public enum ValueType {
 	},
 	/**
 	 * true-false we would have loved to call it binary, but unfortunately that
-	 * has different
-	 * connotation :-)
+	 * has different connotation :-)
 	 */
 	BOOLEAN(Types.BOOLEAN, "BOOLEAN", "_boolean") {
 		@Override
@@ -212,7 +211,10 @@ public enum ValueType {
 			} else {
 				val = this.parse(obj);
 			}
-			return Value.newBooleanValue(val);
+			if (val) {
+				return Value.VALUE_TRUE;
+			}
+			return Value.VALUE_FALSE;
 		}
 
 		@Override
@@ -227,7 +229,10 @@ public enum ValueType {
 			} else {
 				val = this.parse(obj);
 			}
-			return Value.newBooleanValue(val);
+			if (val) {
+				return Value.VALUE_TRUE;
+			}
+			return Value.VALUE_FALSE;
 		}
 
 		/*
@@ -330,8 +335,7 @@ public enum ValueType {
 	},
 	/**
 	 * clob : a wrapper on text specifically for RDBMS clob field. Behaviour
-	 * mimics text except for
-	 * RDBMS I/O
+	 * mimics text except for RDBMS I/O
 	 */
 	CLOB(Types.CLOB, "CLOB", "_clob") {
 
@@ -382,23 +386,18 @@ public enum ValueType {
 		/*
 		 * save clob into file
 		 */
-		private Value saveIt(Clob clob) throws SQLException {
+		private Value saveIt(Clob clob) {
 			if (clob == null) {
 				return Value.newUnknownValue(CLOB);
 			}
-			Reader reader = clob.getCharacterStream();
-			try {
+			try (Reader reader = clob.getCharacterStream()) {
 				File file = FileManager.createTempFile(reader);
 				if (file == null) {
 					throw new ApplicationError("Unable to save clob value to a tmp storage.");
 				}
 				return Value.newClobValue(file.getName());
-			} finally {
-				try {
-					reader.close();
-				} catch (Exception e) {
-					//
-				}
+			} catch (Exception e) {
+				throw new ApplicationError(e, "Error while saving clob value to a tmp storage.");
 			}
 		}
 	},
@@ -439,23 +438,18 @@ public enum ValueType {
 		/*
 		 * save blob into file
 		 */
-		private Value saveIt(Blob blob) throws SQLException {
+		private Value saveIt(Blob blob) {
 			if (blob == null) {
 				return Value.newUnknownValue(BLOB);
 			}
-			InputStream stream = blob.getBinaryStream();
-			try {
+			try (InputStream stream = blob.getBinaryStream()) {
 				File file = FileManager.createTempFile(stream);
 				if (file == null) {
 					throw new ApplicationError("Unable to save blob value to a tmp storage.");
 				}
 				return Value.newBlobValue(file.getName());
-			} finally {
-				try {
-					stream.close();
-				} catch (Exception e) {
-					//
-				}
+			} catch (Exception e) {
+				throw new ApplicationError(e, "Error while saving blob field to a temp file");
 			}
 		}
 	},
@@ -540,6 +534,7 @@ public enum ValueType {
 	 *
 	 * @param resultSet
 	 * @param posn
+	 *            1-based index position of the column in the result set
 	 * @return value
 	 * @throws SQLException
 	 */

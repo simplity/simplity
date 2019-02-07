@@ -26,6 +26,8 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.simplity.json.JSONWriter;
+
 /**
  * represents a boolean value that can either be true or false
  *
@@ -95,7 +97,8 @@ public class BooleanValue extends Value {
     return Boolean.FALSE;
   }
 
-  @Override
+  @SuppressWarnings("unchecked")
+@Override
   public Object[] toArray(Value[] values) {
     int n = values.length;
     Boolean[] arr = new Boolean[n];
@@ -105,4 +108,12 @@ public class BooleanValue extends Value {
     }
     return arr;
   }
+	/* (non-Javadoc)
+	 * @see org.simplity.json.Jsonable#writeJsonValue(org.simplity.json.JSONWriter)
+	 */
+	@Override
+	public void writeJsonValue(JSONWriter writer) {
+		writer.value(this.value);
+	}
+
 }

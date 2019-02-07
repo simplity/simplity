@@ -1,14 +1,12 @@
 package org.simplity.json;
 
-import org.simplity.service.ResponseWriterException;
-
 /**
  * The JSONException is thrown by the JSON.org classes when things are amiss.
  *
  * @author JSON.org
  * @version 2015-12-09
  */
-public class JSONException extends ResponseWriterException {
+public class JSONException extends RuntimeException {
   /** Serialization ID */
   private static final long serialVersionUID = 0;
 

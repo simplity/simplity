@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<service name="batchProcessorError" moduleName="batchProcess"
-	xmlns="http://www.simplity.org/schema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-	<actions>
-		<logic className="org.simplity.test.ProcessErrorRows" />
-	</actions>
-</service>

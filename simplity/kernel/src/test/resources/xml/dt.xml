@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<dataTypes name="NCName" xmlns="http://www.simplity.org/schema">
-	<components>
-		<booleanDataType description="boolean DT" formatter="NCName"
-			messageName="BooleanDT" name="NCName" sqlType="sqlType" valueList="true,false" />
-	</components>
-</dataTypes>

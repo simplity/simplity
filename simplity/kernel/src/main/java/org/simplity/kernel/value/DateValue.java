@@ -28,6 +28,7 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.Date;
 
+import org.simplity.json.JSONWriter;
 import org.simplity.kernel.util.DateUtil;
 
 /**
@@ -57,7 +58,7 @@ public class DateValue extends Value {
 
   @Override
   protected void format() {
-    this.textValue = "" + DateUtil.format(this.value);
+    this.textValue = DateUtil.formatDateTime(this.value);
   }
 
   @Override
@@ -120,4 +121,12 @@ public class DateValue extends Value {
     }
     return arr;
   }
+
+  /* (non-Javadoc)
+	 * @see org.simplity.json.Jsonable#writeJsonValue(org.simplity.json.JSONWriter)
+	 */
+	@Override
+	public void writeJsonValue(JSONWriter writer) {
+		writer.value(new Date(this.value));
+	}
 }

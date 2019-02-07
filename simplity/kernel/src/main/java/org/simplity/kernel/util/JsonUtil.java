@@ -33,23 +33,15 @@ import java.util.Map;
 import org.simplity.json.JSONArray;
 import org.simplity.json.JSONObject;
 import org.simplity.json.JSONWriter;
-import org.simplity.json.Jsonable;
+import org.simplity.json.JsonWritable;
 import org.simplity.kernel.ApplicationError;
-import org.simplity.kernel.FilterCondition;
-import org.simplity.kernel.FormattedMessage;
-import org.simplity.kernel.Messages;
-import org.simplity.kernel.comp.ComponentManager;
-import org.simplity.kernel.data.DataSheet;
-import org.simplity.kernel.data.FieldsInterface;
-import org.simplity.kernel.data.HierarchicalSheet;
+import org.simplity.kernel.data.IDataSheet;
 import org.simplity.kernel.data.MultiRowsSheet;
-import org.simplity.kernel.dm.Field;
-import org.simplity.kernel.dt.DataType;
+import org.simplity.kernel.dm.field.Field;
+import org.simplity.kernel.msg.FormattedMessage;
+import org.simplity.kernel.service.ServiceContext;
 import org.simplity.kernel.value.Value;
 import org.simplity.kernel.value.ValueType;
-import org.simplity.rest.Tags;
-import org.simplity.service.ServiceContext;
-import org.simplity.service.ServiceProtocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +52,62 @@ import org.slf4j.LoggerFactory;
  */
 public class JsonUtil {
 	private static final Logger logger = LoggerFactory.getLogger(JsonUtil.class);
+	/**
+	 * swagger tag for object type
+	 */
+	public static final String OBJECT_TYPE_ATTR = "x-object-type";
+
+	/**
+	 * create a data sheet based on json array. Value types are guessed based on
+	 * values in the first row
+	 *
+	 * @param arr
+	 * @param ctx
+	 * @return data sheet with columns based on the first row of data, and value
+	 *         type decided based on best guess
+	 */
+	public static IDataSheet getSheet(JSONArray arr, ServiceContext ctx) {
+		if (arr == null || arr.length() == 0) {
+			logger.info("JSONArray is null or has no data. Data Sheet not created.");
+			return null;
+		}
+		Object obj = arr.opt(0);
+		if (obj instanceof JSONObject) {
+			return getSheet(arr, null, null, true, null, null, ctx);
+		}
+		if (obj instanceof JSONArray) {
+			return getSheetFromTable(arr);
+		}
+		logger.info(
+				"JSONArray has its first element as {}. Data sheet can be created only if the array contains either array of header/data or array of objects",
+				obj.getClass().getName());
+		return null;
+	}
+
+	/**
+	 * @param arr
+	 * @return data sheet by guessing value type based on data in the first data
+	 *         row.null if there is no data row
+	 */
+	private static IDataSheet getSheetFromTable(JSONArray arr) {
+		int nbrRows = arr.length();
+		if (nbrRows <= 1) {
+			logger.info("JSONArray with header/data row format has only header, and no data. Data sheet not created");
+			return null;
+		}
+		Field[] fields = getFields(arr.getJSONArray(0), arr.getJSONArray(1));
+		int nbrCols = fields.length;
+		IDataSheet sheet = new MultiRowsSheet(fields);
+		for (int i = 1; i < nbrRows; i++) {
+			JSONArray row = arr.getJSONArray(i);
+			Value[] values = new Value[nbrCols];
+			for (int j = 0; j < nbrCols; j++) {
+				values[j] = Value.parseValue(row.getString(j), fields[j].getValueType());
+			}
+			sheet.addRow(values);
+		}
+		return sheet;
+	}
 
 	/**
 	 * create a data sheet out of a well-formed json array of simple jsonObject.
@@ -80,11 +128,12 @@ public class JsonUtil {
 	 *            if this is a child sheet, and you have specified
 	 *            parentFieldName, value to be populated in each row for that
 	 *            column
+	 * @param ctx
 	 * @return data sheet. Null if no data found or the json is not well
 	 *         formated. was null. case the array is not well-formed
 	 */
-	public static DataSheet getSheet(JSONArray arr, Field[] inputFields, List<FormattedMessage> errors,
-			boolean allFieldsAreOptional, String parentFieldName, Value parentValue) {
+	public static IDataSheet getSheet(JSONArray arr, Field[] inputFields, List<FormattedMessage> errors,
+			boolean allFieldsAreOptional, String parentFieldName, Value parentValue, ServiceContext ctx) {
 		if (arr == null || arr.length() == 0) {
 			return null;
 		}
@@ -128,7 +177,7 @@ public class JsonUtil {
 						+ " not found in the fields list for child. Filed will not be populated from parent sheet.");
 			}
 		}
-		DataSheet ds = new MultiRowsSheet(fields);
+		IDataSheet ds = new MultiRowsSheet(fields);
 		int nbrRows = arr.length();
 		/*
 		 * let us now extract each row into data sheet
@@ -148,7 +197,7 @@ public class JsonUtil {
 				if (j == parentIdx) {
 					row[j] = parentValue;
 				} else {
-					row[j] = field.parseObject(val, errors, allFieldsAreOptional, null);
+					row[j] = field.parseObject(val, allFieldsAreOptional, ctx);
 				}
 				j++;
 			}
@@ -167,13 +216,13 @@ public class JsonUtil {
 	 * @param fields
 	 *            expected fields. Input data is validated as per these field
 	 *            specifications.
-	 * @param errors
 	 * @param allFieldsAreOptional
+	 * @param ctx
 	 * @return data sheet. Null if no data found. Throws ApplicationError on
 	 *         case the array is not well-formed
 	 */
-	public static DataSheet getChildSheet(JSONArray arr, String attName, Field[] fields, List<FormattedMessage> errors,
-			boolean allFieldsAreOptional) {
+	public static IDataSheet getChildSheet(JSONArray arr, String attName, Field[] fields, boolean allFieldsAreOptional,
+			ServiceContext ctx) {
 		/*
 		 * arr corresponds to following json. We are to accumulate child rows
 		 * across all main rows
@@ -181,7 +230,7 @@ public class JsonUtil {
 		 * [...,"attName"=[{},{}....],..],[....,"attName"=[{},{}.... ],..]....
 		 */
 		Field[] inputFields = fields;
-		DataSheet ds = null;
+		IDataSheet ds = null;
 		if (inputFields != null) {
 			ds = new MultiRowsSheet(inputFields);
 		}
@@ -219,7 +268,7 @@ public class JsonUtil {
 				Value[] row = new Value[fields.length];
 				for (Field field : inputFields) {
 					Object val = obj.opt(field.getName());
-					row[j] = field.parseObject(val, errors, allFieldsAreOptional, attName);
+					row[j] = field.parseObject(val, allFieldsAreOptional, ctx);
 					j++;
 				}
 				ds.addRow(row);
@@ -233,13 +282,11 @@ public class JsonUtil {
 	 *
 	 * @param writer
 	 * @param ds
-	 * @param childSheets
 	 * @param outputAsObject
 	 *            if the data sheet is meant for an object/data structure and
 	 *            not an array of them. Only first row is used
 	 */
-	public static void sheetToJson(JSONWriter writer, DataSheet ds, HierarchicalSheet[] childSheets,
-			boolean outputAsObject) {
+	public static void sheetToJson(JSONWriter writer, IDataSheet ds, boolean outputAsObject) {
 		int nbrRows = 0;
 		int nbrCols = 0;
 		if (ds != null) {
@@ -277,41 +324,11 @@ public class JsonUtil {
 				}
 				j++;
 			}
-
-			if (childSheets != null) {
-				for (HierarchicalSheet childSheet : childSheets) {
-					if (childSheet != null) {
-						childSheet.toJson(writer, row);
-					}
-				}
-			}
 			writer.endObject();
 		}
 		if (outputAsObject == false) {
 			writer.endArray();
 		}
-	}
-
-	/**
-	 * write the first column of data sheet as an array
-	 *
-	 * @param writer
-	 * @param ds
-	 */
-	public static void sheetToArray(JSONWriter writer, DataSheet ds) {
-		writer.array();
-		if (ds != null && ds.length() > 0) {
-			/*
-			 * if rows exist, then first column is guaranteed
-			 */
-			for (Value[] row : ds.getAllRows()) {
-				Value value = row[0];
-				if (value != null) {
-					writer.value(value.toObject());
-				}
-			}
-		}
-		writer.endArray();
 	}
 
 	/**
@@ -370,214 +387,23 @@ public class JsonUtil {
 	}
 
 	/**
-	 * @param json
-	 * @param fields
-	 * @param ctx
-	 * @param errors
-	 * @param allFieldsAreOptional
-	 * @return number of fields extracted
-	 */
-	public static int extractFields(JSONObject json, Field[] fields, FieldsInterface ctx, List<FormattedMessage> errors,
-			boolean allFieldsAreOptional) {
-		int result = 0;
-		for (Field field : fields) {
-			Object val = json.opt(field.getName());
-			Value value = null;
-			if (val == null) {
-				/*
-				 * possible that this field is already extracted
-				 */
-				value = ctx.getValue(field.getName());
-			} else {
-				value = field.getValueType().parseObject(val);
-				if (value == null) {
-					errors.add(new FormattedMessage(Messages.INVALID_VALUE, null, field.getName(), null, 0,
-							'\'' + val.toString() + "' is not a valid " + field.getValueType()));
-					continue;
-				}
-			}
-			/*
-			 * this is validation, and not exactly parse.
-			 */
-			value = field.parse(value, errors, allFieldsAreOptional, null);
-			if (value != null) {
-				ctx.setValue(field.getName(), value);
-				result++;
-			}
-		}
-		return result;
-	}
-
-	/**
-	 * @param json
-	 * @param names
-	 * @param ctx
-	 * @return number of fields added
-	 */
-	public static int extractFields(JSONObject json, String[] names, FieldsInterface ctx) {
-		int result = 0;
-		for (String name : names) {
-			Object val = json.opt(name);
-			if (val != null) {
-				ctx.setValue(name, Value.parseObject(val));
-				result++;
-			}
-		}
-		return result;
-	}
-
-	/**
-	 * @param json
-	 * @param fields
-	 * @param ctx
-	 * @param errors
-	 * @return number of fields extracted
-	 */
-	public static int extractFilterFields(JSONObject json, Field[] fields, FieldsInterface ctx,
-			List<FormattedMessage> errors) {
-		int result = 0;
-		for (Field field : fields) {
-			result += parseFilter(json, ctx, errors, field.getName(), field.getValueType());
-		}
-		/*
-		 * some additional fields for filter, like sort
-		 */
-		/*
-		 * what about sort ?
-		 */
-		String fieldName = ServiceProtocol.SORT_COLUMN_NAME;
-		String textValue = json.optString(fieldName, null);
-		if (textValue != null) {
-			Value value = ComponentManager.getDataType(DataType.ENTITY_LIST).parseValue(textValue);
-			if (value == null) {
-				errors.add(new FormattedMessage(Messages.INVALID_ENTITY_LIST, null, fieldName, null, 0));
-			} else {
-				ctx.setValue(fieldName, value);
-			}
-		}
-
-		fieldName = ServiceProtocol.SORT_ORDER;
-		textValue = json.optString(fieldName, null);
-		if (textValue != null) {
-			textValue = textValue.toLowerCase();
-			if (textValue.equals(ServiceProtocol.SORT_ORDER_ASC) || textValue.equals(ServiceProtocol.SORT_ORDER_DESC)) {
-				ctx.setValue(fieldName, Value.newTextValue(textValue));
-			} else {
-				errors.add(new FormattedMessage(Messages.INVALID_SORT_ORDER, null, fieldName, null, 0));
-			}
-		}
-		return result;
-	}
-
-	/**
-	 * parse input object as a filter field
+	 * create a data sheet for attributes in this object
 	 *
-	 * @param json
-	 * @param extratedFields
-	 *            to which extracted fields are to be added
-	 * @param validationErrors
-	 * @param recordName
-	 * @return number of fields extracted
+	 * @param header
+	 *            row that has names of columns
+	 * @param data
+	 *            row of data
+	 * @return array of fields in this table, based on best-guess on values
+	 *         found in data row
 	 */
-	private static int parseFilter(JSONObject json, FieldsInterface extratedFields,
-			List<FormattedMessage> validationErrors, String fieldName, ValueType valueType) {
-
-		Object obj = json.opt(fieldName);
-		if (obj == null) {
-			return 0;
+	public static Field[] getFields(JSONArray header, JSONArray data) {
+		int nbrCols = header.length();
+		Field[] fields = new Field[nbrCols];
+		for (int i = 0; i < nbrCols; i++) {
+			ValueType vt = Value.parseObject(data.opt(i)).getValueType();
+			fields[i] = Field.getDefaultField(header.getString(i), vt);
 		}
-		/*
-		 * what is the comparator
-		 */
-		String otherName = fieldName + ServiceProtocol.COMPARATOR_SUFFIX;
-		String otherValue = json.optString(otherName, null);
-		FilterCondition f = FilterCondition.parse(otherValue);
-		/*
-		 * filter field need not conform to data-type but it should be of the
-		 * same value type, except that IN_LIST is always text
-		 */
-		Value value = FilterCondition.In == f ? ValueType.TEXT.parseObject(obj) : valueType.parseObject(obj);
-		if (value == null) {
-			if (validationErrors != null) {
-				validationErrors.add(new FormattedMessage(Messages.INVALID_VALUE, null, fieldName, null, 0));
-			}
-		} else {
-			extratedFields.setValue(fieldName, value);
-		}
-		if (f == null) {
-			extratedFields.setValue(otherName, Value.newTextValue(ServiceProtocol.EQUAL));
-			return 1;
-		}
-		extratedFields.setValue(otherName, Value.newTextValue(otherValue));
-		if (f != FilterCondition.Between) {
-			return 1;
-		}
-		otherName = fieldName + ServiceProtocol.TO_FIELD_SUFFIX;
-		Object val = json.opt(otherName);
-		value = null;
-		if (val != null) {
-			value = valueType.parseObject(val);
-		}
-		if (value == null) {
-			if (validationErrors != null) {
-				validationErrors.add(
-						new org.simplity.kernel.FormattedMessage(Messages.INVALID_VALUE, null, otherName, null, 0));
-			}
-		} else {
-			extratedFields.setValue(otherName, value);
-		}
-		return 1;
-	}
-
-	/**
-	 * extract a simple json object (with fields and tables) into service
-	 * context
-	 *
-	 * @param jsonText
-	 * @param ctx
-	 */
-	public static void extractAll(String jsonText, ServiceContext ctx) {
-		JSONObject json = null;
-		try {
-			json = new JSONObject(jsonText);
-		} catch (Exception e) {
-			ctx.addMessage(Messages.INVALID_DATA, "Input json is invalid");
-			return;
-		}
-		extractAll(json, ctx);
-	}
-
-	/**
-	 * Create json string from all data from context context
-	 *
-	 * @param ctx
-	 * @return jsonText
-	 */
-	public static String outputAll(ServiceContext ctx) {
-		JSONWriter writer = new JSONWriter();
-		writer.object();
-		for (Map.Entry<String, Value> entry : ctx.getAllFields()) {
-			writer.key(entry.getKey()).value(entry.getValue());
-		}
-
-		for (Map.Entry<String, DataSheet> entry : ctx.getAllSheets()) {
-			writer.key(entry.getKey());
-			DataSheet sheet = entry.getValue();
-			JsonUtil.sheetToJson(writer, sheet, null, false);
-		}
-		List<FormattedMessage> msgs = ctx.getMessages();
-		if (msgs.size() > 0) {
-			writer.key(ServiceProtocol.MESSAGES);
-			JsonUtil.addObject(writer, msgs);
-		}
-		writer.key(ServiceProtocol.REQUEST_STATUS);
-		if (ctx.isInError()) {
-			writer.value(ServiceProtocol.STATUS_ERROR);
-		} else {
-			writer.value(ServiceProtocol.STATUS_OK);
-		}
-		writer.endObject();
-		return writer.toString();
+		return fields;
 	}
 
 	/**
@@ -589,106 +415,74 @@ public class JsonUtil {
 	 */
 	public static void extractAll(JSONObject json, ServiceContext ctx) {
 		for (String key : json.keySet()) {
-			JSONArray arr = json.optJSONArray(key);
-			if (arr != null) {
-				DataSheet sheet = JsonUtil.getSheet(arr, null, null, true, null, null);
-				if (sheet == null) {
-
-					logger.info("Table " + key + " could not be extracted");
-
-				} else {
-					ctx.putDataSheet(key, sheet);
-
-					logger.info("Table " + key + " extracted with " + sheet.length() + " rows");
-				}
+			Object val = json.opt(key);
+			if (val == null) {
+				logger.info("{} is null. Skipped.", key);
 				continue;
 			}
-			JSONObject obj = json.optJSONObject(key);
-			if (obj != null) {
+			if (val instanceof JSONArray) {
+				JSONArray arr = (JSONArray) val;
+				if (arr.length() == 0) {
+					logger.info("Table {} has no data. Skipped", key);
+					continue;
+				}
+				Object obj = arr.opt(0);
+				if (obj instanceof JSONArray) {
+					IDataSheet sheet = JsonUtil.getSheet(arr, ctx);
+					if (sheet == null) {
+						logger.info("Table {} could not be extracted", key);
+						continue;
+					}
+					if (key.equals("_messages")) {
+						addMessages(sheet, ctx);
+						continue;
+					}
+					ctx.putDataSheet(key, sheet);
+					logger.info("Table {} extracted with {} rows", key, sheet.length());
+					continue;
+				}
+				ctx.setObject(key, val);
+				logger.info("{} saved as json array", key);
+				continue;
+			}
+			if (val instanceof JSONObject) {
 				/*
 				 * we do not have a standard for converting data structure. As
 				 * of now, we just copy this json
 				 */
-				ctx.setObject(key, obj);
-
-				logger.info(key + " retained as a JSON into ctx");
-
+				ctx.setObject(key, val);
+				logger.info("{} retained as a JSON into ctx", key);
 				continue;
 			}
-			Object val = json.opt(key);
 			Value value = Value.parseObject(val);
-			if (value != null) {
+			if (value == null) {
 				ctx.setValue(key, value);
-
-				logger.info(key + " = " + value + " extracted");
-
+				logger.info("{} ={} extracted ", key, value);
 			} else {
-
-				logger.info(key + " = " + val + " is not extracted");
+				logger.info("{} ={} NOT extracted ", key, value);
 			}
 		}
 	}
 
 	/**
-	 * @param json
-	 * @param ctx
-	 * @param sheetName
-	 * @param parentSheetName
-	 */
-	public static void extractWithNoValidation(JSONObject json, ServiceContext ctx, String sheetName,
-			String parentSheetName) {
-		DataSheet ds = null;
-		String arrName = null;
-		JSONArray arr = null;
-		if (parentSheetName != null) {
-			arr = json.optJSONArray(parentSheetName);
-			if (arr == null) {
-				arrName = parentSheetName;
-			} else {
-				ds = getChildSheet(arr, sheetName, null, null, true);
-			}
-		} else {
-			arr = json.optJSONArray(sheetName);
-			if (arr == null) {
-				arrName = sheetName;
-			} else {
-				ds = JsonUtil.getSheet(arr, null, null, true, null, null);
-			}
-		}
-		if (arr == null) {
-
-			logger.info("No data found for sheet " + arrName);
-
-		} else if (ds == null) {
-
-			logger.info("Sheet " + arrName + " has only null data. Data not extracted");
-
-		} else {
-			ctx.putDataSheet(sheetName, ds);
-		}
-	}
-
-	/**
-	 * @param writer
-	 * @param fieldNames
+	 * @param sheet
 	 * @param ctx
 	 */
-	public static void addAttributes(JSONWriter writer, String[] fieldNames, ServiceContext ctx) {
-		for (String fieldName : fieldNames) {
-			fieldName = TextUtil.getFieldValue(ctx, fieldName).toText();
-			Value value = ctx.getValue(fieldName);
-			if (value != null) {
-				if (value.isUnknown() == false) {
-					writer.key(fieldName).value(value.toObject());
-				}
-				continue;
-			}
-			Object obj = ctx.getObject(fieldName);
-			if (obj != null) {
-				writer.key(fieldName);
-				addObject(writer, obj);
-			}
+	private static void addMessages(IDataSheet sheet, ServiceContext ctx) {
+		if (sheet.width() != 2) {
+			logger.error("_messages sheet has to have two columns. Data ignored.");
+			return;
 		}
+		for (Value[] row : sheet.getAllRows()) {
+			Value val = row[1];
+			String[] params = null;
+			if (Value.isNull(val) == false) {
+				params = val.toText().split(",");
+			}
+			ctx.addMessage(row[0].toString(), params);
+			logger.info("Message {} added to context", row[0]);
+		}
+
 	}
 
 	/**
@@ -702,9 +496,13 @@ public class JsonUtil {
 			writer.value(null);
 			return;
 		}
-		if (obj instanceof Jsonable) {
-			((Jsonable) obj).writeJsonValue(writer);
+		if (obj instanceof JsonWritable) {
+			((JsonWritable) obj).writeJsonValue(writer);
 			return;
+		}
+		if (obj instanceof Value) {
+			Value value = (Value) obj;
+			value.writeJsonValue(writer);
 		}
 		if (obj instanceof String || obj instanceof Number || obj instanceof Boolean || obj instanceof Date
 				|| obj instanceof Enum) {
@@ -899,14 +697,7 @@ public class JsonUtil {
 		if (fieldSelector == null || fieldSelector.isEmpty()) {
 
 			logger.info("Null/empty selector for get/setValue");
-
-			if (option == 0) {
-				return null;
-			}
-			if (option == 1) {
-				return new JSONObject();
-			}
-			return new JSONArray();
+			return json;
 		}
 		/*
 		 * special case that indicates root object itself
@@ -999,7 +790,7 @@ public class JsonUtil {
 	 * @param json
 	 * @param value
 	 */
-	public static void setValueWorker(String fieldSelector, Object json, Object value) {
+	public static void setValue(String fieldSelector, Object json, Object value) {
 		/*
 		 * special case of root object itself
 		 */
@@ -1094,161 +885,121 @@ public class JsonUtil {
 		return toJson;
 	}
 
-	/**
-	 * look for internal $ref attributes and de-reference them inside the json
-	 *
-	 * @param json
-	 *            a json object that may contain schema references within the
-	 *            doc.
+	/*
+	 * new set of APIs for data adapters. They all have *Child* in their name
 	 */
-	public static void dereference(JSONObject json) {
-		if (json == null) {
-			return;
-		}
 
-		JSONObject defs = json.optJSONObject("definitions");
-		if (defs == null) {
-
-			logger.info("No definitions in this json");
-
-			return;
-		}
-		/*
-		 * we need class name at times. induce names
-		 */
-		for(String key : defs.keySet()){
-			defs.getJSONObject(key).put(Tags.OBJECT_TYPE_ATTR, key);
-		}
-		/*
-		 * defs may contain refs. substitute them first
-		 */
-		replaceRefs(defs, defs, true);
-		/*
-		 * replace refs in rest of the api
-		 */
-		replaceRefs(json, defs, false);
+	/**
+	 * set a value to a node, possibly down the hierarchy. json objects may be
+	 * created in-between to create the desired path
+	 *
+	 * @param root
+	 *            non-null
+	 * @param path
+	 *            non-null
+	 * @param fieldValue
+	 * @return always true. kept it for nay possible complications in the future
+	 */
+	public static boolean setChildValue(JSONObject root, String path, Object fieldValue) {
+		LeafObject lo = getLeaf(root, path, true);
+		lo.parent.put(lo.fieldName, fieldValue);
+		return true;
 	}
 
-	private static final String REF = "$ref";
-	private static final String REF_PREFIX = "#/definitions/";
-	private static final int REF_PREFIX_LEN = REF_PREFIX.length();
+	/**
+	 * get a value of a node, possibly down the hierarchy
+	 *
+	 * @param root
+	 *            non-null
+	 * @param path
+	 *            non-null
+	 * @return value, or null in case the value is null, or the path cannot be
+	 *         traversed
+	 */
+	public static Object getChildValue(JSONObject root, String path) {
+		LeafObject lo = getLeaf(root, path, false);
+		if (lo == null) {
+			return null;
+		}
+		return lo.parent.opt(lo.fieldName);
+	}
 
 	/**
-	 * find internal references in json and de-reference them from definitions
+	 * get a leaf based on path of type a.b.c. Any list on the path is assumed
+	 * as its first/sole member. any missing member is created. if a member if
+	 * non-json, it is ruthlessly replaced!!!
 	 *
-	 * @param parentJson
-	 *            that may have "$ref" keys
-	 * @param definitions
-	 *            object that has all the definitions for de-referencing
+	 * @param root
+	 *            non-null
+	 * @param path
+	 *            possibly of the form a.b.c
+	 * @param createIfRequired
+	 *            if this is true, we will create a JSON object child if
+	 *            required to continue down the path. if false, we return null
+	 *            in case of non-josn member
+	 * @return null if createIfRequired is false, and we encounter non-josn
+	 *         member in between
 	 */
-	private static void replaceRefs(JSONObject parentJson, JSONObject definitions, boolean forRefs) {
-		if (parentJson.length() == 0) {
-			return;
+	public static LeafObject getLeaf(JSONObject root, String path, boolean createIfRequired) {
+		int idx = path.lastIndexOf('.');
+		if (idx == -1) {
+			return new LeafObject(root, path);
 		}
-
-		for (String key : parentJson.keySet()) {
-			Object obj = parentJson.get(key);
-			if (obj == null) {
-				continue;
-			}
-			if (obj instanceof JSONObject) {
-				Object sub = getSubstitution((JSONObject) obj, definitions, forRefs);
-				if (sub != null) {
-					parentJson.put(key, sub);
+		String leafName = path.substring(idx + 1);
+		String p = path.substring(0, idx);
+		JSONObject parent = root;
+		for (String fn : p.split("\\.")) {
+			Object value = parent.opt(fn);
+			JSONObject child = null;
+			if (value instanceof JSONObject) {
+				child = (JSONObject) value;
+			} else if (value instanceof JSONArray) {
+				JSONArray arr = (JSONArray) value;
+				value = arr.opt(0);
+				if (value instanceof JSONObject) {
+					child = (JSONObject) value;
+				} else if (createIfRequired) {
+					child = new JSONObject();
+					arr.put(0, child);
+				} else {
+					return null;
 				}
-				continue;
+			} else if (createIfRequired) {
+				child = new JSONObject();
+				parent.put(fn, child);
+			} else {
+				return null;
 			}
-			if (obj instanceof JSONArray) {
-				replaceRefs((JSONArray) obj, definitions, forRefs);
-			}
+			parent = child;
 		}
+		return new LeafObject(parent, leafName);
 	}
 
 	/**
-	 * find internal references and replace them with actual objects
+	 * object details for a leaf-value
 	 *
-	 * @param array
-	 * @param definitions
-	 * @param forRefs
-	 *            if we are substituting within refs, we have to go recursively
-	 *            inside defs
+	 * @author simplity.org
+	 *
 	 */
-	private static void replaceRefs(JSONArray array, JSONObject definitions, boolean forRefs) {
-		int nbr = array.length();
-		for (int i = 0; i < nbr; i++) {
-			Object obj = array.get(i);
-			if (obj == null) {
-				continue;
-			}
-
-			if (obj instanceof JSONObject) {
-				Object sub = getSubstitution((JSONObject) obj, definitions, forRefs);
-				if (sub != null) {
-					array.put(i, sub);
-				}
-				continue;
-			}
-
-			if (obj instanceof JSONArray) {
-				replaceRefs((JSONArray) obj, definitions, forRefs);
-			}
-		}
-	}
-
-	private static Object getSubstitution(JSONObject childJson, JSONObject definitions, boolean forRefs) {
-		String ref = getRef(childJson);
-		if (ref == null) {
-			/*
-			 * normal JSON. Recurse to inspect it further
-			 */
-			replaceRefs(childJson, definitions, forRefs);
-			return null;
-		}
-		/*
-		 * get the object to substitute
+	public static class LeafObject {
+		/**
+		 * direct parent of the leaf member
 		 */
-		Object subObj = definitions.opt(ref);
-		if (subObj == null) {
+		public final JSONObject parent;
+		/**
+		 * simple field name of the leaf relative to its direct parent
+		 */
+		public final String fieldName;
 
-			logger.info("defintion for " + ref + " not found. reference replaced with an empty object");
-
-			subObj = new JSONObject();
-		} else if (forRefs) {
-			/*
-			 * we may have $refs within this as well!!
-			 */
-			if (subObj instanceof JSONObject) {
-				replaceRefs((JSONObject) subObj, definitions, forRefs);
-			} else if (subObj instanceof JSONObject) {
-				replaceRefs((JSONArray) subObj, definitions, forRefs);
-			}
+		/**
+		 * constructor with all data members
+		 *
+		 * @param parent
+		 * @param fieldName
+		 */
+		public LeafObject(JSONObject parent, String fieldName) {
+			this.parent = parent;
+			this.fieldName = fieldName;
 		}
-
-		logger.info("Replacing " + ref);
-
-		return subObj;
-	}
-
-	/**
-	 * @param jsonObj
-	 * @return attribute name to be referred to, if this is a ref-object. FOr
-	 *         example if this object is {"$ref": "#/definitions/pets"} this
-	 *         method returns "pets"
-	 */
-	private static String getRef(JSONObject jsonObj) {
-		String ref = jsonObj.optString(REF, null);
-		if (ref == null) {
-			return null;
-		}
-		if (ref.indexOf(REF_PREFIX) != 0) {
-
-			logger.info("$ref is to be set to a value starting with " + REF_PREFIX);
-
-			return null;
-		}
-
-		logger.info("Found a ref entry for " + ref);
-
-		return ref.substring(REF_PREFIX_LEN);
 	}
 }

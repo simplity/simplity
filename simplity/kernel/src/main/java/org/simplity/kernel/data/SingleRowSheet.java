@@ -30,7 +30,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.simplity.kernel.ApplicationError;
-import org.simplity.kernel.dm.Field;
+import org.simplity.kernel.dm.field.Field;
 import org.simplity.kernel.util.ArrayUtil;
 import org.simplity.kernel.value.Value;
 import org.simplity.kernel.value.ValueType;
@@ -39,14 +39,13 @@ import org.slf4j.LoggerFactory;
 
 /**
  * represents a sheet with exactly one row of data. Use this if list of columns
- * is generally known
- * at the time of creating the sheet, and the order is important. If you expect
- * frequent add/remove
- * columns, look at DynamicSheet instead
+ * is generally known at the time of creating the sheet, and the order is
+ * important. If you expect frequent add/remove columns, look at DynamicSheet
+ * instead
  *
  * @author simplity.org
  */
-public class SingleRowSheet implements DataSheet {
+public class SingleRowSheet implements IDataSheet {
 	private static final Logger logger = LoggerFactory.getLogger(SingleRowSheet.class);
 
 	private static final char TAB = '\t';
@@ -54,6 +53,11 @@ public class SingleRowSheet implements DataSheet {
 	private ValueType[] valueTypes;
 	private final Map<String, Value> fieldValues = new HashMap<String, Value>();
 	private int[] columnWidths;
+	/**
+	 * need to track whether any data us set to this sheet, to do justice to
+	 * length() method
+	 */
+	private boolean dataAdded = false;
 
 	/**
 	 * create a sheet that does not have fixed fields. fields are added as and
@@ -87,19 +91,6 @@ public class SingleRowSheet implements DataSheet {
 			n++;
 		}
 		this.setUnknownValues();
-		/*
-		 * do we have field widths?.
-		 * we did not put this inside the loop with an if becuase this is a very
-		 * very very rare case.
-		 */
-		if (fields[0].getFieldWidth() != 0) {
-			this.columnWidths = new int[fields.length];
-			n = 0;
-			for (Field field : fields) {
-				this.columnWidths[n] = field.getFieldWidth();
-				n++;
-			}
-		}
 	}
 
 	/**
@@ -122,6 +113,7 @@ public class SingleRowSheet implements DataSheet {
 				this.fieldValues.put(this.columnNames[i], value);
 			}
 		}
+		this.dataAdded = true;
 	}
 
 	@Override
@@ -146,11 +138,17 @@ public class SingleRowSheet implements DataSheet {
 
 	@Override
 	public int length() {
-		return 1;
+		if (this.dataAdded) {
+			return 1;
+		}
+		return 0;
 	}
 
 	@Override
 	public int width() {
+		if (this.columnNames == null) {
+			return 0;
+		}
 		return this.columnNames.length;
 	}
 
@@ -200,10 +198,11 @@ public class SingleRowSheet implements DataSheet {
 			return;
 		}
 		this.fieldValues.put(columnName, value);
+		this.dataAdded = true;
 	}
 
 	@Override
-	public Iterator<FieldsInterface> iterator() {
+	public Iterator<IFieldsCollection> iterator() {
 		return new DataRows(this);
 	}
 
@@ -215,6 +214,7 @@ public class SingleRowSheet implements DataSheet {
 	@Override
 	public void setValue(String fieldName, Value value) {
 		this.fieldValues.put(fieldName, value);
+		this.dataAdded = true;
 	}
 
 	@Override
@@ -234,6 +234,10 @@ public class SingleRowSheet implements DataSheet {
 		for (int i = 0; i < this.columnNames.length; i++) {
 			this.fieldValues.put(this.columnNames[i], Value.newUnknownValue(this.valueTypes[i]));
 		}
+		/*
+		 * this is "dummy data" and not data. hence we do not set dataSet to
+		 * true
+		 */
 	}
 
 	@Override
@@ -251,7 +255,7 @@ public class SingleRowSheet implements DataSheet {
 		 */
 		if (this.fieldValues.containsKey(columnName)) {
 			for (int i = 0; i < this.columnNames.length; i++) {
-				if (this.columnNames.equals(columnName)) {
+				if (this.columnNames[i].equals(columnName)) {
 					colIdx = i;
 					break;
 				}
@@ -271,6 +275,7 @@ public class SingleRowSheet implements DataSheet {
 					+ " but an addColumn() is requested for a value type of " + valueType);
 		}
 		this.fieldValues.put(columnName, values == null || values.length == 0 ? null : values[0]);
+		this.dataAdded = true;
 	}
 
 	@Override
@@ -318,7 +323,7 @@ public class SingleRowSheet implements DataSheet {
 	 * DataSheet)
 	 */
 	@Override
-	public int appendRows(DataSheet sheet) {
+	public int appendRows(IDataSheet sheet) {
 		throw new ApplicationError(
 				"SingleRowSheet sheet can not have more than one rows, and hence appendRows operation is invalid");
 	}
@@ -413,5 +418,25 @@ public class SingleRowSheet implements DataSheet {
 			result[i] = this.getColIdx(names[i]);
 		}
 		return result;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see org.simplity.kernel.data.DataSheet#getRowAsFields(int)
+	 */
+	@Override
+	public IFieldsCollection getRowAsFields(int zeroBasedRow) {
+		return this;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see org.simplity.kernel.data.DataSheet#appendEmptyRows()
+	 */
+	@Override
+	public int appendEmptyRows(int n) {
+		throw new ApplicationError("Rows can not be added to a Single row sheet");
 	}
 }

@@ -40,74 +40,96 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import org.simplity.kernel.ApplicationError;
+import org.simplity.kernel.app.AppConventions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
- * class that manages to send mail. This is similar to DbDriver in its functionality
+ * Crude, initial design. Needs to be improved based on actual app requirements
  *
  * @author simplity.org
  */
 public class MailConnector {
+	private static final Logger logger = LoggerFactory.getLogger(MailProperties.class);
 
-  static Properties mailProps;
+	static Properties mailProps;
 
-  public Session initialize() {
-    return Session.getInstance(MailProperties.getProperties(), null);
-  }
+	/**
+	 * initial set-up.
+	 * 
+	 * @param mailProperties
+	 */
+	public static void initialize(MailProperties mailProperties) {
+		logger.info("Setting up the Mail Agent");
 
-  /**
-   * create MimeMessage and values (fromId, toIds, ccIds, bccIds, subject, content, and attachment)
-   * and send the object to MailConnector
-   */
-  public void sendEmail(Mail mail) {
+		mailProps = new Properties();
+		mailProps.setProperty("mail.smtp.host", mailProperties.host);
+		mailProps.setProperty("mail.smtp.port", mailProperties.port);
+	}
 
-    try {
-      Session session = this.initialize();
-      MimeMessage msg = new MimeMessage(session);
-      msg.addHeader("Content-type", "text/html; charset=UTF-8");
-      msg.addHeader("Content-Transfer-Encoding", "8bit");
-      msg.setFrom(new InternetAddress(mail.fromId, "NoReply-JD"));
-      msg.setReplyTo(InternetAddress.parse(mail.fromId, false));
-      msg.setSubject(mail.subject, "UTF-8");
-      msg.setSentDate(new Date());
-      msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(mail.toIds, false));
-      msg.setRecipients(Message.RecipientType.CC, InternetAddress.parse(mail.ccIds, false));
-      msg.setRecipients(Message.RecipientType.BCC, InternetAddress.parse(mail.bccIds, false));
+	/**
+	 * create MimeMessage and values (fromId, toIds, ccIds, bccIds, subject,
+	 * content, and attachment) and send the object to MailConnector
+	 *
+	 * @param mail
+	 */
+	public void sendEmail(Mail mail) {
+		if (mailProps == null) {
+			throw new ApplicationError("Mail server not set up for this applicaiton. MailAction can not be executed.");
+		}
+		try {
+			Session session = Session.getInstance(mailProps, null);
+			MimeMessage msg = new MimeMessage(session);
+			msg.addHeader("Content-type", "text/html; charset=UTF-8");
+			msg.addHeader("Content-Transfer-Encoding", "8bit");
+			msg.setFrom(new InternetAddress(mail.fromId, "NoReply-JD"));
+			msg.setReplyTo(InternetAddress.parse(mail.fromId, false));
+			msg.setSubject(mail.subject, AppConventions.CHAR_ENCODING);
+			msg.setSentDate(new Date());
+			msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(mail.toIds, false));
+			msg.setRecipients(Message.RecipientType.CC, InternetAddress.parse(mail.ccIds, false));
+			msg.setRecipients(Message.RecipientType.BCC, InternetAddress.parse(mail.bccIds, false));
 
-      Multipart multipart = new MimeMultipart();
+			Multipart multipart = new MimeMultipart();
 
-      MimeBodyPart bodyPart = new MimeBodyPart();
-      bodyPart.setText(mail.content, "US-ASCII", "html");
-      multipart.addBodyPart(bodyPart);
+			MimeBodyPart bodyPart = new MimeBodyPart();
+			bodyPart.setText(mail.content, "US-ASCII", "html");
+			multipart.addBodyPart(bodyPart);
 
-      if (mail.inlineAttachment != null) {
-        MailAttachment[] inlineMailAttachment = mail.inlineAttachment;
-        for (int i = 0; i < inlineMailAttachment.length; i++) {
-          bodyPart = new MimeBodyPart();
-          bodyPart.setDisposition(Part.INLINE);
-          bodyPart.attachFile(inlineMailAttachment[i].filepath); // attach inline image file
-          bodyPart.setHeader("Content-ID", inlineMailAttachment[i].name);
-          multipart.addBodyPart(bodyPart);
-        }
-      }
+			if (mail.inlineAttachment != null) {
+				MailAttachment[] inlineMailAttachment = mail.inlineAttachment;
+				for (int i = 0; i < inlineMailAttachment.length; i++) {
+					bodyPart = new MimeBodyPart();
+					bodyPart.setDisposition(Part.INLINE);
+					bodyPart.attachFile(inlineMailAttachment[i].filepath); // attach
+																			// inline
+																			// image
+																			// file
+					bodyPart.setHeader("Content-ID", inlineMailAttachment[i].name);
+					multipart.addBodyPart(bodyPart);
+				}
+			}
 
-      if (mail.attachment != null) {
-        DataSource dataSource = null;
-        MailAttachment[] mailAttachment = mail.attachment;
-        for (int i = 0; i < mailAttachment.length; i++) {
-          bodyPart = new MimeBodyPart();
-          dataSource = new FileDataSource(mailAttachment[i].filepath);
-          bodyPart.setDataHandler(new DataHandler(dataSource));
-          bodyPart.setFileName(mailAttachment[i].name);
-          multipart.addBodyPart(bodyPart);
-        }
-      }
+			if (mail.attachment != null) {
+				DataSource dataSource = null;
+				MailAttachment[] mailAttachment = mail.attachment;
+				for (int i = 0; i < mailAttachment.length; i++) {
+					bodyPart = new MimeBodyPart();
+					dataSource = new FileDataSource(mailAttachment[i].filepath);
+					bodyPart.setDataHandler(new DataHandler(dataSource));
+					bodyPart.setFileName(mailAttachment[i].name);
+					multipart.addBodyPart(bodyPart);
+				}
+			}
 
-      msg.setContent(multipart);
-      Transport.send(msg);
+			msg.setContent(multipart);
+			Transport.send(msg);
 
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (MessagingException e) {
-      e.printStackTrace();
-    }
-  }
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (MessagingException e) {
+			e.printStackTrace();
+		}
+	}
 }
