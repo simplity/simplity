@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<messages name="kernel"
+    xmlns="http://www.simplity.org/schema">
+    <!-- 
+    	messages used by kernel. These are defined as constants in Messages class.
+    	we have to ensure that this list and the ones declared in the class are in synch
+    	
+    	DO NOT MODIFY THIS FOR YOUR PROJECT.
+    	use myMessages.xml or create a new one for your messages.
+     -->
+    <components>
+	<message messageType="error" name="kernel.invalidValue" text="This value is not valid.  $1"/>
+	<message messageType="error" name="kernel.invalidData" text="This value is invalid. $1"/>
+	<message messageType="error" name="kernel.invalidField" text="This field has an invalid value. $1"/>
+	<message messageType="error" name="kernel.invalidComparator" text="This is not a valid comparator. $1"/>
+	<message messageType="error" name="kernel.invalidEntityList" text="This is not a valid list of names. $1"/>
+	<message messageType="error" name="kernel.valueRequired" text="Value is required. No value is entered."/>
+	<message messageType="error" name="kernel.invalidFromTo" text="To value can not be less than the from value."/>
+	<message messageType="error" name="kernel.invalidOtherField" text="Value is required for this field because of the value its related field has."/>
+	<message messageType="error" name="kernel.invalidSortOrder" text="Sort order shoudl be either asc or desc"/>
+	<message messageType="error" name="kernel.invalidBasedOnField" text="Value is required for this field because of the value its related field has."/>
+	<message messageType="error" name="kernel.internalError" text="We are sorry. There was an internal error because of which your request could not be completed. Issue has been reported to the support team. You may try again after some time."/>
+	<message messageType="error" name="kernal.invalidTableAction" text="add, modify, delete and save are the vaid actions."/>
+	<message messageType="error" name="kernel.invalidInputStream" text="Serialized data sent by the client is invalid"/>
+	<message messageType="error" name="kernel.noService" text="Service $1 is not served by this server."/>
+	<message messageType="error" name="kernel.noAccess" text="This service is not accessible to you."/>
+
+	<message messageType="success" name="kernel.success" text="$1"/>
+	<message messageType="error" name="kernel.error" text="$1"/>
+	<message messageType="warning" name="kernel.warning" text="$1"/>
+	<message messageType="info" name="kernel.info" text="$1"/>
+	<message messageType="info" name="kernel.noRows" text="No rows found maching the requested data"/>
+	<message messageType="info" name="kernel.noUpdate" text="No data was updated/inserted or deleted"/>
+ 	<message messageType="error" name="kernel.invalidAttachmentKey" text="$1 is not a valid attachment key. On success of an upload, server returns a key to that attachment. Client needs to send that key."/>
+    </components>
+</messages>

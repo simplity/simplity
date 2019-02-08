@@ -27,8 +27,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.simplity.kernel.data.IFieldsCollection;
-import org.simplity.kernel.value.Value;
+import org.simplity.core.data.IFieldsCollection;
+import org.simplity.core.value.Value;
 
 /**
  * @author simplity.org

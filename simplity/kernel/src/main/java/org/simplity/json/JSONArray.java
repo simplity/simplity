@@ -36,8 +36,8 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.simplity.kernel.util.DateUtil;
-import org.simplity.kernel.value.Value;
+import org.simplity.core.util.DateUtil;
+import org.simplity.core.value.Value;
 
 /**
  * A JSONArray is an ordered sequence of values. Its external text form is a

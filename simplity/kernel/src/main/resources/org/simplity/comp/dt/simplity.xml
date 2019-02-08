@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<dataTypes
+	name="kernel"
+	xmlns="http://www.simplity.org/schema"
+>
+	<!-- These are the data types that are defined and used internally by Simplity. 
+		DO NOT DELETE THESE. These are available in declaredDataTypes.xsd These serve 
+		as only quick-and-dirty types to kick-start your applicaiton. But you should 
+		look at other .xml files in this folder -->
+	<components>
+		<textDataType
+			name="_text"
+			maxLength="3000" />
+		<booleanDataType
+			name="_boolean"
+			description="0 for false and 1 for true" />
+		<dateDataType
+			name="_date"
+			maxDaysIntoFuture="730000"
+			maxDaysIntoPast="3650000" />
+		<dateDataType
+			name="_dateTime"
+			description="Date with time"
+			maxDaysIntoFuture="730000"
+			maxDaysIntoPast="3650000"
+			hasTime="true" />
+
+		<numericDataType
+			name="_number"
+			maxValue="99999999999999"
+			minValue="-99999999999999" />
+
+		<numericDataType
+			name="_decimal"
+			maxValue="99999999999999"
+			minValue="-99999999999999"
+			nbrFractionDigits="6" />
+		<textDataType
+			maxLength="100"
+			name="_entityName"
+			description="Name strats with alpha (_ is considered alpha) followed by alpha-numeric"
+			regex="[_a-zA-Z][\w.]*" />
+		<textDataType
+			maxLength="1000"
+			name="_entityList"
+			description="comma separated list of entityNames"
+			regex="[_a-zA-Z][\w.]{0,99}([\s]*,[\s]*[\w.]{1,100})*" />
+
+		<clobDataType
+			name="_clob"
+			description="CLOB data type as in RDBMS. However the field actually is a text-field in the sense that the field contains the text-key for the CLOB content" />
+		<blobDataType
+			name="_blob"
+			description="BLOB data type as in RDBMS. However the field actually is a text-field in the sense that the field contains the text-key for the BLOB content" />
+		<timestampDataType
+			name="_timestamp"
+			description="TIMESTAMP data type as in RDBMS. Behaves like an integer, but can be convrted to date if required. Contains number of nano seconds from epoch." />
+	</components>
+</dataTypes>

@@ -46,8 +46,8 @@ import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.Set;
 
-import org.simplity.kernel.util.DateUtil;
-import org.simplity.kernel.value.Value;
+import org.simplity.core.util.DateUtil;
+import org.simplity.core.value.Value;
 
 /**
  * A JSONObject is an unordered collection of name/value pairs. Its external

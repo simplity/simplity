@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 
-import org.simplity.kernel.value.Value;
+import org.simplity.core.value.Value;
 
 /*
 Copyright (c) 2006 JSON.org
