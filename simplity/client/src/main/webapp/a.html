@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Simplity RESTful Test</title>
+<script>
+	var getReady = function() {
+		var ele = document.getElementById('path');
+		var url = ele.value;
+		if (!path) {
+			ele.value = url = 'app/{1234}/add';
+		}
+		var qry = document.getElementById('qry').value;
+		if (qry) {
+			url = url + '?' + qry;
+		}
+		document.getElementById('url').value = url;
+		var json = {};
+		for (var i = 1; i < 6; i++) {
+			var field = document.getElementById('f' + i).value;
+			var val = document.getElementById('v' + i).value;
+			if (field && val) {
+				/*
+				 * fields with same name are converted to arrays
+				 */
+				var entry = json[field];
+				if (!entry) {
+					json[field] = val;
+				} else if (entry.push) {
+					entry.push(val);
+				} else {
+					json[field] = [ entry, val ];
+				}
+			}
+		}
+		json = JSON.stringify(json, null, 2);
+		document.getElementById('req').value = json;
+	}
+
+	var test = function() {
+		var ele = document.getElementById('method');
+		var method = ele.value;
+		if (!method) {
+			ele.value = method = 'PUT';
+		}
+		var url = document.getElementById('url').value;
+		var json = document.getElementById('req').value;
+		var xhr = new XMLHttpRequest();
+		xhr.onreadystatechange = function() {
+			if (this.readyState != '4') {
+				return;
+			}
+			document.getElementById('resp').innerHTML = xhr.responseText;
+			try {
+				var json = JSON
+						.stringify(JSON.parse(xhr.responseText), null, 2);
+				document.getElementById('json').innerHTML = json;
+			} catch (e) {
+				//
+			}
+		};
+
+		try {
+			xhr.open(method, url, true);
+			xhr.send(json);
+		} catch (e) {
+			alert('Unable to connect to server. Error : ' + e.message);
+		}
+	}
+</script>
+</head>
+<body>
+	<h1 id="Simplity Test"></h1>
+	Path : &nbsp;
+	<input id="path" width="40" />
+	<br />
+	<br /> Query String :
+	<input id="qry" /> Method :
+	<input id="method" />
+	<br />
+	<br />
+	<br /> Field Name :
+	<input id="f1" /> Value :
+	<input id="v1" />
+	<br /> Field Name :
+	<input id="f2" /> Value :
+	<input id="v2" />
+	<br /> Field Name :
+	<input id="f3" /> Value :
+	<input id="v3" />
+	<br /> Field Name :
+	<input id="f4" /> Value :
+	<input id="v4" />
+	<br /> Field Name :
+	<input id="f5" /> Value :
+	<input id="v5" />
+	<br />
+	<br />
+
+	<input type="button" value="Prepare Request" onclick="getReady()" />
+	<br />
+	<br /> Request URL :
+	<input id="url" width="100">
+	<br /> Request Body :
+	<textarea rows="10" cols="50" id="req"></textarea>
+	<br />
+	<br />
+	<input type="button" value="Go... Get Response" onclick="test()" />
+	<br />
+	<br />
+	<br />
+	<h4>Response Text</h4>
+	<pre id="resp"></pre>
+	<br />
+	<br />
+	<h4>Response JSON</h4>
+	<pre id="json"></pre>
+</body>
+</html>

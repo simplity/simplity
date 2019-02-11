@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Simplity Trace Window</title>
+<script type="text/javascript" src="lib/simplity.js"></script>
+<script type="text/javascript">
+	var logsEle = null;
+
+	var loaded = function() {
+		logsEle = document.getElementById('logs');
+		window.setInterval(getLogs, 10000);
+	}
+	
+	var addLogs = function(logs){
+		if(!logs){
+			return;
+		}
+		logs = logs.replace(/&/g, "&apm;").replace(/</g, "&lt;").split('\n');
+		var n = logs.length;
+		for(var i = 0; i < n; i++){
+			var log = logs[i];
+			if(log.indexOf('ERROR') !=  -1 || log.indexOf('Error') !=  -1 || log.indexOf('error') !=  -1){
+				logs[i] = '<span style="color:red">' + log + '</span>';
+			}
+		}
+		logs = '<pre>' + logs.join('\n') + '</pre>';
+		var div = document.createElement('div');
+		div.innerHTML = logs;
+		logsEle.appendChild(div);
+		window.scrollTo(0, document.body.scrollHeight);
+	}
+	
+	var getLogs = function() {
+		Simplity.getLogs(addLogs);
+	}
+	
+	var cleanUp = function(){
+		logsEle.innerHTML = '';
+	}
+</script>
+</head>
+<body style="margin-top: 20px;" onload="loaded()">
+	<div
+		style="background-color: #dddddd; position: fixed; top:0px; left:0px; width:100%">
+		<div style="padding-left: 100px; font-weight:700; display: inline-block;">Logs</div>
+		<div style="display: inline-block; float: right;">
+		<input type="button" value="Refresh" onclick="getLogs();" />&nbsp;&nbsp;&nbsp;&nbsp;<input
+			type="button" value="Clean" onclick="cleanUp();" /></div>
+	</div>
+	<div id="logs"></div>
+</body>
+</html>

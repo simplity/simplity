@@ -122,6 +122,13 @@ public abstract class HttpAgent extends HttpServlet {
 	 * use the REST sway of specifying resource-specific-path and operation
 	 */
 	protected boolean cleintCanSpecifyServiceName = true;
+	/**
+	 * many a times, developers do not notice the error message thrown by
+	 * set-up. They look at only the error message thrown by service request and
+	 * get to a wrong path for debugging. Better to keep throwing the config
+	 * error each time. This field captures the error, if any
+	 */
+	private String errorMessage;
 
 	@Override
 	public void init() throws ServletException {
@@ -198,6 +205,13 @@ public abstract class HttpAgent extends HttpServlet {
 	 *
 	 */
 	public void serve(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+		if (this.errorMessage != null) {
+			/*
+			 * app was not configured properly
+			 */
+			logger.error(this.errorMessage);
+			return;
+		}
 		String serviceName = null;
 		long bigin = System.currentTimeMillis();
 
@@ -475,7 +489,17 @@ public abstract class HttpAgent extends HttpServlet {
 		if (allOk) {
 			AppManager.setDefaultApp(app);
 		} else {
-			logger.error("Application configuration failed. All requests will be responded with an error message.");
+			StringBuilder sbf = new StringBuilder("Application configuration failed. Error message:\n");
+			if (messages.size() == 0) {
+				sbf.append(
+						"application.xml is probably missing or has syntax errors. Please verify that you have set resourceRoot to the right folder/path and that application.xml is located there");
+			} else {
+				for (String msg : messages) {
+					sbf.append(msg).append('\n');
+				}
+			}
+			this.errorMessage = sbf.toString();
+			logger.error(this.errorMessage);
 		}
 	}
 

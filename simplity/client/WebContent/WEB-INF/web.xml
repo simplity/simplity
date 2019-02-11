@@ -12,8 +12,8 @@
 
   <servlet>
     <servlet-name>controller</servlet-name>
-    <servlet-class>org.simplity.sample.client.http.Controller</servlet-class>
-    <load-on-startup>0</load-on-startup>
+    <servlet-class>org.simplity.sample.http.Controller</servlet-class>
+    <load-on-startup>1</load-on-startup>
   </servlet>
   <servlet-mapping>
     <servlet-name>controller</servlet-name>

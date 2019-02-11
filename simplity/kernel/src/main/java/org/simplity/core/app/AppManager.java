@@ -59,7 +59,7 @@ public class AppManager {
 			return defaultInstance;
 		}
 		if (instances == null) {
-			logger.warn(
+			logger.error(
 					"app named {} is requested, but a multi-app environment is not set up. Also, this app is not the default app.");
 			return null;
 		}
@@ -69,7 +69,7 @@ public class AppManager {
 			}
 		}
 
-		logger.warn(
+		logger.error(
 				"app named {} is not running.", appId);
 		return null;
 	}

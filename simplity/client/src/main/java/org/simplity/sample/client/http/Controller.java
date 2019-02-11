@@ -37,7 +37,7 @@ import org.simplity.core.value.Value;
 /**
  * this is an example controller. refer to <code>ExampleClient</code> in the
  * simplity core package
- * 
+ *
  * @author simplity.org
  *
  */

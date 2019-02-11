@@ -7,7 +7,7 @@
 		<artifactId>simplity</artifactId>
 		<version>2.0.0-SNAPSHOT</version>
 	</parent>
-	<artifactId>core</artifactId>
+	<artifactId>simplity-core</artifactId>
 	<packaging>jar</packaging>
 	<name>core server</name>
 	<properties>
