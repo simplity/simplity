@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" type="img/x-icon" href="img/favicon.png">
+
+<title>PetClinic :: Simplity Demonstration</title>
+<link rel="stylesheet" href="css/petclinic.css">
+</head>
+
+<body onload="loaded()">
+	<nav class="navbar navbar-default" role="navigation">
+		<div class="container">
+			<div class="navbar-header">
+				<a id="home" class="navbar-brand" href="welcome.html"><span></span></a>
+				<button type="button" class="navbar-toggle" data-toggle="collapse"
+					data-target="#main-navbar">
+					<span class="sr-only"><os-p>Toggle navigation</os-p></span> <span
+						class="icon-bar"></span> <span class="icon-bar"></span> <span
+						class="icon-bar"></span>
+				</button>
+			</div>
+			<div class="navbar-collapse collapse" id="main-navbar">
+				<ul class="nav navbar-nav navbar-right">
+
+					<li><a id="welcome" href="welcome.html" title="home page">
+							<span class="glyphicon  glyphicon-home" aria-hidden="true"></span>
+							<span>Home</span>
+					</a></li>
+
+					<li><a id="ownerTab" href="findOwners.html" title="find owners">
+							<span class="glyphicon  glyphicon-search" aria-hidden="true"></span>
+							<span>Find owners</span>
+					</a></li>
+
+					<li><a id="vets" href="vets.html" title="veterinarians"> <span
+							class="glyphicon  glyphicon-th-list" aria-hidden="true"></span> <span>Veterinarians</span>
+					</a></li>
+
+					<li><a id="aups" href="oups.html"
+						title="trigger a RuntimeException to see how it is handled"> <span
+							class="glyphicon  glyphicon-th-warning-sign" aria-hidden="true"></span>
+							<span>Error</span>
+					</a></li>
+
+				</ul>
+			</div>
+		</div>
+	</nav>
+	<div class="container-fluid">
+		<div class="container xd-container">
+			<div class="container">
+
+  <h2>Pet Visit</h2>
+
+  <b>Pet</b>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Birth Date</th>
+        <th>Type</th>
+        <th>Owner</th>
+      </tr>
+    </thead>
+    <tbody><tr>
+      <td id="petName">lorem</td>
+      <td id="petDob">epsum</td>
+      <td id="petType">lorem</td>
+      <td > <span id="firstName">James</span>&nbsp;<span id="lastName">Bond</span></td>
+    </tr>
+  </tbody></table>
+
+  <form class="form-horizontal" onsubmit="event.preventDefault();submitted()">
+    <div class="form-group has-feedback">
+      <input type="hidden" id="ownerId"/>
+      <div id="visitDateGroup" class="form-group">
+        <label class="col-sm-2 control-label">Date</label>
+        <div class="col-sm-10">
+          <input class="form-control" id="visitDate">
+          <span id="visitDateIcon" class="glyphicon glyphicon-ok form-control-feedback" aria-hidden="true"></span>
+          <span id="visitDateMsg" class="help-inline"></span>
+        </div>
+      </div>
+    
+      
+      <div id="visitDescriptionGroup" class="form-group">
+        <label class="col-sm-2 control-label">Description</label>
+        <div class="col-sm-10">
+          <input class="form-control" id="visitDescription">
+          <span id="visitDescriptionIcon" class="glyphicon glyphicon-ok form-control-feedback" aria-hidden="true"></span>
+ 	<span id="visitDescriptionMsg"	class="help-inline"></span>
+          
+        </div>
+      </div>
+    
+    </div>
+
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <input id="petId" type="hidden">
+        <button class="btn btn-default" id="submit" type="submit">Add Visit</button>
+      </div>
+    </div>
+  </form>
+
+  <br>
+  <b>Previous Visits</b>
+  <table class="table table-striped">
+    <thead><tr>
+      <th>Date</th>
+      <th>Description</th>
+    </tr>
+    </thead><tbody><tr id="__visits__"><td> __visitDate__</td><td >__visitDescription__</td></tr> 
+  </tbody></table>
+
+				<br /> <br />
+				<div class="row">
+					<div class="col-12 text-center">
+						<img src="img/spring-pivotal-logo.png" alt="Sponsored by Pivotal">
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script src="lib/simplity.js"></script>
+	<script src="js/common.js"></script>
+<script src="js/editVisit.js"></script>
+</body>
+</html>

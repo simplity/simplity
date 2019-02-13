@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<service
+	xmlns="http://www.simplity.org/schema"
+	name="filterOwnersJava"
+	moduleName="pet"
+	description="Demonstrates use of java code to implement a service with the help of Simplity components"
+	dbAccessType="readOnly"
+>
+
+	<inputData>
+		<inputRecords>
+			<inputRecord
+				recordName="pet.owner"
+				purpose="filter" />
+		</inputRecords>
+	</inputData>
+
+	<actions>
+		<!-- complexLogic is does logic and i/o while logic is meant for pure logic -->
+		<complexLogic className="org.simplity.pet.action.FilterOwners" />
+	</actions>
+
+	<outputData>
+		<outputRecords>
+			<outputRecord sheetName="owners" />
+			<!-- child table is to be output as child pf parent rows -->
+			<outputRecord
+				sheetName="petDetails"
+				parentSheetName="owners"
+				linkColumnInParentSheet="ownerId"
+				linkColumnInThisSheet="ownerId" />
+		</outputRecords>
+	</outputData>
+</service>

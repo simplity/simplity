@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package org.simplity.sample.client.http;
+package org.simplity.pet;
 
 import java.util.Map;
 

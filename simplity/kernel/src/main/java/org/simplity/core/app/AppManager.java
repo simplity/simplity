@@ -22,7 +22,6 @@
 
 package org.simplity.core.app;
 
-import org.simplity.core.ApplicationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,8 +81,9 @@ public class AppManager {
 		if (defaultInstance != null) {
 			return defaultInstance;
 		}
-		throw new ApplicationError(
+		logger.error(
 				"Design error: Applicaiton.getInstance() invoked before configuring any application.");
+		return null;
 	}
 
 	/**

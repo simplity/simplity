@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<record
+  xmlns="http://www.simplity.org/schema"
+  name="department"
+  moduleName="acad"
+  recordType="storage"
+  description="like civil. This table may not be used in schools"
+>
+  <fields>
+    <primaryKey
+      name="departmentId"
+      dataType="id"
+      description="internal sequence" />
+      
+  </fields>
+
+</record>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<application
+	xmlns="http://www.simplity.org/schema"
+	applicationId="org.simplity.sample.http"
+  modules="pet"
+>
+	<!-- 
+<rdbDriver 
+  dbVendor="postgresql"
+  dbDriverClassName="org.postgresql.Driver"
+  connectionString="jdbc:postgresql://ec2-54-83-11-247.compute-1.amazonaws.com:5432/d4akh88jea3ug9?user=yqxmrxabbnnncf&amp;password=9d279359e2a09cb7801761a999bf17e3000af97fda4c83ae530c978fa0906200"
+  
+/>
+connectionString="jdbc:postgresql://yqxmrxabbnnncf:9d279359e2a09cb7801761a999bf17e3000af97fda4c83ae530c978fa0906200@ec2-54-83-11-247.compute-1.amazonaws.com:5432/d4akh88jea3ug9"
+
+
+	dbVendor="oracle"
+
+	dbDriverClassName="oracle.jdbc.OracleDriver"
+
+	connectionString="jdbc:oracle:thin:simplity/simplity@localhost:1521:XE"
+	dbDriverClassName="com.ibm.db2.jcc.DB2Driver"
+	dbVendor="db2"
+	connectionString="jdbc:db2://myhost:5021/SAMPLE:user=sa;password=sa;"
+	
+	dbVendor="mysql" 
+	
+	dbDriverClassName="com.mysql.jdbc.Driver" 
+	
+	connectionString="jdbc:mysql://localhost:3306/petclinic?user=pc&amp;password=pc" 
+
+	exceptionListener="org.simplity.kernel.ExampleExceptionListener" 
+	
+	-->
+
+
+</application>

@@ -95,13 +95,13 @@ public class HttpConventions {
 		 * field name for service name. Could be in header. used by
 		 * ServiceRequest.
 		 */
-		public static final String SERVICE_NAME = "sa_serviceName";
+		public static final String SERVICE_NAME = "_serviceName";
 		/**
 		 * header field used to indicate that this request is for testing, and
 		 * the response should be for this test id. Honored by server if the
 		 * server is in stub-mode for simulation
 		 */
-		public static final String TEST_ID = "sa_testId";
+		public static final String TEST_ID = "_testId";
 	}
 
 	/**

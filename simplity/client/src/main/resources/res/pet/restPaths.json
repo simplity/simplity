@@ -1,0 +1,15 @@
+{
+	"basePath": "v1/",
+	"serviceNamePrefix": "a.b.",
+	"paths": {
+		"corp/{corp}/{id}": {
+			"": "corpIq"
+		},
+		"{c}": {
+			"": "fieldC"
+		},
+		"c/d/e": {
+			"": "c.d.e"
+		}
+	}
+}

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" type="img/x-icon" href="img/favicon.png">
+
+<title>PetClinic :: Simplity Demonstration</title>
+<link rel="stylesheet" href="css/petclinic.css">
+</head>
+
+<body onload="loaded()">
+	<nav class="navbar navbar-default" role="navigation">
+		<div class="container">
+			<div class="navbar-header">
+				<a id="home" class="navbar-brand" href="welcome.html"><span></span></a>
+				<button type="button" class="navbar-toggle" data-toggle="collapse"
+					data-target="#main-navbar">
+					<span class="sr-only"><os-p>Toggle navigation</os-p></span> <span
+						class="icon-bar"></span> <span class="icon-bar"></span> <span
+						class="icon-bar"></span>
+				</button>
+			</div>
+			<div class="navbar-collapse collapse" id="main-navbar">
+				<ul class="nav navbar-nav navbar-right">
+
+					<li><a id="welcome" href="welcome.html" title="home page">
+							<span class="glyphicon  glyphicon-home" aria-hidden="true"></span>
+							<span>Home</span>
+					</a></li>
+
+					<li><a id="ownerTab" href="findOwners.html"
+						title="find owners"> <span class="glyphicon  glyphicon-search"
+							aria-hidden="true"></span> <span>Find owners</span>
+					</a></li>
+
+					<li><a id="vetsTab" href="vets.html" title="veterinarians">
+							<span class="glyphicon  glyphicon-th-list" aria-hidden="true"></span>
+							<span>Veterinarians</span>
+					</a></li>
+
+					<li><a id="aups" href="oups.html"
+						title="trigger a RuntimeException to see how it is handled"> <span
+							class="glyphicon  glyphicon-th-warning-sign" aria-hidden="true"></span>
+							<span>Error</span>
+					</a></li>
+
+				</ul>
+			</div>
+		</div>
+	</nav>
+	<div class="container-fluid">
+		<div class="container xd-container">
+			<div class="container">
+
+
+
+				<h2>Owner Information</h2>
+
+				<table class="table table-striped">
+					<tbody>
+						<tr>
+							<th>Name</th>
+							<td><input type="hidden" id="ownerId" /> <b id="firstName">George
+							</b>&nbsp; <b id="lastName"> Franklin</b></td>
+						</tr>
+						<tr>
+							<th>Address</th>
+							<td id="address">110 W. Liberty St.</td>
+						</tr>
+						<tr>
+							<th>City</th>
+							<td id="city">Madison</td>
+						</tr>
+						<tr>
+							<th>Telephone</th>
+							<td id="telephone">6085551023</td>
+						</tr>
+					</tbody>
+				</table>
+
+				<a href="javascript:editOwner()" class="btn btn-default">Edit
+					Owner</a> <a href="javascript:addPet();" class="btn btn-default">Add New
+					Pet</a> <br> <br> <br>
+				<h2>Pets and Visits</h2>
+
+				<table id="petDetails" data-table="petDetails" data-has-children="true"
+					class="table table-striped">
+
+					<tbody>
+						<tr data-row="petDetails">
+							<td valign="top">
+								<dl class="dl-horizontal">
+									<dt>Name</dt>
+									<dd>__petName__</dd>
+									<dt>Birth Date</dt>
+									<dd>__petDob__</dd>
+									<dt>Type</dt>
+									<dd>__petType__</dd>
+								</dl>
+							</td>
+							<td data-table="visits" valign="top">
+								<table  class="table-condensed">
+									<thead>
+										<tr>
+											<th>Visit Date</th>
+											<th>Description</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr data-row="visits">
+											<td>__visitDate__</td>
+											<td>__visitDescription__</td>
+										</tr>
+										<tr>
+											<td><a href="editPet.html?petId=__petId__">Edit Pet</a></td>
+											<td><a href="editVisit.html?__petId__">Add Visit</a></td>
+										</tr>
+									</tbody>
+								</table>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+
+				<br /> <br />
+				<div class="row">
+					<div class="col-12 text-center">
+						<img src="img/spring-pivotal-logo.png" alt="Sponsored by Pivotal">
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="js/common.js"></script>
+	<script src="lib/simplity.js"></script>
+	<script src="js/ownerDetails.js"></script>
+</body>
+</html>

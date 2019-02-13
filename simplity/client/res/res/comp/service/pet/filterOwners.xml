@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<service
+	xmlns="http://www.simplity.org/schema"
+	name="filterOwners"
+	moduleName="pet"
+	dbAccessType="readOnly"
+>
+
+	<inputData>
+		<inputRecords>
+			<inputRecord
+				recordName="pet.owner"
+				purpose="filter" />
+		</inputRecords>
+	</inputData>
+
+	<actions>
+		<filter
+			filterRecordName="pet.owner"
+			outputSheetName="owners"
+		>
+			<childRecords>
+				<relatedRecord
+					sheetName="petDetails"
+					recordName="pet.petDetail" />
+			</childRecords>
+		</filter>
+	</actions>
+
+	<outputData>
+		<outputRecords>
+			<outputRecord sheetName="owners" />
+			<outputRecord
+				sheetName="petDetails"
+				parentSheetName="owners"
+				linkColumnInParentSheet="ownerId"
+				linkColumnInThisSheet="ownerId" />
+		</outputRecords>
+	</outputData>
+</service>

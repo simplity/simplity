@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<service
+	xmlns="http://www.simplity.org/schema"
+	moduleName="a.b"
+	name="junk"
+	dbAccessType="none"
+>
+<inputData>
+<inputFields>
+<inputField dataType="_text" name="a"/>
+<inputField dataType="_number" name="b"/>
+</inputFields>
+</inputData>
+<outputData justOutputEveryThing="true"></outputData>
+	<actions>
+		<setValue fieldName="junk" fieldValue="this is junk"/>
+	</actions>
+</service>

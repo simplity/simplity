@@ -257,4 +257,18 @@ public class ServiceRequest implements IServiceRequest {
 	public void setClientContext(Object clientContext) {
 		this.clientContext = clientContext;
 	}
+
+	/**
+	 *
+	 * @return get the payload as it is
+	 */
+	public Object getPayload() {
+		if (this.jsonPayload != null) {
+			return this.jsonPayload;
+		}
+		if (this.xmlPayload != null) {
+			return this.xmlPayload;
+		}
+		return this.payload;
+	}
 }

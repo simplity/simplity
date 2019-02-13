@@ -1244,8 +1244,6 @@ public class Application implements IApp {
 					return null;
 				}
 
-				this.compClass.newInstance();
-
 				if (XmlUtil.xmlToObject(fileName, obj) == false) {
 					/*
 					 * load failed. obj is not valid any more.
@@ -1296,7 +1294,6 @@ public class Application implements IApp {
 		 */
 		void loadAll() {
 			if (this.isPreloaded == false) {
-				logger.info("{} is not pre-loaded. loadAll() woudl do nothing.");
 				return;
 			}
 			this.cachedOnes = new HashMap<>();
@@ -1312,8 +1309,12 @@ public class Application implements IApp {
 				 * load one for each module
 				 */
 				String prefix = Application.this.resourceRoot + this.folderPrefix;
-				for (String module : Application.this.modules) {
-					this.loadOne(prefix + module + EXTN, pkg);
+				if (Application.this.modules == null) {
+					this.loadOne("dt.xml", pkg);
+				} else {
+					for (String module : Application.this.modules) {
+						this.loadOne(prefix + module + EXTN, pkg);
+					}
 				}
 				/*
 				 * we have to initialize the components

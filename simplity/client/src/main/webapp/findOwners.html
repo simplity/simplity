@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="shortcut icon" type="img/x-icon" href="img/favicon.png">
+
+<title>PetClinic :: Simplity Demonstration</title>
+<link rel="stylesheet" href="css/petclinic.css">
+</head>
+
+<body onload="loaded()">
+	<nav class="navbar navbar-default" role="navigation">
+		<div class="container">
+			<div class="navbar-header">
+				<a id="home" class="navbar-brand" href="welcome.html"><span></span></a>
+				<button type="button" class="navbar-toggle" data-toggle="collapse"
+					data-target="#main-navbar">
+					<span class="sr-only"><os-p>Toggle navigation</os-p></span> <span
+						class="icon-bar"></span> <span class="icon-bar"></span> <span
+						class="icon-bar"></span>
+				</button>
+			</div>
+			<div class="navbar-collapse collapse" id="main-navbar">
+				<ul class="nav navbar-nav navbar-right">
+
+					<li><a id="welcome" href="welcome.html" title="home page">
+							<span class="glyphicon  glyphicon-home" aria-hidden="true"></span>
+							<span>Home</span>
+					</a></li>
+
+					<li><a id="ownerTab" href="findOwners.html" title="find owners">
+							<span class="glyphicon  glyphicon-search" aria-hidden="true"></span>
+							<span>Find owners</span>
+					</a></li>
+
+					<li><a id="vetsTab" href="vets.html" title="veterinarians"> <span
+							class="glyphicon  glyphicon-th-list" aria-hidden="true"></span> <span>Veterinarians</span>
+					</a></li>
+
+					<li><a id="aups" href="oups.html"
+						title="trigger a RuntimeException to see how it is handled"> <span
+							class="glyphicon  glyphicon-th-warning-sign" aria-hidden="true"></span>
+							<span>Error</span>
+					</a></li>
+
+				</ul>
+			</div>
+		</div>
+	</nav>
+	<div class="container-fluid">
+		<div class="container xd-container">
+			<div class="container">
+
+				<div id="find">
+
+					<h2>Find Owners</h2>
+
+					<form class="form-horizontal" id="search-owner-form">
+						<div class="form-group">
+							<div class="control-group">
+								<label class="col-sm-2 control-label">Last name </label>
+								<div class="col-sm-10">
+									<input class="form-control" size="30" maxlength="80"
+										id="lastName"> <span id="message"
+										class="help-inline"></span>
+								</div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-sm-offset-2 col-sm-10">
+								<button type="button" onclick="find()" class="btn btn-default">Find
+									Owner</button>
+							</div>
+						</div>
+
+					</form>
+					<br> <a class="btn btn-default"
+						href="editOwner.html">Add Owner</a>
+				</div>
+				<div id="found">
+					<h2>Owners</h2>
+
+					<table data-table="owners" data-has-children="true" data-hide-if-no-data="true" id="owners" class="table table-striped">
+						<thead>
+							<tr>
+								<th style="width: 150px;">Name</th>
+								<th style="width: 200px;">Address</th>
+								<th>City</th>
+								<th style="width: 120px">Telephone</th>
+								<th>Pets</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr data-row="owners" id="owners__i__">
+								<td><a href="ownerDetails.html?__ownerId__">__firstName__&nbsp;__lastName__</a>
+								</td>
+								<td>__address__</td>
+								<td>__city__</td>
+								<td>__telephone__</td>
+								<td data-table="petDetails"><span  data-row="petDetails" id="owners_pets__i__"><span>__petName__&nbsp;&nbsp;</span></span></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col-12 text-center">
+					<img src="img/spring-pivotal-logo.png" alt="Sponsored by Pivotal">
+				</div>
+			</div>
+		</div>
+	</div>
+	<script src="lib/simplity.js"></script>
+	<script src="js/common.js"></script>
+	<script src="js/findOwners.js"></script>
+</body>
+</html>

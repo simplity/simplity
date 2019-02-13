@@ -1,20 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd" id="WebApp_ID" version="3.0">
-  <display-name>Simplity Petsore Example</display-name>
-  <welcome-file-list>
-    <welcome-file>welcome.html</welcome-file>
-  </welcome-file-list>
+  <display-name>Simplity Sample Client</display-name>
   <context-param>
-  	<param-name>org.simplity.resourceRoot</param-name>
-  	<param-value>/res/pet/</param-value>
+    <param-name>org.simplity.resourceRoot</param-name>
+    <param-value>res/sample/</param-value>
   </context-param>
+  <context-param>
+    <param-name>org.simplity.restRoot</param-name>
+    <param-value>/v1/</param-value>
+  </context-param>
+
   <servlet>
     <servlet-name>controller</servlet-name>
-    <servlet-class>org.simplity.pet.Controller</servlet-class>
-    <load-on-startup>1</load-on-startup>
+    <servlet-class>org.simplity.sample.client.http.Controller</servlet-class>
+    <load-on-startup>0</load-on-startup>
   </servlet>
   <servlet-mapping>
     <servlet-name>controller</servlet-name>
-    <url-pattern>*._s</url-pattern>
+    <url-pattern>/v1/*</url-pattern>
   </servlet-mapping>
 </web-app>

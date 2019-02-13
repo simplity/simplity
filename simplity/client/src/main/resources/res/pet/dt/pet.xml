@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<dataTypes
+	name="myTypes"
+	xmlns="http://www.simplity.org/schema"
+>
+	<components>
+		<numericDataType
+			name="pet.id"
+			description="internal key" 
+			/>
+		<textDataType
+			name="pet.description"
+			description="max of 255 characters allowed."
+			maxLength="255"
+			 />
+		<textDataType
+			name="pet.name"
+			maxLength="30"
+			description="name starts with alpha character and may contain upto 50 alpha-numeric characters. _ is treated as alpha."
+			regex="^[a-zA-Z].*" />
+		<textDataType
+			name="pet.phone"
+			maxLength="20"
+			messageName="invalidPhone"
+			description="You may use space, - and () to format the phone number"
+			regex="[0-9\- ()]{1,19}" />
+		<textDataType
+			name="pet.city"
+			maxLength="20"
+			 />
+		<textDataType
+			name="pet.text"
+			description="Three thousand characters are more than enough to describe pretty much anything. Well almost."
+			maxLength="3000"
+			 />
+			 
+		<textDataType
+			name="pet.address"
+			description="Three thousand characters are more than enough to describe pretty much anything. Well almost."
+			maxLength="3000"
+			 />
+		<textDataType
+			name="pet.text80"
+			description="max of 80 characters allwed."
+			maxLength="80"
+			/>
+		<dateDataType
+			name="pet.date"
+			maxDaysIntoFuture="730000"
+			maxDaysIntoPast="3650000" />
+	</components>
+</dataTypes>

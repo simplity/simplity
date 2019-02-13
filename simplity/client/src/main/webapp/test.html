@@ -3,217 +3,25 @@
 <head>
 <meta charset="ISO-8859-1">
 <title>Simplity Test</title>
+<script type="text/javascript" src="js/test.js"></script>
 <script type="text/javascript" src="lib/simplity.js"></script>
-<script>
-	/**
-	 * invoked on page load
-	 */
-
-	var login = function() {
-		document.getElementById('json').value = JSON.stringify(TEST_JSON[2],
-				null, 2);
-		document.getElementById('service').value = 'save_test.parentTable';
-		Simplity.login('222', 'abcd');
-	};
-	/**
-	 * we just want to validate service name as of now, but we have plans to do some
-	 * more meaningful stuff, like getting input data specifications
-	 */
-	var serviceChanged = function(ele) {
-		// disabled this functionality
-		return;
-		var serviceName = ele.value;
-		if (serviceName) {
-			var json = {
-				serviceName : serviceName
-			};
-			Simplity.getResponse('test.getService', JSON.stringify(json));
-		}
-	};
-
-	var TEST_JSON = [ {
-		txt : 'this is a text field',
-		nbr : 12,
-		amt : 23.45,
-		bool : true,
-		dt : new Date(),
-		txtarr : [ {
-			txtarr : 't1'
-		}, {
-			txtarr : 't2'
-		}, {
-			txtarr : 't3'
-		}, {
-			txtarr : 't4'
-		}, {
-			txtarr : 't5'
-		} ],
-		nbrarr : [ {
-			nbrarr : 1
-		}, {
-			nbrarr : 2
-		}, {
-			nbrarr : 3
-		}, {
-			nbrarr : 4
-		}, {
-			nbrarr : 5
-		}, {
-			nbrarr : 6
-		} ],
-		amtarr : [ {
-			amtarr : 1.1
-		}, {
-			amtarr : 2.2
-		}, {
-			amtarr : 3.3
-		}, {
-			amtarr : 4.4
-		} ],
-		boolarr : [ {
-			boolarr : true
-		}, {
-			boolarr : false
-		} ],
-		datarr : [ {
-			datarr : new Date(2016, 1, 12)
-		}, {
-			datarr : new Date(2014, 4, 6)
-		} ],
-		ds : [ {
-			nbr : 123,
-			txt : 'ds text'
-		} ],
-		dsarr : [ {
-			nbr : 234,
-			txt : 'ds arr text1'
-		}, {
-			nbr : 345678,
-			txt : 'ds arr text 2'
-		} ],
-		cds : {
-			nbr : 765,
-			txtarr : [ 'sd1', 'sd2', 'sd3' ],
-			ds : {
-				nbr : 99,
-				txt : 'tteexxtt'
-			},
-			dsarr : [ {
-				nbr : 22,
-				txt : 'text22'
-			}, {
-				nbr : 33,
-				txt : 'text33'
-			}, {
-				nbr : 44,
-				txt : 'text44'
-			} ]
-		},
-		cdsarr : [ {
-			nbr : 765,
-			txtarr : [ 'sd1', 'sd2', 'sd3' ],
-			ds : {
-				nbr : 99,
-				txt : 'tteexxtt'
-			},
-			dsarr : [ {
-				nbr : 22,
-				txt : 'text22'
-			}, {
-				nbr : 33,
-				txt : 'text33'
-			}, {
-				nbr : 44,
-				txt : 'text44'
-			} ]
-		}, {
-			nbr : 765,
-			txtarr : [ 'sd1', 'sd2', 'sd3' ],
-			ds : {
-				nbr : 99,
-				txt : 'tteexxtt'
-			},
-			dsarr : [ {
-				nbr : 22,
-				txt : 'text22'
-			}, {
-				nbr : 33,
-				txt : 'text33'
-			}, {
-				nbr : 44,
-				txt : 'text44'
-			} ]
-		} ]
-	}, {
-		"parentName" : "par1Name",
-		"_saveAction" : "add",
-		"childTable" : [ {
-			"childName" : "c1OfPar1"
-		}, {
-			"childName" : "c2OfPar1"
-		} ]
-	}, {
-		name : "parent  - 1",
-		notes : "noootes",
-		dateOfBirth : "11-21-1988",
-		timeOfBirth : "11-20-1988T22:12:31.123Z",
-		netWorth : "12.345",
-		active : true,
-		self : [ {
-			name : "self1 - 1"
-		}, {
-			name : "self1 - 2"
-		}, {
-			name : "self1 - 3"
-		} ]
-	} ];
-
-	var test = function() {
-		var serviceName = document.getElementById('service').value;
-		var data = document.getElementById('json').value;
-		if (!serviceName) {
-			Simplity.showMessage('Please enter the service name to test');
-			return;
-		}
-		var txt = null;
-		try {
-			txt = JSON.stringify(JSON.parse(data), null, 2);
-		} catch (e) {
-			if (!confirm("Your json has sytax error. want to still proceed? \n\n "
-					+ e)) {
-				return;
-			}
-		}
-		if (txt) {
-			document.getElementById('json').value = txt;
-		}
-		Simplity.getResponse(serviceName, data, showResponse);
-	};
-	var showResponse = function(data) {
-		document.getElementById('response').innerHTML = JSON.stringify(data,
-				null, 2);
-	};
-</script>
 <style type="text/css">
-.key {
-	color: red;
+.key{
+	color:red;
 }
-
-.number {
-	color: blue;
+.number{
+	color:blue;
 }
-
-.string {
-	color: green;
+.string{
+	color:green;
 }
-
 .boolean {
-	color: olive;
+	color:olive;
+}
+.null{
+	color:fuchsia;
 }
 
-.null {
-	color: fuchsia;
-}
 </style>
 </head>
 <body onload="login()">
@@ -221,16 +29,16 @@
 	Service name to invoke : &nbsp;
 	<input id="service" width="25" onchange="serviceChanged(this)" />
 	<br />
-	<br /> Json Data :
-	<textarea id="json" cols="50" rows="10"> </textarea>
 	<br />
+	Json Data : <textarea id="json" cols="50" rows="10"> </textarea>
+	<br/>
 	<br />
-
+	
 	<input type="button" value="Go... Get Response" onclick="test()" />
 	<br />
 	<br />
 	<h4>Request data</h4>
-	<pre id="request"></pre>
+	<pre id="request" ></pre >
 	<br />
 	<br />
 	<h4>Response data</h4>

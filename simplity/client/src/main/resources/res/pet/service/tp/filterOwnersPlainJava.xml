@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<service
+	xmlns="http://www.simplity.org/schema"
+	name="filterOwnersPlainJava"
+	dbAccessType="readOnly" className="org.simplity.pet.service.FilterOwners"
+>
+
+	<inputData>
+		<inputRecords>
+			<inputRecord
+				recordName="owners"
+				purpose="filter" />
+		</inputRecords>
+	</inputData>
+
+	<actions>
+		<filter
+			filterRecordName="owners"
+			outputSheetName="owners"
+		>
+			<childRecords>
+				<relatedRecord
+					sheetName="petDetails"
+					recordName="petDetails" />
+			</childRecords>
+		</filter>
+	</actions>
+
+	<outputData>
+		<outputRecords>
+			<outputRecord sheetName="owners" />
+			<outputRecord
+				sheetName="petDetails"
+				parentSheetName="owners"
+				linkColumnInParentSheet="ownerId"
+				linkColumnInThisSheet="ownerId" />
+		</outputRecords>
+	</outputData>
+</service>

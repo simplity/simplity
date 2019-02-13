@@ -20,8 +20,38 @@
  * SOFTWARE.
  */
 
+package org.simplity.pet;
+
+import org.simplity.core.app.Application;
+import org.simplity.core.data.IDataSheet;
+import org.simplity.core.dm.DbTable;
+import org.simplity.core.idb.IDbHandle;
+import org.simplity.core.idb.IReadOnlyHandle;
+import org.simplity.core.service.ServiceContext;
+import org.simplity.core.trans.ILogicWithDbAccess;
+
 /**
  * @author simplity.org
  *
  */
-package org.simplity.sample.client.http;
+public class FilterOwners implements ILogicWithDbAccess {
+	private static final String OWNERS = "owners";
+	private static final String PETS = "petDetails";
+
+	@Override
+	public boolean execute(ServiceContext ctx, IDbHandle dbHandle) {
+		DbTable owners = (DbTable) Application.getActiveInstance().getRecord(OWNERS);
+		IDataSheet ds = owners.filter(owners, ctx, (IReadOnlyHandle) dbHandle, ctx.getUserId());
+		ctx.putDataSheet(OWNERS, ds);
+
+		/*
+		 * read rows from pets for the filtered owners
+		 */
+		int nbrRows = ds.length();
+		if (nbrRows > 0) {
+			DbTable pets = (DbTable) Application.getActiveInstance().getRecord(PETS);
+			pets.filterForParents(ds, (IReadOnlyHandle) dbHandle, PETS, false, ctx);
+		}
+		return nbrRows > 0;
+	}
+}

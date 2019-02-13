@@ -1,0 +1,4 @@
+{
+	"filter_owners" : "filter_pet.owners",
+	"get_owners" : "get_pet.owners"
+}

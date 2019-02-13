@@ -47,6 +47,7 @@ import org.simplity.core.app.AppManager;
 import org.simplity.core.app.Application;
 import org.simplity.core.app.IApp;
 import org.simplity.core.app.ServiceResult;
+import org.simplity.core.app.StandInApp;
 import org.simplity.core.app.internal.ServiceRequest;
 import org.simplity.core.app.internal.ServiceResponse;
 import org.simplity.core.util.IoUtil;
@@ -250,8 +251,16 @@ public abstract class HttpAgent extends HttpServlet {
 			serviceName = this.getServiceName(req, fields);
 			if (serviceName == null) {
 				logger.warn("No service name is inferred from request.");
-				this.respondWithError(resp, "Sorry, that request is beyond us!!", writer);
-				return;
+				if (app instanceof StandInApp) {
+					/*
+					 * StandInApp is not a real app. So, we go in with unknown
+					 * service
+					 */
+					serviceName = "unknownService";
+				} else {
+					this.respondWithError(resp, "Sorry, that request is beyond us!!", writer);
+					return;
+				}
 			}
 			/*
 			 * get all non-payload data
@@ -486,9 +495,7 @@ public abstract class HttpAgent extends HttpServlet {
 		List<String> messages = new ArrayList<>();
 		IApp app = new Application();
 		boolean allOk = app.openShop(params, messages);
-		if (allOk) {
-			AppManager.setDefaultApp(app);
-		} else {
+		if (!allOk) {
 			StringBuilder sbf = new StringBuilder("Application configuration failed. Error message:\n");
 			if (messages.size() == 0) {
 				sbf.append(
@@ -498,9 +505,11 @@ public abstract class HttpAgent extends HttpServlet {
 					sbf.append(msg).append('\n');
 				}
 			}
-			this.errorMessage = sbf.toString();
-			logger.error(this.errorMessage);
+			String error = sbf.toString();
+			logger.error(error);
+			app = new StandInApp(error);
 		}
+		AppManager.setDefaultApp(app);
 	}
 
 	/**
