@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<record
+	xmlns="http://www.simplity.org/schema"
+	name="petDetail"
+	moduleName="pet"
+	tableName="pet_details"
+	recordType="view"
+	defaultRefRecord="pet.pet"	
+	childrenToBeRead="pet.visit"
+	defaultSheetName="petDetails"
+>
+	<fields>
+		<field
+			name="petId"
+			columnName="pet_id"
+			fieldType="primaryKey"
+			 />
+		<field
+			name="ownerId"
+			fieldType="parentKey"
+			referredRecord="pet.owner"
+			columnName="owner_id"
+			 />
+		<field
+			name="petName"
+			columnName="pet_name"
+			/>
+		<field
+			name="petDob"
+			columnName="birth_date"
+			dataType="date"
+			 />
+		<field
+			name="petTypeId"
+			columnName="type_id"
+			 />
+		<field
+			name="petType"
+			columnName="pet_type"
+			referredRecord="pet.petType"
+			 />
+		<field
+			name="firstName"
+			columnName="first_name"
+			referredRecord="pet.owner"/>
+		<field
+			name="lastName"
+			columnName="last_name"
+			referredRecord="pet.owner" />
+	</fields>
+</record>

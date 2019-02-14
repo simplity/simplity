@@ -347,58 +347,45 @@ public class Application implements IApp {
 	 * app specific implementations of infrastructure/utility features
 	 */
 
-	/** jndi name for user transaction for using JTA based transactions */
+	/**
+	 * jndi name for user transaction for using JTA based transactions
+	 */
 	String jtaUserTransaction;
 	/**
 	 * if JMS is used by this application, connection factory for local/session
 	 * managed operations
 	 */
 	String jmsConnectionFactory;
-	/** properties of jms connection, like user name password and other flags */
-	Property[] jmsProperties;
 	/**
 	 * if JMS is used by this application, connection factory for JTA/JCA/XA
 	 * managed operations
 	 */
 	String xaJmsConnectionFactory;
 
-	/** batch job to fire after bootstrapping. */
-	@FieldMetaData(isReferenceToComp = true, referredCompType = ComponentType.JOBS)
-	String jobsToRunOnStartup;
-
-	/** Configure the Mail Setup for the application */
-	MailProperties mailProperties;
-	/**
-	 * OAuth parameters
-	 */
-	OAuthParameters oauthParameters;
-
-	/*
-	 * for batch jobs
-	 */
-	/** jndi name the container has created to get a threadFactory instance */
-	String threadFactoryJndiName;
-
-	/**
-	 * jndi name the container has created to get a managed schedule thread
-	 * pooled executor instance
-	 */
-	String scheduledExecutorJndiName;
-
-	/** number of threads to keep in the pool even if they are idle */
-	int corePoolSize;
-
+	BatchProperties batchProperties;
 	/**
 	 * rdb driver set-up
 	 */
 	RdbDriver rdbDriver;
 
 	/**
+	 * Configure the Mail Setup for the application
+	 */
+	MailProperties mailProperties;
+	/**
+	 * OAuth parameters
+	 */
+	OAuthParameters oauthParameters;
+	/**
 	 * gateways for external applications, indexed by id
 	 */
 	@FieldMetaData(memberClass = ServiceGateway.class, indexFieldName = "applicationName")
 	Map<String, ServiceGateway> externalApplications = new HashMap<>();
 
+	/**
+	 * properties of jms connection, like user name password and other flags
+	 */
+	Property[] jmsProperties;
 	/**
 	 * plugin instances for this app
 	 */
@@ -412,12 +399,6 @@ public class Application implements IApp {
 
 	private boolean userIdIsNumeric;
 
-	/*
-	 * batch and thread management
-	 */
-	private ThreadFactory threadFactory;
-	private ScheduledExecutorService threadPoolExecutor;
-	private int batchPoolSize;
 	private Comp[] allComps;
 	private Value dummyUser;
 
@@ -738,10 +719,7 @@ public class Application implements IApp {
 	 * @return thread
 	 */
 	public Thread createThread(Runnable runnable) {
-		if (this.threadFactory == null) {
-			return new Thread(runnable);
-		}
-		return this.threadFactory.newThread(runnable);
+		return this.batchProperties.createThread(runnable);
 	}
 
 	/**
@@ -750,18 +728,7 @@ public class Application implements IApp {
 	 * @return executor
 	 */
 	public ScheduledExecutorService getScheduledExecutor() {
-		if (this.threadPoolExecutor != null) {
-			return this.threadPoolExecutor;
-		}
-		int nbr = this.batchPoolSize;
-		if (nbr == 0) {
-			nbr = 2;
-		}
-		if (this.threadFactory == null) {
-			return new ScheduledThreadPoolExecutor(nbr);
-		}
-		this.threadPoolExecutor = new ScheduledThreadPoolExecutor(nbr, this.threadFactory);
-		return this.threadPoolExecutor;
+		return this.batchProperties.getScheduledExecutor();
 	}
 
 	/**
@@ -829,35 +796,6 @@ public class Application implements IApp {
 		}
 
 		/*
-		 * batch job, thread pools etc..
-		 */
-		if (this.corePoolSize == 0) {
-			this.batchPoolSize = 1;
-		} else {
-			this.batchPoolSize = this.corePoolSize;
-		}
-
-		if (this.threadFactoryJndiName != null) {
-			try {
-				this.threadFactory = (ThreadFactory) new InitialContext().lookup(this.threadFactoryJndiName);
-				logger.info("Thread factory instantiated as " + this.threadFactory.getClass().getName());
-			} catch (Exception e) {
-				msgs.add("Error while looking up " + this.threadFactoryJndiName + ". " + e.getLocalizedMessage());
-			}
-		}
-
-		if (this.scheduledExecutorJndiName != null) {
-			try {
-				this.threadPoolExecutor = (ScheduledExecutorService) new InitialContext()
-						.lookup(this.scheduledExecutorJndiName);
-				logger.info(
-						"ScheduledThreadPoolExecutor instantiated as " + this.threadPoolExecutor.getClass().getName());
-			} catch (Exception e) {
-				msgs.add("Error while looking up " + this.scheduledExecutorJndiName + ". " + e.getLocalizedMessage());
-			}
-		}
-
-		/*
 		 * gate ways
 		 */
 
@@ -865,25 +803,7 @@ public class Application implements IApp {
 			Gateways.setGateways(this.externalApplications);
 			this.externalApplications = null;
 		}
-
-		if (msgs.size() > 0) {
-			/*
-			 * we run the background batch job only if everything has gone well.
-			 */
-			if (this.jobsToRunOnStartup != null) {
-				msgs.add("Scheduler NOT started for batch " + this.jobsToRunOnStartup
-						+ " because of issues with applicaiton set up.");
-
-			}
-
-		} else if (this.jobsToRunOnStartup != null) {
-			/*
-			 * we run the background batch job only if everything has gone well.
-			 */
-			BatchJobs.startJobs(this.jobsToRunOnStartup);
-
-			logger.info("Scheduler started for Batch " + this.jobsToRunOnStartup);
-		}
+		this.batchProperties.configure(msgs);
 	}
 
 	/**
@@ -1399,5 +1319,131 @@ public class Application implements IApp {
 			return comp;
 		}
 
+	}
+
+	/**
+	 * batch related functionalities
+	 *
+	 * @author simplity.org
+	 *
+	 */
+	class BatchProperties {
+		public BatchProperties() {
+			//
+		}
+
+		/**
+		 * batch job to fire after bootstrapping.
+		 */
+		@FieldMetaData(isReferenceToComp = true, referredCompType = ComponentType.JOBS)
+		String jobsToRunOnStartup;
+
+		/*
+		 * for batch jobs
+		 */
+		/**
+		 * jndi name the container has created to get a threadFactory instance
+		 */
+		String threadFactoryJndiName;
+
+		/**
+		 * jndi name the container has created to get a managed schedule thread
+		 * pooled executor instance
+		 */
+		String scheduledExecutorJndiName;
+
+		/** number of threads to keep in the pool even if they are idle */
+		int corePoolSize;
+		/*
+		 * batch and thread management
+		 */
+		private ThreadFactory threadFactory;
+		private ScheduledExecutorService threadPoolExecutor;
+		private int batchPoolSize;
+
+		protected void configure(List<String> msgs) {
+			/*
+			 * batch job, thread pools etc..
+			 */
+			if (this.corePoolSize == 0) {
+				this.batchPoolSize = 1;
+			} else {
+				this.batchPoolSize = this.corePoolSize;
+			}
+
+			if (this.threadFactoryJndiName != null) {
+				try {
+					this.threadFactory = (ThreadFactory) new InitialContext().lookup(this.threadFactoryJndiName);
+					logger.info("Thread factory instantiated as " + this.threadFactory.getClass().getName());
+				} catch (Exception e) {
+					msgs.add("Error while looking up " + this.threadFactoryJndiName + ". " + e.getLocalizedMessage());
+				}
+			}
+
+			if (this.scheduledExecutorJndiName != null) {
+				try {
+					this.threadPoolExecutor = (ScheduledExecutorService) new InitialContext()
+							.lookup(this.scheduledExecutorJndiName);
+					logger.info(
+							"ScheduledThreadPoolExecutor instantiated as "
+									+ this.threadPoolExecutor.getClass().getName());
+				} catch (Exception e) {
+					msgs.add("Error while looking up " + this.scheduledExecutorJndiName + ". "
+							+ e.getLocalizedMessage());
+				}
+			}
+			if (msgs.size() > 0) {
+				/*
+				 * we run the background batch job only if everything has gone
+				 * well.
+				 */
+				if (this.jobsToRunOnStartup != null) {
+					msgs.add("Scheduler NOT started for batch " + this.jobsToRunOnStartup
+							+ " because of issues with applicaiton set up.");
+
+				}
+
+			} else if (this.jobsToRunOnStartup != null) {
+				/*
+				 * we run the background batch job only if everything has gone
+				 * well.
+				 */
+				BatchJobs.startJobs(this.jobsToRunOnStartup);
+				logger.info("Scheduler started for Batch " + this.jobsToRunOnStartup);
+			}
+		}
+
+		/**
+		 * get a managed thread as per the container
+		 *
+		 * @param runnable
+		 * @return thread
+		 */
+		protected Thread createThread(Runnable runnable) {
+			if (this.threadFactory == null) {
+				return new Thread(runnable);
+			}
+			return this.threadFactory.newThread(runnable);
+		}
+
+		/**
+		 * get a managed thread as per the container
+		 *
+		 * @return executor
+		 */
+		protected ScheduledExecutorService getScheduledExecutor() {
+			if (this.threadPoolExecutor != null) {
+				return this.threadPoolExecutor;
+			}
+			int nbr = this.batchPoolSize;
+			if (nbr == 0) {
+				nbr = 2;
+			}
+			if (this.threadFactory == null) {
+				return new ScheduledThreadPoolExecutor(nbr);
+			}
+			this.threadPoolExecutor = new ScheduledThreadPoolExecutor(nbr, this.threadFactory);
+			return this.threadPoolExecutor;
+		}
 	}
 }

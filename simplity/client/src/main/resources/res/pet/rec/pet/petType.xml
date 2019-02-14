@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<record
+	xmlns="http://www.simplity.org/schema"
+	name="petType"
+	moduleName="pet"
+	tableName="types"
+	keyToBeGenerated="true"
+	okToSelectAll="true"
+	listFieldName="petType"
+	defaultSheetName="petTypes"
+>
+	<fields>
+		<field
+			name="petTypeId"
+			columnName="id"
+			dataType="pet.id"
+			fieldType="primaryKey"
+			isRequired="true"
+			/>
+		<field
+			name="petType"
+			columnName="name"
+			dataType="pet.text80"
+			isRequired="true"
+			 />
+	</fields>
+</record>

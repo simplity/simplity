@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<service
+	xmlns="http://www.simplity.org/schema"
+	name="gigo"
+	moduleName="pet"
+	dbAccessType="none"
+	description="gigo stands for garbage in garbage out"
+>
+<inputData setInputToFieldName="junk"  />
+<actions>
+	<log names="junk"/>
+</actions>
+<outputData responseTextFieldName="junk"/>
+</service>
+

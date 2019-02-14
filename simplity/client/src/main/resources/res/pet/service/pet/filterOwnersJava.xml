@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <service
 	xmlns="http://www.simplity.org/schema"
-	name="filterOwnersPlainJava"
+	name="filterOwnersJava"
 	moduleName="pet"
-	dbAccessType="readOnly" 
-	className="org.simplity.pet.service.FilterOwners"
+	description="Demonstrates use of java code to implement a service with the help of Simplity components"
+	dbAccessType="readOnly"
 >
 
 	<inputData>
@@ -16,21 +16,14 @@
 	</inputData>
 
 	<actions>
-		<filter
-			filterRecordName="pet.owner"
-			outputSheetName="owners"
-		>
-			<childRecords>
-				<relatedRecord
-					sheetName="petDetails"
-					recordName="pet.petDetail" />
-			</childRecords>
-		</filter>
+		<!-- complexLogic is does logic and i/o while logic is meant for pure logic -->
+		<complexLogic className="org.simplity.pet.action.FilterOwners" />
 	</actions>
 
 	<outputData>
 		<outputRecords>
 			<outputRecord sheetName="owners" />
+			<!-- child table is to be output as child pf parent rows -->
 			<outputRecord
 				sheetName="petDetails"
 				parentSheetName="owners"

@@ -4076,7 +4076,8 @@
     <xs:complexType>
       <xs:sequence>
         <xs:element
-          ref="jmsProperties"
+          name="jmsProperties"
+          type="properties"
           minOccurs="0"
           maxOccurs="1"
         >
@@ -4104,6 +4105,70 @@
             </xs:documentation>
           </xs:annotation>
 
+        </xs:element>
+        <xs:element
+          name="rdbDriver"
+          minOccurs="0"
+          maxOccurs="1"
+        >
+          <xs:annotation>
+            <xs:documentation>Details default db driver. Not required if
+              this app does not use rdb driver
+            </xs:documentation>
+          </xs:annotation>
+          <xs:complexType>
+            <xs:attribute
+              name="dbVendor"
+              use="optional"
+            >
+              <xs:simpleType>
+                <xs:annotation>
+                  <xs:documentation>vendor specific specific syntax used
+                    ONLy
+                    when
+                    ansi syntax is not available for the specified vendor
+                  </xs:documentation>
+                </xs:annotation>
+                <xs:restriction base="xs:string">
+                  <xs:enumeration value="mysql" />
+                  <xs:enumeration value="postgre" />
+                  <xs:enumeration value="oracle" />
+                  <xs:enumeration value="mssql" />
+                  <xs:enumeration value="h2" />
+                  <xs:enumeration value="db2" />
+                </xs:restriction>
+              </xs:simpleType>
+            </xs:attribute>
+            <xs:attribute
+              name="connectionString"
+              type="xs:string"
+              use="optional"
+            >
+              <xs:annotation>
+                <xs:documentation>complete string including credentials
+                </xs:documentation>
+              </xs:annotation>
+            </xs:attribute>
+            <xs:attribute
+              name="dbDriverClassName"
+              type="xs:string"
+              use="optional"
+            >
+              <xs:annotation>
+                <xs:documentation></xs:documentation>
+              </xs:annotation>
+            </xs:attribute>
+            <xs:attribute
+              name="dataSourceName"
+              type="xs:string"
+              use="optional"
+            >
+              <xs:annotation>
+                <xs:documentation>Preferred way to establish connection.
+                </xs:documentation>
+              </xs:annotation>
+            </xs:attribute>
+          </xs:complexType>
         </xs:element>
         <xs:element
           name="schemaDetails"
@@ -4178,56 +4243,6 @@
             in
             the application. This reduces the build
             requirements.
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-      <xs:attribute
-        name="dbVendor"
-        use="optional"
-      >
-        <xs:simpleType>
-          <xs:annotation>
-            <xs:documentation>vendor specific specific syntax used ONLy
-              when
-              ansi syntax is not available for the specified vendor
-            </xs:documentation>
-          </xs:annotation>
-          <xs:restriction base="xs:string">
-            <xs:enumeration value="mysql" />
-            <xs:enumeration value="postgre" />
-            <xs:enumeration value="oracle" />
-            <xs:enumeration value="mssql" />
-            <xs:enumeration value="h2" />
-            <xs:enumeration value="db2" />
-          </xs:restriction>
-        </xs:simpleType>
-      </xs:attribute>
-      <xs:attribute
-        name="connectionString"
-        type="xs:string"
-        use="optional"
-      >
-        <xs:annotation>
-          <xs:documentation>complete string including credentials
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-      <xs:attribute
-        name="dbDriverClassName"
-        type="xs:string"
-        use="optional"
-      >
-        <xs:annotation>
-          <xs:documentation></xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-      <xs:attribute
-        name="dataSourceName"
-        type="xs:string"
-        use="optional"
-      >
-        <xs:annotation>
-          <xs:documentation>Preferred way to establish connection.
           </xs:documentation>
         </xs:annotation>
       </xs:attribute>
@@ -4666,8 +4681,7 @@
     </xs:complexType>
   </xs:element>
 
-  <xs:element name="jmsProperties">
-    <xs:complexType>
+    <xs:complexType name="properties">
       <xs:sequence>
         <xs:element
           ref="property"
@@ -4675,7 +4689,6 @@
           maxOccurs="unbounded" />
       </xs:sequence>
     </xs:complexType>
-  </xs:element>
   <xs:element name="ldapProperties">
     <xs:complexType>
       <xs:attribute
