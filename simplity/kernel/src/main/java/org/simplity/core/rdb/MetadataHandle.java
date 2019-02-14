@@ -118,7 +118,7 @@ public class MetadataHandle extends AbstractHandle implements IMetadataHandle {
 	private static final int[][] META_POSNS = { TABLE_POSNS, COL_POSNS, KEY_POSNS, PROC_POSNS, PARAM_POSNS,
 			STRUCT_POSNS, ATTR_POSNS };
 
-	MetadataHandle(Connection con, RdbDriver driver, String schema) {
+	MetadataHandle(Connection con, RdbSetup driver, String schema) {
 		super(con, driver, schema);
 	}
 

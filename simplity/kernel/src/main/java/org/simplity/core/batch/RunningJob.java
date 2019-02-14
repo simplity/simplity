@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package org.simplity.core.job;
+package org.simplity.core.batch;
 
 import org.simplity.core.ApplicationError;
 import org.simplity.core.app.Application;

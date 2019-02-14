@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<record
+<dbTable
 	xmlns="http://www.simplity.org/schema"
 	name="petDetail"
 	moduleName="pet"
@@ -12,40 +12,40 @@
 	<fields>
 		<field
 			name="petId"
-			columnName="pet_id"
+			externalName="pet_id"
 			fieldType="primaryKey"
 			 />
 		<field
 			name="ownerId"
 			fieldType="parentKey"
 			referredRecord="pet.owner"
-			columnName="owner_id"
+			externalName="owner_id"
 			 />
 		<field
 			name="petName"
-			columnName="pet_name"
+			externalName="pet_name"
 			/>
 		<field
 			name="petDob"
-			columnName="birth_date"
+			externalName="birth_date"
 			dataType="date"
 			 />
 		<field
 			name="petTypeId"
-			columnName="type_id"
+			externalName="type_id"
 			 />
 		<field
 			name="petType"
-			columnName="pet_type"
+			externalName="pet_type"
 			referredRecord="pet.petType"
 			 />
 		<field
 			name="firstName"
-			columnName="first_name"
+			externalName="first_name"
 			referredRecord="pet.owner"/>
 		<field
 			name="lastName"
-			columnName="last_name"
+			externalName="last_name"
 			referredRecord="pet.owner" />
 	</fields>
-</record>
+</dbTable>

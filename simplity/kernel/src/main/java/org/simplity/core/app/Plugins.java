@@ -90,6 +90,18 @@ class Plugins {
 	}
 
 	/**
+	 * class that can be used for caching app data. must implement
+	 * <code>AppDataCacherInterface</code>
+	 */
+	@FieldMetaData(superClass = IAppDataCacher.class)
+	String appDataCacher;
+	private IAppDataCacher appDataCacherInstance;
+
+	IAppDataCacher getAppDataCacher() {
+		return this.appDataCacherInstance;
+	}
+
+	/**
 	 * Service level access control to be implemented by
 	 * <code>ServiceAgent</code> null if service agent is not responsible for
 	 * this. Any service specific access control is to be managed by the service
@@ -148,18 +160,6 @@ class Plugins {
 
 	IExceptionListener getExceptionListener() {
 		return this.exceptionListenerInstance;
-	}
-
-	/**
-	 * class that can be used for caching app data. must implement
-	 * <code>AppDataCacherInterface</code>
-	 */
-	@FieldMetaData(superClass = IAppDataCacher.class)
-	String appDataCacher;
-	private IAppDataCacher appDataCacherInstance;
-
-	IAppDataCacher getAppDataCacher() {
-		return this.appDataCacherInstance;
 	}
 
 	/**

@@ -36,10 +36,9 @@ import org.simplity.core.comp.ValidationMessage;
 import org.simplity.core.comp.ValidationUtil;
 import org.simplity.core.idb.IDbDriver;
 import org.simplity.core.idb.IDbHandle;
-import org.simplity.core.jms.JmsConnector;
+import org.simplity.core.jms.JmsSetup.JmsConnector;
 import org.simplity.core.jms.JmsUsage;
 import org.simplity.core.rdb.DbUsage;
-import org.simplity.core.rdb.RdbDriver;
 import org.simplity.core.service.ServiceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,7 +97,7 @@ public class TransactionProcessor implements IProcessor {
 			 * acquire resources that are needed for this service
 			 */
 			if (this.jmsUsage != null) {
-				jmsConnector = JmsConnector.borrowConnector(this.jmsUsage);
+				jmsConnector = Application.getActiveInstance().getJmsSetup().borrowConnector(this.jmsUsage);
 				ctx.setJmsSession(jmsConnector.getSession());
 			}
 
@@ -115,7 +114,7 @@ public class TransactionProcessor implements IProcessor {
 					userTransaciton = Application.getActiveInstance().getUserTransaction();
 					userTransaciton.begin();
 				}
-				IDbDriver driver = RdbDriver.getDefaultDriver();
+				IDbDriver driver = Application.getActiveInstance().getRdbSetup().getDefaultDriver();
 				driver.accessDb(worker, this.dbUsage.getDbAccessType(), this.schemaName);
 			}
 		} catch (ApplicationError e) {
@@ -127,7 +126,7 @@ public class TransactionProcessor implements IProcessor {
 		 * close/return resources
 		 */
 		if (jmsConnector != null) {
-			JmsConnector.returnConnector(jmsConnector, exception == null && ctx.isInError() == false);
+			jmsConnector.returnedWithThanks(exception == null && ctx.isInError() == false);
 		}
 		if (userTransaciton != null) {
 			try {
@@ -230,7 +229,7 @@ public class TransactionProcessor implements IProcessor {
 		}
 
 		if (this.schemaName != null) {
-			IDbDriver driver = RdbDriver.getDefaultDriver();
+			IDbDriver driver = Application.getActiveInstance().getRdbSetup().getDefaultDriver();
 			if (driver != null && driver.isSchemaDefined(this.schemaName) == false) {
 
 				vtx.message(new ValidationMessage(this, ValidationMessage.SEVERITY_ERROR,

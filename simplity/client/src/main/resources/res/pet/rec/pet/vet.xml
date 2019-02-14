@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<record
+<dbTable
 	xmlns="http://www.simplity.org/schema"
 	name="vet"
 	moduleName="pet"
 	okToSelectAll="true"
-	keyToBeGenerated="true"
+	keyIsGenerated="true"
 	childrenToBeRead="pet.vetSpecialtyDetail"
 	defaultSheetName="vets"
 	tableName="vets"
@@ -12,22 +12,22 @@
 	<fields>
 		<field
 			name="vetId"
-			columnName="id"
+			externalName="id"
 			dataType="pet.id"
 			fieldType="primaryKey"
 			isRequired="true"
 			 />
 		<field
 			name="firstName"
-			columnName="first_name"
+			externalName="first_name"
 			dataType="pet.name"
 			isRequired="true"
 			 />
 		<field
 			name="lastName"
-			columnName="last_name"
+			externalName="last_name"
 			dataType="pet.name"
 			isRequired="true"
 			/>
 	</fields>
-</record>
+</dbTable>

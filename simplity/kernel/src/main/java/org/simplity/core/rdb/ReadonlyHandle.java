@@ -53,7 +53,7 @@ public class ReadonlyHandle extends AbstractHandle implements IReadOnlyHandle {
 	 * @param con
 	 * @param driver
 	 */
-	ReadonlyHandle(Connection con, RdbDriver driver, String schema) {
+	ReadonlyHandle(Connection con, RdbSetup driver, String schema) {
 		super(con, driver, schema);
 	}
 

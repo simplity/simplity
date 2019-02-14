@@ -1,47 +1,42 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<record
-	xmlns="http://www.simplity.org/schema"
-	name="pet"
-	moduleName="pet"
-	keyToBeGenerated="true"
-	defaultSheetName="pets"
-	tableName="pets"
+<dbTable
+  xmlns="http://www.simplity.org/schema"
+  name="pet"
+  moduleName="pet"
+  keyIsGenerated="true"
+  defaultSheetName="pets"
+  tableName="pets"
 >
-	<fields>
-		<field
-			name="petId"
-			columnName="id"
-			dataType="pet.id"
-			fieldType="primaryKey"
-			isRequired="true"
-			 />
-		<field
-			name="ownerId"
-			columnName="owner_id"
-			dataType="pet.id"
-			fieldType="parentKey"
-			referredRecord="pet.owner"
-			isRequired="true"
-			 />
-		<field
-			name="petName"
-			columnName="name"
-			dataType="pet.name"
-			isRequired="true"
-			/>
-		<field
-			name="petDob"
-			columnName="birth_date"
-			dataType="pet.date"
-			isRequired="true"
-			 />
-		<field
-			name="petTypeId"
-			columnName="type_id"
-			dataType="pet.id"
-			fieldType="foreignKey"
-			referredRecord="pet.petType"
-			isRequired="true"
-			 />
-	</fields>
-</record>
+  <fields>
+    <primaryKey
+      name="petId"
+      externalName="id"
+      valueType="integer" />
+    <parentKey
+      name="ownerId"
+      valueType="integer"
+      externalName="owner_id"
+      referredRecord="pet.owner" />
+    <dbField
+      name="petName"
+      valueType="text"
+      externalName="name"
+    >
+      <fieldValidation
+        dataType="pet.name"
+        isRequired="true" />
+    </dbField>
+    <field
+      name="petDob"
+      externalName="birth_date"
+      dataType="pet.date"
+      isRequired="true" />
+    <field
+      name="petTypeId"
+      externalName="type_id"
+      dataType="pet.id"
+      fieldType="foreignKey"
+      referredRecord="pet.petType"
+      isRequired="true" />
+  </fields>
+</dbTable>

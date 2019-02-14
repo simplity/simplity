@@ -21,13 +21,17 @@
  */
 package org.simplity.core.mail;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * data structure that holds properties required to set-up a mail server
  *
  * @author simplity.org
  *
  */
-public class MailProperties {
+public class MailSetup {
+	private static final Logger logger = LoggerFactory.getLogger(MailSetup.class);
 	/**
 	 * host
 	 */
@@ -36,5 +40,16 @@ public class MailProperties {
 	 * port
 	 */
 	String port;
+
+	/**
+	 * called from Application before using it
+	 *
+	 * @return error message in case of any error. null if all OK.
+	 */
+	public String configure() {
+		String msg = "Mail set up not yet implemneted ";
+		logger.error(msg);
+		return msg;
+	}
 
 }

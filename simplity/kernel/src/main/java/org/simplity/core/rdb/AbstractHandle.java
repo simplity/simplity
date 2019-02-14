@@ -46,7 +46,7 @@ public abstract class AbstractHandle implements IDbHandle {
 	 * connection object. null if this is closed.
 	 */
 	protected Connection connection;
-	protected RdbDriver dbDriver;
+	protected RdbSetup dbDriver;
 	protected String schemaName;
 
 	/**
@@ -55,7 +55,7 @@ public abstract class AbstractHandle implements IDbHandle {
 	 * @param con
 	 * @param traceSql
 	 */
-	AbstractHandle(Connection con, RdbDriver driver, String schema) {
+	AbstractHandle(Connection con, RdbSetup driver, String schema) {
 		this.connection = con;
 		this.dbDriver = driver;
 		this.schemaName = schema;

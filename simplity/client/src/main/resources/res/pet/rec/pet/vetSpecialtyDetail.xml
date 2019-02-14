@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<record
+<dbTable
 	xmlns="http://www.simplity.org/schema"
 	name="vetSpecialtyDetail"
 	moduleName="pet"
@@ -9,20 +9,20 @@
 	<fields>
 		<field
 			name="vetId"
-			columnName="vet_id"
+			externalName="vet_id"
 			fieldType="parentKey"
 			referredRecord="pet.vet"
 			referredField="vetId"
 			 />
 		<field
 			name="specialtyId"
-			columnName="specialty_Id"
+			externalName="specialty_Id"
 			dataType="pet.id"
 			/>
 		<field
 			name="specialty"
-			columnName="specialty"
+			externalName="specialty"
 			dataType="pet.text80"
 			/>
 	</fields>
-</record>
+</dbTable>

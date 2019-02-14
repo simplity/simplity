@@ -932,9 +932,7 @@
         >
           <xs:annotation>
             <xs:documentation>use c-data-section to avoid xml-escaping
-              issues
-              with
-              special characters
+              issues with special characters
             </xs:documentation>
           </xs:annotation>
         </xs:element>
@@ -4074,150 +4072,66 @@
   <!-- *********************** custom services ************************************** -->
   <xs:element name="application">
     <xs:complexType>
-      <xs:sequence>
+      <xs:all>
         <xs:element
-          name="jmsProperties"
-          type="properties"
+          name="rdbSetup"
+          type="rdbSetup"
           minOccurs="0"
-          maxOccurs="1"
         >
           <xs:annotation>
-            <xs:documentation>Attributes like user name and password
-              etc..
-              that may have to be put into environment before
-              getting
-              conection
-              factory. refer to your JMS provider
-              manua, like jboss
-              for
-              details
+            <xs:documentation>Database infrastructure
             </xs:documentation>
           </xs:annotation>
         </xs:element>
         <xs:element
-          ref="externalApplications"
+          name="batchSetup"
+          type="batchSetup"
           minOccurs="0"
-          maxOccurs="1"
         >
           <xs:annotation>
-            <xs:documentation>Specify attriutes of gateways for calling
-              external services
+            <xs:documentation>Scheduling Batch and background jobs
             </xs:documentation>
           </xs:annotation>
-
         </xs:element>
         <xs:element
-          name="rdbDriver"
+          name="jmsSetup"
+          type="jmsSetup"
           minOccurs="0"
-          maxOccurs="1"
         >
           <xs:annotation>
-            <xs:documentation>Details default db driver. Not required if
-              this app does not use rdb driver
+            <xs:documentation>JMS infrastructure
             </xs:documentation>
           </xs:annotation>
-          <xs:complexType>
-            <xs:attribute
-              name="dbVendor"
-              use="optional"
-            >
-              <xs:simpleType>
-                <xs:annotation>
-                  <xs:documentation>vendor specific specific syntax used
-                    ONLy
-                    when
-                    ansi syntax is not available for the specified vendor
-                  </xs:documentation>
-                </xs:annotation>
-                <xs:restriction base="xs:string">
-                  <xs:enumeration value="mysql" />
-                  <xs:enumeration value="postgre" />
-                  <xs:enumeration value="oracle" />
-                  <xs:enumeration value="mssql" />
-                  <xs:enumeration value="h2" />
-                  <xs:enumeration value="db2" />
-                </xs:restriction>
-              </xs:simpleType>
-            </xs:attribute>
-            <xs:attribute
-              name="connectionString"
-              type="xs:string"
-              use="optional"
-            >
-              <xs:annotation>
-                <xs:documentation>complete string including credentials
-                </xs:documentation>
-              </xs:annotation>
-            </xs:attribute>
-            <xs:attribute
-              name="dbDriverClassName"
-              type="xs:string"
-              use="optional"
-            >
-              <xs:annotation>
-                <xs:documentation></xs:documentation>
-              </xs:annotation>
-            </xs:attribute>
-            <xs:attribute
-              name="dataSourceName"
-              type="xs:string"
-              use="optional"
-            >
-              <xs:annotation>
-                <xs:documentation>Preferred way to establish connection.
-                </xs:documentation>
-              </xs:annotation>
-            </xs:attribute>
-          </xs:complexType>
         </xs:element>
         <xs:element
-          name="schemaDetails"
+          name="mailSetup"
+          type="mailSetup"
           minOccurs="0"
-          maxOccurs="1"
         >
           <xs:annotation>
-            <xs:documentation> If your application used more than one
-              schemas,
-              then you need to provide details for non-default
-              schema
+            <xs:documentation>MAIL infrastructure. Not yet designed..
             </xs:documentation>
           </xs:annotation>
-          <xs:complexType>
-            <xs:sequence minOccurs="1">
-              <xs:element
-                name="schemaDetail"
-                minOccurs="1"
-                maxOccurs="unbounded"
-              >
-                <xs:complexType>
-                  <xs:attribute
-                    name="schemaName"
-                    type="xs:string"
-                    use="required" />
-                  <xs:attribute
-                    name="dataSourceName"
-                    type="xs:string"
-                    use="optional" />
-                  <xs:attribute
-                    name="connectionString"
-                    type="xs:string"
-                    use="optional" />
-                </xs:complexType>
-              </xs:element>
-            </xs:sequence>
-          </xs:complexType>
         </xs:element>
         <xs:element
-          ref="ldapProperties"
+          name="oAuthSetup"
+          type="oAuthSetup"
           minOccurs="0"
-          maxOccurs="1"
         >
           <xs:annotation>
-            <xs:documentation> Setup details for the LDAP connection
+            <xs:documentation>Open Authentication infrastructure
             </xs:documentation>
           </xs:annotation>
         </xs:element>
-      </xs:sequence>
+        <xs:element name="gateWays" type="gateWays" minOccurs="0">
+          <xs:annotation>
+            <xs:documentation>gateway details for each external appliction
+              that this app depends on
+            </xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="plugins" type="plugins" minOccurs="0" />
+      </xs:all>
       <xs:attribute
         name="applicationId"
         type="xs:NCName"
@@ -4266,170 +4180,6 @@
         </xs:annotation>
       </xs:attribute>
       <xs:attribute
-        name="jobsToRunOnStartup"
-        type="xs:string"
-        use="optional"
-      >
-        <xs:annotation>
-          <xs:documentation>If a batch job is to be started whenever the
-            application comes up, use this option. It is possible that
-            the
-            batch job is run on a different container than the
-            regular
-            on-line, in which case you may have custom-made
-            application.xmlfor
-            each.
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-      <xs:attribute
-        name="serviceCacherClassName"
-        type="xs:string"
-        use="optional"
-      >
-        <xs:annotation>
-          <xs:documentation>Responses can be cached at http(web tier) as
-            well
-            as at service (app tier). specify the qualified class
-            name
-            for the
-            service cache manager that implements
-            ServiceCacheManager
-            interface. Services should indicate
-            cacheability in response
-            service data (refer to service.xml
-            attributes)
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-      <xs:attribute
-        name="appDataCacherClassName"
-        type="xs:string"
-        use="optional"
-      >
-        <xs:annotation>
-          <xs:documentation>Data in the DB that is unlikley to change
-            often
-            can be marked for caching at the Record level. This
-            works fine so
-            long as updates are also handled through Record
-            based
-            operation.
-            (refer to Record attributes) Specify the
-            class name that
-            implements AppDataCacherInterface to
-            facilitate this feature
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-      <xs:attribute
-        name="accessControllerClassName"
-        type="xs:string"
-        use="optional"
-      >
-        <xs:annotation>
-          <xs:documentation>fetaure to restrict service access by user
-            id.
-            fully qualified class name that implements
-            AccessControllerInterface. skip if this feature is not
-            needed
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-      <xs:attribute
-        name="servicePrePostProcessorClassName"
-        type="xs:string"
-        use="optional"
-      >
-        <xs:annotation>
-          <xs:documentation>fetaure to provide hooks for service agebt
-            during
-            service invocation life-cycle
-            ServicePrePostProcessorInterface.
-            skip if this feature is not
-            needed
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-      <xs:attribute
-        name="exceptionListenerClassName"
-        type="xs:string"
-        use="optional"
-      >
-        <xs:annotation>
-          <xs:documentation>refer to
-            org.simplity.service.ExceptionListener
-            class. This feature
-            allows you to wire exceptions to any
-            corporate
-            infrastructure to deal with exceptions
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-      <xs:attribute
-        name="logSqls"
-        type="booleanType"
-        use="optional"
-      >
-        <xs:annotation>
-          <xs:documentation>Should the server log the sqs that are being
-            executed? This would be off in production for security
-            reasons,
-            but would be quite helpful during development
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-      <xs:attribute
-        name="attachmentsFolderPath"
-        type="xs:string"
-        use="optional"
-      >
-        <xs:annotation>
-          <xs:documentation>Simplity provides a simple way to store
-            attachments in folder that is accessible to web tier as well
-            as
-            App tier. Use this attribute to set the folder.
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-      <xs:attribute
-        name="attachmentAssistantClassName"
-        type="xs:string"
-        use="optional"
-      >
-        <xs:annotation>
-          <xs:documentation>Way to interface with your own attachment
-            management infrastructure. This plug-in handles storage and
-            retrieval for all your services. Refer to
-            org.simplity.AttachmentManager class
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-      <xs:attribute
-        name="jmsConnectionFactory"
-        type="xs:string"
-        use="optional"
-      >
-        <xs:annotation>
-          <xs:documentation>JNDI name for jms connection factory for a
-            non-JTA/JCA/XA aware connection. For example
-            java:/ConnectionFactory for JBOSS.
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-      <xs:attribute
-        name="xaJmsConnectionFactory"
-        type="xs:string"
-        use="optional"
-      >
-        <xs:annotation>
-          <xs:documentation>JNDI name for jms connection factory for a
-            JTA/JCA/XA aware connection. For example java:/JmsXA for
-            JBOSS.
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-      <xs:attribute
         name="jtaUserTransaction"
         type="xs:string"
         use="optional"
@@ -4440,91 +4190,6 @@
             a JTA transaction. For example
             java:comp/UserTransaction in
             JBOSS
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-      <xs:attribute
-        name="corePoolSize"
-        use="optional"
-        type="xs:int"
-      >
-        <xs:annotation>
-          <xs:documentation>number of threads that are retained in the
-            pool
-            for the batch even if they are idle.
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-      <xs:attribute
-        name="threadFactoryJndiName"
-        use="optional"
-        type="xs:string"
-      >
-        <xs:annotation>
-          <xs:documentation>Required if you use batch components inside
-            some
-            EJB containers like Websphere. for example
-            java:jboss/ee/concurrency/factory/default for jboss. This is
-            avaiable in the configuration file of your app
-            server/container
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-      <xs:attribute
-        name="scheduledExecutorJndiName"
-        use="optional"
-        type="xs:string"
-      >
-        <xs:annotation>
-          <xs:documentation>Required if you use batch components inside
-            some
-            EJB containers like Websphere. for example
-            java:jboss/ee/concurrency/scheduler/default for jboss. This
-            is
-            avaiable in the configuration file of your app
-            server/container
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-      <xs:attribute
-        name="commonCodeValidatorClassName"
-        use="optional"
-        type="xs:string"
-      >
-        <xs:annotation>
-          <xs:documentation>class should implement
-            CommonCodeValidatorInterface. Used for validting fields that
-            are
-            declared as common codes
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-      <xs:attribute
-        name="parameterRetrieverClassName"
-        use="optional"
-        type="xs:string"
-      >
-        <xs:annotation>
-          <xs:documentation>class that implements ParameterRetriever
-            interface to get the deployment/runtime value of a
-            paramater.
-            Simplity components may allow attributes to have
-            such a
-            parameteras their values, in which case the actual
-            value is
-            retrieved by this class at run time.
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-      <xs:attribute
-        name="dataAdapterExtensionClassName"
-        use="optional"
-        type="xs:string"
-      >
-        <xs:annotation>
-          <xs:documentation>class that implements DataAdapterExtension
-            interface to get source/target for copying data involving
-            app-specific objects. Refer to DataAdapter component
           </xs:documentation>
         </xs:annotation>
       </xs:attribute>
@@ -4556,185 +4221,492 @@
           </xs:documentation>
         </xs:annotation>
       </xs:attribute>
-      <xs:attribute
-        name="beanFinderClassName"
-        use="optional"
-        type="xs:string"
-      >
-        <xs:annotation>
-          <xs:documentation>By default, Simplity uses Class.forName() to
-            get
-            an instance of any class that is configured. However, if
-            a
-            bean-container is used, and the objects/beans are managed,
-            say
-            like Spring, then this is the class name that uses such a
-            fetaure
-            to get obect instances. must implement
-            BeanFinderInterface
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
     </xs:complexType>
   </xs:element>
 
-  <xs:element name="externalApplications">
-    <xs:annotation>
-      <xs:documentation>external applications used by this app. Specify
-        a
-        gateway for each app
-      </xs:documentation>
-    </xs:annotation>
-    <xs:complexType>
-      <xs:choice
+  <xs:complexType name="gateWays">
+  <xs:annotation >
+    <xs:documentation>external applications used by this app. Specify a
+      gateway for each app
+    </xs:documentation>
+  </xs:annotation>
+    <xs:choice
+      minOccurs="1"
+      maxOccurs="unbounded"
+    >
+    
+      <xs:element
+        name="httpGateway"
+        type="httpGateway"
+        minOccurs="0"
+        maxOccurs="unbounded" />
+    </xs:choice>
+    
+  </xs:complexType>
+  
+  <xs:complexType name="httpGateway">
+    <xs:attribute
+      name="applicationName"
+      type="xs:string"
+      use="required"
+    >
+      <xs:annotation>
+        <xs:documentation>unique name of the application for which
+          this
+          gateway is set up
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute
+      name="baseUrl"
+      type="xs:string"
+      use="required"
+    >
+      <xs:annotation>
+        <xs:documentation>starting with protocol up to the part of the
+          path
+          that is common for all requests to this server fir
+          example
+          https://www.simplity.org/app1/
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute
+      name="contentType"
+      type="xs:string"
+      use="optional"
+    >
+      <xs:annotation>
+        <xs:documentation>valid http content type like
+          application/json,
+          application/xml, and text/html
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute
+      name="proxyHostName"
+      type="xs:string"
+      use="optional"
+    >
+      <xs:annotation>
+        <xs:documentation>if this server requires proxy authentication
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute
+      name="proxyPort"
+      type="xs:string"
+      use="optional"
+    >
+      <xs:annotation>
+        <xs:documentation>if this server requires proxy authentication
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute
+      name="proxyUserName"
+      type="xs:string"
+      use="optional"
+    >
+      <xs:annotation>
+        <xs:documentation>if this server requires prxy authentication
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute
+      name="proxyPassword"
+      type="xs:string"
+      use="optional"
+    >
+      <xs:annotation>
+        <xs:documentation>if this server requires prxy authentication
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="rdbSetup">
+    <xs:sequence>
+      <xs:element
+        name="schemaDetails"
+        minOccurs="0"
+        maxOccurs="1"
+      >
+        <xs:annotation>
+          <xs:documentation> If your application used more than one
+            schemas,
+            then you need to provide details for non-default
+            schema
+          </xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+          <xs:sequence minOccurs="1">
+            <xs:element
+              name="schemaDetail"
+              minOccurs="1"
+              maxOccurs="unbounded"
+            >
+              <xs:complexType>
+                <xs:attribute
+                  name="schemaName"
+                  type="xs:string"
+                  use="required" />
+                <xs:attribute
+                  name="dataSourceName"
+                  type="xs:string"
+                  use="optional" />
+                <xs:attribute
+                  name="connectionString"
+                  type="xs:string"
+                  use="optional" />
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute
+      name="dbVendor"
+      use="optional"
+    >
+      <xs:simpleType>
+        <xs:annotation>
+          <xs:documentation>vendor specific specific syntax used
+            ONLy
+            when
+            ansi syntax is not available for the specified
+            vendor
+          </xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="mysql" />
+          <xs:enumeration value="postgre" />
+          <xs:enumeration value="oracle" />
+          <xs:enumeration value="mssql" />
+          <xs:enumeration value="h2" />
+          <xs:enumeration value="db2" />
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute
+      name="connectionString"
+      type="xs:string"
+      use="optional"
+    >
+      <xs:annotation>
+        <xs:documentation>complete string including credentials
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute
+      name="dbDriverClassName"
+      type="xs:string"
+      use="optional"
+    >
+      <xs:annotation>
+        <xs:documentation></xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute
+      name="dataSourceName"
+      type="xs:string"
+      use="optional"
+    >
+      <xs:annotation>
+        <xs:documentation>Preferred way to establish connection.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute
+      name="logSqls"
+      type="booleanType"
+    >
+      <xs:annotation>
+        <xs:documentation>Should sqls be logged. SHould be set to
+          false
+          inproduction if security is a concern
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:complexType name="properties">
+    <xs:sequence>
+      <xs:element
+        name="property"
         minOccurs="1"
         maxOccurs="unbounded"
       >
-        <xs:element
-          ref="httpGateway"
-          minOccurs="0"
-          maxOccurs="unbounded" />
-      </xs:choice>
-    </xs:complexType>
-  </xs:element>
+        <xs:complexType>
+          <xs:attribute
+            name="name"
+            type="xs:string"
+            use="required" />
+          <xs:attribute
+            name="value"
+            type="xs:string"
+            use="required" />
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
 
-  <xs:element name="httpGateway">
-    <xs:complexType>
-      <xs:attribute
-        name="applicationName"
-        type="xs:string"
-        use="required"
-      >
-        <xs:annotation>
-          <xs:documentation>unique name of the application for which
-            this
-            gateway is set up
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-      <xs:attribute
-        name="baseUrl"
-        type="xs:string"
-        use="required"
-      >
-        <xs:annotation>
-          <xs:documentation>starting with protocol up to the part of the
-            path
-            that is common for all requests to this server fir
-            example
-            https://www.simplity.org/app1/
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-      <xs:attribute
-        name="contentType"
-        type="xs:string"
-        use="optional"
-      >
-        <xs:annotation>
-          <xs:documentation>valid http content type like
-            application/json,
-            application/xml, and text/html
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-      <xs:attribute
-        name="proxyHostName"
-        type="xs:string"
-        use="optional"
-      >
-        <xs:annotation>
-          <xs:documentation>if this server requires proxy authentication
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-      <xs:attribute
-        name="proxyPort"
-        type="xs:string"
-        use="optional"
-      >
-        <xs:annotation>
-          <xs:documentation>if this server requires proxy authentication
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-      <xs:attribute
-        name="proxyUserName"
-        type="xs:string"
-        use="optional"
-      >
-        <xs:annotation>
-          <xs:documentation>if this server requires prxy authentication
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-      <xs:attribute
-        name="proxyPassword"
-        type="xs:string"
-        use="optional"
-      >
-        <xs:annotation>
-          <xs:documentation>if this server requires prxy authentication
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-    </xs:complexType>
-  </xs:element>
+  <xs:complexType name="batchSetup">
+    <xs:attribute
+      name="jobsToRunOnStartup"
+      type="xs:string"
+      use="optional"
+    >
+      <xs:annotation>
+        <xs:documentation>If a batch job is to be started whenever the
+          application comes up, use this option. It is possible that
+          the
+          batch job is run on a different container than the
+          regular
+          on-line, in which case you may have custom-made
+          application.xmlfor
+          each.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute
+      name="corePoolSize"
+      use="optional"
+      type="xs:int"
+    >
+      <xs:annotation>
+        <xs:documentation>number of threads that are retained in the pool
+          for the batch even if they are idle.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute
+      name="threadFactoryJndiName"
+      use="optional"
+      type="xs:string"
+    >
+      <xs:annotation>
+        <xs:documentation>If the app is run inside any
+          framework/container, this is the JNDI name for the factory
+          class. Else unpooled threads will be used
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute
+      name="scheduledExecutorJndiName"
+      use="optional"
+      type="xs:string"
+    >
+      <xs:annotation>
+        <xs:documentation>jndi name for the scheduled executor. If this is
+          not provided, JVM provided scheduler will be used
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
 
-    <xs:complexType name="properties">
-      <xs:sequence>
-        <xs:element
-          ref="property"
-          minOccurs="1"
-          maxOccurs="unbounded" />
-      </xs:sequence>
-    </xs:complexType>
-  <xs:element name="ldapProperties">
-    <xs:complexType>
-      <xs:attribute
-        name="factory"
-        use="required"
-        type="xs:string"
+  <xs:complexType name="jmsSetup">
+    <xs:sequence>
+      <xs:element
+        name="jmsProperties"
+        type="properties"
       >
-      </xs:attribute>
-      <xs:attribute
-        name="principal"
-        use="required"
-        type="xs:string"
-      >
-      </xs:attribute>
-      <xs:attribute
-        name="credentials"
-        use="required"
-        type="xs:string"
-      >
-      </xs:attribute>
-      <xs:attribute
-        name="authentication"
-        use="required"
-        type="xs:string"
-      >
-      </xs:attribute>
-      <xs:attribute
-        name="ldapurl"
-        use="required"
-        type="xs:string"
-      >
-      </xs:attribute>
-    </xs:complexType>
-  </xs:element>
-  <xs:element name="property">
-    <xs:complexType>
-      <xs:attribute
-        name="name"
-        type="xs:string"
-        use="required" />
-      <xs:attribute
-        name="value"
-        type="xs:string"
-        use="required" />
-    </xs:complexType>
-  </xs:element>
+        <xs:annotation>
+          <xs:documentation>properties to be used fr creating JMS context.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute
+      name="jmsConnectionFactory"
+      type="xs:string"
+      use="optional"
+    >
+      <xs:annotation>
+        <xs:documentation>JNDI name for jms connection factory for a
+          non-JTA/JCA/XA aware connection. For example
+          java:/ConnectionFactory for JBOSS.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute
+      name="xaJmsConnectionFactory"
+      type="xs:string"
+      use="optional"
+    >
+      <xs:annotation>
+        <xs:documentation>JNDI name for jms connection factory for a
+          JTA/JCA/XA aware connection. For example java:/JmsXA for
+          JBOSS.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="mailSetup">
+    <xs:attribute
+      name="host"
+      type="xs:string"
+      use="optional"
+    >
+      <xs:annotation>
+        <xs:documentation>mail host URL
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute
+      name="port"
+      type="xs:string"
+      use="optional"
+    >
+      <xs:annotation>
+        <xs:documentation>port for mail URL
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="oAuthSetup">
+    <xs:attribute
+      name="clientId"
+      type="xs:string"
+      use="required"
+    >
+      <xs:annotation>
+        <xs:documentation>mail host URL
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute
+      name="clientSecret"
+      type="xs:string"
+      use="required"
+    >
+      <xs:annotation>
+        <xs:documentation>port for mail URL
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute
+      name="checkTokenUrl"
+      type="xs:string"
+      use="required"
+    >
+      <xs:annotation>
+        <xs:documentation>port for mail URL
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="plugins">
+    <xs:attribute
+      name="accessController"
+      type="xs:string"
+      use="optional"
+    >
+      <xs:annotation>
+        <xs:documentation>fetaure to restrict service access by user id.
+          must implement IAccessController
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute
+      name="appDataCacher"
+      type="xs:string"
+      use="optional"
+    >
+      <xs:annotation>
+        <xs:documentation>feature to cache data from database. For example
+          static or rarely-changing rows from an RDBMS. Features exist to
+          monitor and ivalidate cache based on update activities. must
+          implement IAppDataCacher
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute
+      name="attachmentAssistant"
+      use="optional"
+      type="xs:string"
+    >
+      <xs:annotation>
+        <xs:documentation>class that manages atatchments storage and
+          retrieval. must implement IAttachmentAssistant
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute
+      name="beanFinder"
+      use="optional"
+      type="xs:string"
+    >
+      <xs:annotation>
+        <xs:documentation>Feature to use specialized class to get an
+          instance of an object. For example if the app is inside a spring
+          container. Defaults to using a siple class-finder utility. must
+          implement IBeanFinder
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute
+      name="dataAdapterExtension"
+      type="xs:string"
+      use="optional"
+    >
+      <xs:annotation>
+        <xs:documentation>class that extends data adapter used for copying
+          data back and forth between different type of data structures
+          used in the App.must implement IDataAdapterExtension
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute
+      name="exceptionListener"
+      type="xs:string"
+      use="optional"
+    >
+      <xs:annotation>
+        <xs:documentation>provision to wire exceptions at the app level to
+          any app-specific infrastructure. must implement
+          IExceptionListener
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute
+      name="parameterRetriever"
+      type="xs:string"
+      use="optional"
+    >
+      <xs:annotation>
+        <xs:documentation>class that retrieves the run-time value for a
+          parameter. must implement IParameterRetriever.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+
+    <xs:attribute
+      name="serviceCacher"
+      type="xs:string"
+      use="optional"
+    >
+      <xs:annotation>
+        <xs:documentation>feature to cache response to a service request.
+          must implement IServiceCacher
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute
+      name="servicePrePostProcessor"
+      type="xs:string"
+      use="optional"
+    >
+      <xs:annotation>
+        <xs:documentation>fetaure to provide hooks for any procssing to be
+          done before and after a service is invoked. must implement
+          IServicePrePostProcessor
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
   <!-- Test case. we systematically develop elements bottom-up for this.. -->
   <!-- testFieldAtts is common to inputField and outputField -->
   <xs:attributeGroup name="testFieldAtts">

@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package org.simplity.core.job;
+package org.simplity.core.batch;
 
 import java.util.Calendar;
 import java.util.concurrent.ScheduledExecutorService;

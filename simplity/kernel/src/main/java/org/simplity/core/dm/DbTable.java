@@ -48,7 +48,6 @@ import org.simplity.core.idb.IReadOnlyHandle;
 import org.simplity.core.idb.IResultSetReader;
 import org.simplity.core.idb.ITransactionHandle;
 import org.simplity.core.rdb.DbVendor;
-import org.simplity.core.rdb.RdbDriver;
 import org.simplity.core.service.DataStructureType;
 import org.simplity.core.service.InputRecord;
 import org.simplity.core.service.OutputRecord;
@@ -1723,7 +1722,7 @@ public class DbTable extends Record {
 	}
 
 	private String getTimeStamp() {
-		IDbDriver driver = RdbDriver.getDefaultDriver();
+		IDbDriver driver = Application.getActiveInstance().getRdbSetup().getDefaultDriver();
 		if (driver == null) {
 			return DbVendor.MYSQL.getTimeStamp();
 		}

@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
  * @author simplity.org
  */
 public class MailConnector {
-	private static final Logger logger = LoggerFactory.getLogger(MailProperties.class);
+	private static final Logger logger = LoggerFactory.getLogger(MailSetup.class);
 
 	static Properties mailProps;
 
@@ -60,7 +60,7 @@ public class MailConnector {
 	 * 
 	 * @param mailProperties
 	 */
-	public static void initialize(MailProperties mailProperties) {
+	public static void initialize(MailSetup mailProperties) {
 		logger.info("Setting up the Mail Agent");
 
 		mailProps = new Properties();

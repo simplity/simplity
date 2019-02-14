@@ -34,7 +34,7 @@ import org.simplity.core.idb.IAutoCommitHandle;
 public class AutoCommitHandle extends TransactionHandle implements IAutoCommitHandle {
 	private static final DbAccessType HANDLE_TYPE = DbAccessType.AUTO_COMMIT;
 
-	AutoCommitHandle(Connection con, RdbDriver driver, String schema) {
+	AutoCommitHandle(Connection con, RdbSetup driver, String schema) {
 		super(con, driver, schema);
 	}
 

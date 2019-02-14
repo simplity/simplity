@@ -35,7 +35,7 @@ import org.simplity.core.idb.IMultiTransHandle;
 public class MultiTransHandle extends TransactionHandle implements IMultiTransHandle {
 	private static final DbAccessType HANDLE_TYPE = DbAccessType.MULTI_TRANS;
 
-	MultiTransHandle(Connection con, RdbDriver driver, String schema) {
+	MultiTransHandle(Connection con, RdbSetup driver, String schema) {
 		super(con, driver, schema);
 	}
 

@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package org.simplity.core.job;
+package org.simplity.core.batch;
 
 import java.util.List;
 import java.util.concurrent.Future;

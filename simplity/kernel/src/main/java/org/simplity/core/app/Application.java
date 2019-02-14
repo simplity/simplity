@@ -27,17 +27,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
 
 import javax.naming.InitialContext;
 import javax.transaction.UserTransaction;
 
 import org.simplity.core.ApplicationError;
-import org.simplity.core.Property;
 import org.simplity.core.adapter.DataAdapter;
-import org.simplity.core.auth.OAuthParameters;
+import org.simplity.core.auth.OAuthSetup;
+import org.simplity.core.batch.BatchJobs;
+import org.simplity.core.batch.BatchSetup;
 import org.simplity.core.comp.ComponentType;
 import org.simplity.core.comp.FieldMetaData;
 import org.simplity.core.comp.IComponent;
@@ -50,14 +48,12 @@ import org.simplity.core.fn.Concat;
 import org.simplity.core.fn.IFunction;
 import org.simplity.core.gateway.Gateways;
 import org.simplity.core.gateway.ServiceGateway;
-import org.simplity.core.jms.JmsConnector;
-import org.simplity.core.job.BatchJobs;
-import org.simplity.core.mail.MailConnector;
-import org.simplity.core.mail.MailProperties;
+import org.simplity.core.jms.JmsSetup;
+import org.simplity.core.mail.MailSetup;
 import org.simplity.core.msg.FormattedMessage;
 import org.simplity.core.msg.Message;
 import org.simplity.core.msg.Messages;
-import org.simplity.core.rdb.RdbDriver;
+import org.simplity.core.rdb.RdbSetup;
 import org.simplity.core.service.ExternalService;
 import org.simplity.core.service.InputData;
 import org.simplity.core.service.OutputData;
@@ -343,39 +339,32 @@ public class Application implements IApp {
 	 */
 	boolean simulateWithLocalData;
 
-	/*
-	 * app specific implementations of infrastructure/utility features
-	 */
-
 	/**
 	 * jndi name for user transaction for using JTA based transactions
 	 */
 	String jtaUserTransaction;
-	/**
-	 * if JMS is used by this application, connection factory for local/session
-	 * managed operations
-	 */
-	String jmsConnectionFactory;
-	/**
-	 * if JMS is used by this application, connection factory for JTA/JCA/XA
-	 * managed operations
-	 */
-	String xaJmsConnectionFactory;
 
-	BatchProperties batchProperties;
 	/**
-	 * rdb driver set-up
+	 * rdb set up
 	 */
-	RdbDriver rdbDriver;
+	RdbSetup rdbSetup;
 
+	/**
+	 * batch (background job) set up
+	 */
+	BatchSetup batchSetup;
+	/**
+	 * jms setup
+	 */
+	JmsSetup jmsSetup;
 	/**
 	 * Configure the Mail Setup for the application
 	 */
-	MailProperties mailProperties;
+	MailSetup mailSetup;
 	/**
 	 * OAuth parameters
 	 */
-	OAuthParameters oauthParameters;
+	OAuthSetup oAuthSetup;
 	/**
 	 * gateways for external applications, indexed by id
 	 */
@@ -383,11 +372,8 @@ public class Application implements IApp {
 	Map<String, ServiceGateway> externalApplications = new HashMap<>();
 
 	/**
-	 * properties of jms connection, like user name password and other flags
-	 */
-	Property[] jmsProperties;
-	/**
-	 * plugin instances for this app
+	 * plugin instances for this app, we use a default non-null to ensure
+	 * default functionality for all plugins
 	 */
 	Plugins plugins = new Plugins();
 
@@ -401,6 +387,15 @@ public class Application implements IApp {
 
 	private Comp[] allComps;
 	private Value dummyUser;
+	/*
+	 * keep track of configuration error in case of calls to failed components
+	 */
+	private static final String NOT_SET_UP = " not set up for this app";
+	private String rdbError = "Rdb " + NOT_SET_UP;
+	private String jmsError = " JMS " + NOT_SET_UP;
+	private String batchError = "Batch " + NOT_SET_UP;
+	private String mailError = "MAIL " + NOT_SET_UP;
+	private String oAuthError = "Open Authentication " + NOT_SET_UP;
 
 	@Override
 	public String getAppId() {
@@ -712,42 +707,56 @@ public class Application implements IApp {
 		return this.userIdIsNumeric;
 	}
 
-	/**
-	 * get a managed thread as per the container
-	 *
-	 * @param runnable
-	 * @return thread
-	 */
-	public Thread createThread(Runnable runnable) {
-		return this.batchProperties.createThread(runnable);
-	}
-
-	/**
-	 * get a managed thread as per the container
-	 *
-	 * @return executor
-	 */
-	public ScheduledExecutorService getScheduledExecutor() {
-		return this.batchProperties.getScheduledExecutor();
-	}
-
-	/**
-	 *
-	 * @return auth parameters
-	 */
-	public OAuthParameters getOAuthParameters() {
-		return this.oauthParameters;
-	}
-
 	private void configure(List<String> msgs) {
 		this.plugins.configure(msgs);
 
-		if (this.rdbDriver == null) {
+		if (this.rdbSetup == null) {
 			logger.info("No rdb has been set up for this app.");
 		} else {
-			String msg = this.rdbDriver.setup();
-			if (msg != null) {
-				msgs.add(msg);
+			this.rdbError = this.rdbSetup.configure();
+			if (this.rdbError != null) {
+				msgs.add(this.rdbError);
+				this.rdbSetup = null;
+			}
+		}
+
+		if (this.batchSetup == null) {
+			logger.info("No Batch Environment has been set up for this app.");
+		} else {
+			this.batchError = this.batchSetup.configure();
+			if (this.batchError == null) {
+				msgs.add(this.batchError);
+				this.batchSetup = null;
+			}
+		}
+
+		if (this.jmsSetup == null) {
+			logger.info("No JMS infrastructure has been set up for this app.");
+		} else {
+			this.jmsError = this.jmsSetup.configure();
+			if (this.jmsError != null) {
+				msgs.add(this.jmsError);
+				this.jmsSetup = null;
+			}
+		}
+
+		if (this.mailSetup == null) {
+			logger.info("No mail facility has been set up for this app.");
+		} else {
+			this.mailError = this.mailSetup.configure();
+			if (this.mailError != null) {
+				msgs.add(this.mailError);
+				this.mailSetup = null;
+			}
+		}
+
+		if (this.oAuthSetup == null) {
+			logger.info("No Open Authentication has been set up for this app.");
+		} else {
+			this.oAuthError = this.oAuthSetup.configure();
+			if (this.oAuthError != null) {
+				msgs.add(this.oAuthError);
+				this.oAuthSetup = null;
 			}
 		}
 
@@ -764,26 +773,6 @@ public class Application implements IApp {
 			} catch (Exception e) {
 				msgs.add("Error while instantiating UserTransaction using jndi name " + this.jtaUserTransaction + ". "
 						+ e.getMessage());
-			}
-		}
-		/*
-		 * Setup JMS Connection factory
-		 */
-		if (this.jmsConnectionFactory != null || this.xaJmsConnectionFactory != null) {
-			String msg = JmsConnector.setup(this.jmsConnectionFactory, this.xaJmsConnectionFactory, this.jmsProperties);
-			if (msg != null) {
-				msgs.add(msg);
-			}
-		}
-
-		/*
-		 * Setup Mail Agent
-		 */
-		if (this.mailProperties != null) {
-			try {
-				MailConnector.initialize(this.mailProperties);
-			} catch (Exception e) {
-				msgs.add("Error while setting up MailAgent." + e.getMessage() + " Application will not work properly.");
 			}
 		}
 
@@ -803,7 +792,6 @@ public class Application implements IApp {
 			Gateways.setGateways(this.externalApplications);
 			this.externalApplications = null;
 		}
-		this.batchProperties.configure(msgs);
 	}
 
 	/**
@@ -815,9 +803,69 @@ public class Application implements IApp {
 	public void validate(IValidationContext vtx) {
 		ValidationUtil.validateMeta(vtx, this);
 		this.plugins.validate(vtx);
-		if (this.rdbDriver != null) {
-			this.rdbDriver.validate(vtx);
+		if (this.rdbSetup != null) {
+			this.rdbSetup.validate(vtx);
 		}
+	}
+
+	/**
+	 * @return the rdb setup for this app. throws applicationError it not set-up
+	 */
+	public RdbSetup getRdbSetup() {
+		if (this.rdbSetup == null) {
+			throw new ApplicationError(this.rdbError);
+		}
+		return this.rdbSetup;
+	}
+
+	/**
+	 *
+	 * @return non-null batch setup associated with this app. throws
+	 *         ApplicationError in case it is not setup
+	 */
+	public BatchSetup getBatchSetup() {
+		if (this.batchSetup == null) {
+			throw new ApplicationError(this.batchError);
+		}
+		return this.batchSetup;
+	}
+
+	/**
+	 *
+	 * @return non-null JMS driver associated with this app. throws
+	 *         ApplicationError in case it is not setup
+	 */
+	public JmsSetup getJmsSetup() {
+		if (this.jmsSetup == null) {
+			if (this.jmsError == null) {
+				throw new ApplicationError(
+						"JMS is not set up for this project, but a service is trying to use a jms conenction");
+			}
+			throw new ApplicationError(this.jmsError);
+		}
+		return this.jmsSetup;
+	}
+
+	/**
+	 * @return the rdbDriver set up with this app, or null if it not set-up
+	 */
+	public OAuthSetup getOAuthSetup() {
+		if (this.oAuthSetup == null) {
+			throw new ApplicationError(this.oAuthError);
+		}
+		return this.oAuthSetup;
+	}
+
+	/**
+	 *
+	 * @return non-null MailSetp associated with this app. throws
+	 *         ApplicationError in case it is not setup
+	 */
+	public MailSetup getMailSetup() {
+		if (this.mailSetup == null) {
+			throw new ApplicationError(this.mailError);
+		}
+		return this.mailSetup;
 	}
 
 	/**
@@ -1322,128 +1370,13 @@ public class Application implements IApp {
 	}
 
 	/**
-	 * batch related functionalities
-	 *
-	 * @author simplity.org
-	 *
+	 * @param worker
+	 * @return a thread for this worker
 	 */
-	class BatchProperties {
-		public BatchProperties() {
-			//
+	public Thread createThread(Runnable worker) {
+		if (this.batchSetup == null) {
+			return new Thread(worker);
 		}
-
-		/**
-		 * batch job to fire after bootstrapping.
-		 */
-		@FieldMetaData(isReferenceToComp = true, referredCompType = ComponentType.JOBS)
-		String jobsToRunOnStartup;
-
-		/*
-		 * for batch jobs
-		 */
-		/**
-		 * jndi name the container has created to get a threadFactory instance
-		 */
-		String threadFactoryJndiName;
-
-		/**
-		 * jndi name the container has created to get a managed schedule thread
-		 * pooled executor instance
-		 */
-		String scheduledExecutorJndiName;
-
-		/** number of threads to keep in the pool even if they are idle */
-		int corePoolSize;
-		/*
-		 * batch and thread management
-		 */
-		private ThreadFactory threadFactory;
-		private ScheduledExecutorService threadPoolExecutor;
-		private int batchPoolSize;
-
-		protected void configure(List<String> msgs) {
-			/*
-			 * batch job, thread pools etc..
-			 */
-			if (this.corePoolSize == 0) {
-				this.batchPoolSize = 1;
-			} else {
-				this.batchPoolSize = this.corePoolSize;
-			}
-
-			if (this.threadFactoryJndiName != null) {
-				try {
-					this.threadFactory = (ThreadFactory) new InitialContext().lookup(this.threadFactoryJndiName);
-					logger.info("Thread factory instantiated as " + this.threadFactory.getClass().getName());
-				} catch (Exception e) {
-					msgs.add("Error while looking up " + this.threadFactoryJndiName + ". " + e.getLocalizedMessage());
-				}
-			}
-
-			if (this.scheduledExecutorJndiName != null) {
-				try {
-					this.threadPoolExecutor = (ScheduledExecutorService) new InitialContext()
-							.lookup(this.scheduledExecutorJndiName);
-					logger.info(
-							"ScheduledThreadPoolExecutor instantiated as "
-									+ this.threadPoolExecutor.getClass().getName());
-				} catch (Exception e) {
-					msgs.add("Error while looking up " + this.scheduledExecutorJndiName + ". "
-							+ e.getLocalizedMessage());
-				}
-			}
-			if (msgs.size() > 0) {
-				/*
-				 * we run the background batch job only if everything has gone
-				 * well.
-				 */
-				if (this.jobsToRunOnStartup != null) {
-					msgs.add("Scheduler NOT started for batch " + this.jobsToRunOnStartup
-							+ " because of issues with applicaiton set up.");
-
-				}
-
-			} else if (this.jobsToRunOnStartup != null) {
-				/*
-				 * we run the background batch job only if everything has gone
-				 * well.
-				 */
-				BatchJobs.startJobs(this.jobsToRunOnStartup);
-				logger.info("Scheduler started for Batch " + this.jobsToRunOnStartup);
-			}
-		}
-
-		/**
-		 * get a managed thread as per the container
-		 *
-		 * @param runnable
-		 * @return thread
-		 */
-		protected Thread createThread(Runnable runnable) {
-			if (this.threadFactory == null) {
-				return new Thread(runnable);
-			}
-			return this.threadFactory.newThread(runnable);
-		}
-
-		/**
-		 * get a managed thread as per the container
-		 *
-		 * @return executor
-		 */
-		protected ScheduledExecutorService getScheduledExecutor() {
-			if (this.threadPoolExecutor != null) {
-				return this.threadPoolExecutor;
-			}
-			int nbr = this.batchPoolSize;
-			if (nbr == 0) {
-				nbr = 2;
-			}
-			if (this.threadFactory == null) {
-				return new ScheduledThreadPoolExecutor(nbr);
-			}
-			this.threadPoolExecutor = new ScheduledThreadPoolExecutor(nbr, this.threadFactory);
-			return this.threadPoolExecutor;
-		}
+		return this.batchSetup.createThread(worker);
 	}
 }

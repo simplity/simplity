@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
  * @author simplity.org
  *
  */
-public class RdbDriver implements IDbDriver {
+public class RdbSetup implements IDbDriver {
 	private static final Logger logger = LoggerFactory.getLogger(IDbDriver.class);
 	/*
 	 * for sql escaping
@@ -61,13 +61,13 @@ public class RdbDriver implements IDbDriver {
 
 	private static final String CONTEXT_PREFIX = "java:/comp/env/";
 
-	private static RdbDriver defaultDriver;
+	private RdbSetup defaultDriver;
 
 	/**
 	 * @return an instance of the default driver. null if db is not set-up
 	 */
-	public static IDbDriver getDefaultDriver() {
-		return defaultDriver;
+	public IDbDriver getDefaultDriver() {
+		return this.defaultDriver;
 	}
 
 	/*
@@ -79,10 +79,14 @@ public class RdbDriver implements IDbDriver {
 	 * log sqls in production
 	 */
 	boolean logSqls;
-	/** The database vendor we are using */
+	/**
+	 * The database vendor we are using
+	 */
 	DbVendor dbVendor;
 
-	/** The database driver to use */
+	/**
+	 * The database driver to use
+	 */
 	@FieldMetaData(relevantBasedOnField = "dbVendor")
 	String dbDriverClassName;
 
@@ -93,7 +97,9 @@ public class RdbDriver implements IDbDriver {
 	@FieldMetaData(leaderField = "dbDriverClassName")
 	String connectionString;
 
-	/** Data source name to be used to look-up in JNDI for dataSource */
+	/**
+	 * Data source name to be used to look-up in JNDI for dataSource
+	 */
 	@FieldMetaData(relevantBasedOnField = "dbVendor", irrelevantBasedOnField = "dbDriverClassName")
 	String dataSourceName;
 
@@ -293,8 +299,8 @@ public class RdbDriver implements IDbDriver {
 	/**
 	 * @return error message in case of trouble. null if all OK.
 	 */
-	public String setup() {
-		if (defaultDriver != null) {
+	public String configure() {
+		if (this.defaultDriver != null) {
 			logger.warn("Existing driver is going to be replaced with a new one...");
 		}
 		if (this.dbVendor == null) {
@@ -319,7 +325,7 @@ public class RdbDriver implements IDbDriver {
 		}
 		if (msg == null) {
 			logger.info("Driver class name " + this.dbDriverClassName + " invoked successfully");
-			defaultDriver = this;
+			this.defaultDriver = this;
 			return null;
 		}
 

@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package org.simplity.core.job;
+package org.simplity.core.batch;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -129,7 +129,7 @@ public class BatchJobs implements IComponent {
 			throw new ApplicationError(
 					"Jobs are already getting executed while another attempt is being made to execute them.");
 		}
-		this.executor = Application.getActiveInstance().getScheduledExecutor();
+		this.executor = Application.getActiveInstance().getBatchSetup().getScheduledExecutor();
 		/*
 		 * we want jobs to run only when the executor is active. That is,
 		 * executor is not just a submitter, but manager

@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package org.simplity.core.job;
+package org.simplity.core.batch;
 
 import org.simplity.core.data.IDataSheet;
 import org.simplity.core.data.MultiRowsSheet;

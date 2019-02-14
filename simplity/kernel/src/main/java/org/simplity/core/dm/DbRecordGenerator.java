@@ -36,7 +36,6 @@ import org.simplity.core.idb.IDbDriver;
 import org.simplity.core.idb.IDbHandle;
 import org.simplity.core.idb.IMetadataHandle;
 import org.simplity.core.rdb.MetadataHandle;
-import org.simplity.core.rdb.RdbDriver;
 import org.simplity.core.util.RdbUtil;
 import org.simplity.core.util.XmlUtil;
 import org.simplity.core.value.BooleanValue;
@@ -88,7 +87,7 @@ public class DbRecordGenerator {
 	 */
 	public static DbTable createFromTable(String schemaName, String qualifiedName, String tableName,
 			DbToJavaNameConversion conversion, boolean isView) {
-		IDbDriver driver = RdbDriver.getDefaultDriver();
+		IDbDriver driver = Application.getActiveInstance().getRdbSetup().getDefaultDriver();
 		if (driver == null) {
 			logger.error("No active db driver to get table details from. returning null record");
 			return null;
@@ -112,7 +111,7 @@ public class DbRecordGenerator {
 	 * @return number of records saved
 	 */
 	public static int createAllRecords(File folder, DbToJavaNameConversion conversion) {
-		IDbDriver driver = RdbDriver.getDefaultDriver();
+		IDbDriver driver = Application.getActiveInstance().getRdbSetup().getDefaultDriver();
 		if (driver == null) {
 			logger.error("No active db driver to get table details from. returning null record");
 			return 0;

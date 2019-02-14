@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<record
+<dbTable
 	xmlns="http://www.simplity.org/schema"
 	name="specialty"
 	moduleName="pet"
 	okToSelectAll="true"
-	keyToBeGenerated="true"
+	keyIsGenerated="true"
 	listFieldName="specialty"
 	defaultSheetName="specialties"
 	tableName="specialties"
@@ -12,16 +12,16 @@
 	<fields>
 		<field
 			name="specialtyId"
-			columnName="id"
+			externalName="id"
 			dataType="pet.id"
 			fieldType="primaryKey"
 			isRequired="true"
 			/>
 		<field
 			name="specialty"
-			columnName="name"
+			externalName="name"
 			dataType="pet.text80"
 			isRequired="true"
 			/>
 	</fields>
-</record>
+</dbTable>

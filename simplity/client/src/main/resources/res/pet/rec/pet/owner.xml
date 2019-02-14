@@ -1,41 +1,74 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<record
-	xmlns="http://www.simplity.org/schema"
-	name="owner"
-	moduleName="pet"
-	okToSelectAll="true"
-	keyToBeGenerated="true"
-	childrenToBeRead="pet.petDetail"
-	defaultSheetName="owners"
-	tableName="owners"
+<dbTable
+  xmlns="http://www.simplity.org/schema"
+  name="owner"
+  moduleName="pet"
+  okToSelectAll="true"
+  keyIsGenerated="true"
+  childrenToBeRead="pet.petDetail"
+  defaultSheetName="owners"
+  tableName="owners"
 >
-	<fields>
-		<field
-			name="ownerId"
-			columnName="id"
-			dataType="pet.id"
-			fieldType="primaryKey" />
-		<field
-			name="firstName"
-			columnName="first_name"
-			dataType="pet.name"
-			isRequired="true" />
-		<field
-			name="lastName"
-			columnName="last_name"
-			dataType="pet.name"
-			isRequired="true" />
-		<field
-			name="address"
-			dataType="pet.address"
-			isRequired="true" />
-		<field
-			name="city"
-			dataType="pet.city" 
-			isRequired="true"/>
-		<field
-			name="telephone"
-			columnName="telephone"
-			dataType="pet.phone" />
-	</fields>
-</record>
+  <fields>
+    <primaryKey
+      name="ownerId"
+      externalName="id"
+      valueType="integer" />
+    <dbField
+      name="firstName"
+      externalName="first_name"
+      valueType="text"
+    >
+      <fieldValidation
+        dataType="pet.name"
+        isRequired="true" />
+    </dbField>
+
+    <dbField
+      name="firstName"
+      externalName="first_name"
+      valueType="text"
+    >
+      <fieldValidation
+        dataType="pet.name"
+        isRequired="true" />
+    </dbField>
+
+    <dbField
+      name="lastName"
+      externalName="last_name"
+      valueType="text"
+    >
+      <fieldValidation
+        dataType="pet.name"
+        isRequired="true" />
+    </dbField>
+
+    <dbField
+      name="address"
+      valueType="text"
+    >
+      <fieldValidation
+        dataType="pet.address"
+        isRequired="true" />
+    </dbField>
+
+    <dbField
+      name="city"
+      valueType="text"
+    >
+      <fieldValidation
+        dataType="pet.city"
+        isRequired="true" />
+    </dbField>
+
+    <dbField
+      name="telephone"
+      valueType="text"
+    >
+      <fieldValidation
+        dataType="pet.phone"
+        />
+    </dbField>
+  </fields>
+</dbTable>

@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package org.simplity.core.job;
+package org.simplity.core.batch;
 
 import org.simplity.core.value.Value;
 import org.slf4j.Logger;

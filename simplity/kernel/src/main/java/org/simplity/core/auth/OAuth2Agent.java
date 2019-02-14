@@ -115,8 +115,8 @@ public class OAuth2Agent implements ISecurityAgent {
 	}
 
 	private boolean checkForValidToken(String accesstoken) {
-		OAuthParameters oAuthParameters = Application.getActiveInstance().getOAuthParameters();
-		String url = oAuthParameters.getCheckTokenURL();
+		OAuthSetup oAuthParameters = Application.getActiveInstance().getOAuthSetup();
+		String url = oAuthParameters.getCheckTokenUrl();
 		url += "?token=" + accesstoken;
 		HttpURLConnection conn = null;
 		logger.info("Checking token " + url);

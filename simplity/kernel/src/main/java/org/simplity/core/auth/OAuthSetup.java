@@ -22,12 +22,12 @@
 package org.simplity.core.auth;
 
 /**
- * dummy data structure to hold parameters for OAuth
+ * Open Authentication Set up. Work in progress.
  *
  * @author simplity.org
  *
  */
-public class OAuthParameters {
+public class OAuthSetup {
 	/*
 	 * all attributes are made package private for them to be loaded by the
 	 * oader
@@ -43,14 +43,14 @@ public class OAuthParameters {
 	/**
 	 * check token URL
 	 */
-	String checkTokenURL;
+	String checkTokenUrl;
 
 	/**
 	 *
 	 * @return check token URL
 	 */
-	public String getCheckTokenURL() {
-		return this.checkTokenURL;
+	public String getCheckTokenUrl() {
+		return this.checkTokenUrl;
 	}
 
 	/**
@@ -67,5 +67,14 @@ public class OAuthParameters {
 	 */
 	public String getClientSecret() {
 		return this.clientSecret;
+	}
+
+	/**
+	 * called by <code>Application</code> before using it
+	 *
+	 * @return error message in case any error in configuring. null if all OK.
+	 */
+	public String configure() {
+		return "Oauth is not yet implemented";
 	}
 }

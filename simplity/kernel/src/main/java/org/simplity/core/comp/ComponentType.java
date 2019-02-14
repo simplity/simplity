@@ -23,10 +23,10 @@
 package org.simplity.core.comp;
 
 import org.simplity.core.adapter.DataAdapter;
+import org.simplity.core.batch.BatchJobs;
 import org.simplity.core.dm.Record;
 import org.simplity.core.dt.DataType;
 import org.simplity.core.fn.IFunction;
-import org.simplity.core.job.BatchJobs;
 import org.simplity.core.msg.Message;
 import org.simplity.core.service.ExternalService;
 import org.simplity.core.sql.Sql;

@@ -45,7 +45,7 @@ import org.simplity.core.value.Value;
 public class TransactionHandle extends ReadonlyHandle implements ITransactionHandle {
 	private static final DbAccessType HANDLE_TYPE = DbAccessType.READ_ONLY;
 
-	TransactionHandle(Connection con, RdbDriver driver, String schema) {
+	TransactionHandle(Connection con, RdbSetup driver, String schema) {
 		super(con, driver, schema);
 	}
 

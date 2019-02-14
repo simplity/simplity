@@ -23,13 +23,13 @@
 package org.simplity.core.trans;
 
 import org.simplity.core.ApplicationError;
+import org.simplity.core.app.Application;
 import org.simplity.core.comp.IValidationContext;
 import org.simplity.core.comp.ValidationMessage;
 import org.simplity.core.idb.DbAccessType;
 import org.simplity.core.idb.IDbClient;
 import org.simplity.core.idb.IDbHandle;
 import org.simplity.core.rdb.DbUsage;
-import org.simplity.core.rdb.RdbDriver;
 import org.simplity.core.service.ServiceContext;
 
 /**
@@ -63,7 +63,8 @@ public abstract class AbstractDbAction extends AbstractAction {
 		 * directly deal with the driver for this
 		 */
 		Worker worker = new Worker(ctx, this);
-		RdbDriver.getDefaultDriver().accessDb(worker, this.getDbUsage().getDbAccessType(), this.schemaName);
+		Application.getActiveInstance().getRdbSetup().getDefaultDriver().accessDb(worker,
+				this.getDbUsage().getDbAccessType(), this.schemaName);
 		return worker.isSuccess();
 	}
 
