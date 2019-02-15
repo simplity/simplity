@@ -1,40 +1,41 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <service
-	xmlns="http://www.simplity.org/schema"
-	name="filterOwners"
-	moduleName="pet"
-	dbAccessType="readOnly"
+  xmlns="http://www.simplity.org/schema"
+  name="filterOwners"
+  moduleName="pet"
 >
 
-	<inputData>
-		<inputRecords>
-			<inputRecord
-				recordName="pet.owner"
-				purpose="filter" />
-		</inputRecords>
-	</inputData>
-
-	<actions>
-		<filter
-			filterRecordName="pet.owner"
-			outputSheetName="owners"
-		>
-			<childRecords>
-				<relatedRecord
-					sheetName="petDetails"
-					recordName="pet.petDetail" />
-			</childRecords>
-		</filter>
-	</actions>
-
-	<outputData>
-		<outputRecords>
-			<outputRecord sheetName="owners" />
-			<outputRecord
-				sheetName="petDetails"
-				parentSheetName="owners"
-				linkColumnInParentSheet="ownerId"
-				linkColumnInThisSheet="ownerId" />
-		</outputRecords>
-	</outputData>
+  <inputData>
+    <inputRecords>
+      <inputRecord
+        recordName="pet.owner"
+        purpose="filter" />
+    </inputRecords>
+  </inputData>
+  <processor>
+    <transactionProcessor dbUsage="readOnly">
+      <actions>
+        <filter
+          filterRecordName="pet.owner"
+          outputSheetName="owners"
+        >
+          <childRecords>
+            <relatedRecord
+              sheetName="petDetails"
+              recordName="pet.petDetail" />
+          </childRecords>
+        </filter>
+      </actions>
+    </transactionProcessor>
+  </processor>
+  <outputData>
+    <outputRecords>
+      <outputRecord name="owners" />
+      <outputRecord
+        name="petDetails"
+        parentSheetName="owners"
+        linkFieldsInParentSheet="ownerId"
+        linkFieldsInThisSheet="ownerId" />
+    </outputRecords>
+  </outputData>
 </service>

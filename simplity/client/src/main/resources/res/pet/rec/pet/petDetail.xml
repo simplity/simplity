@@ -1,51 +1,50 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<dbTable
-	xmlns="http://www.simplity.org/schema"
-	name="petDetail"
-	moduleName="pet"
-	tableName="pet_details"
-	recordType="view"
-	defaultRefRecord="pet.pet"	
-	childrenToBeRead="pet.visit"
-	defaultSheetName="petDetails"
+<dbView
+  xmlns="http://www.simplity.org/schema"
+  name="petDetail"
+  moduleName="pet"
+  tableName="pet_details"
+  defaultRefRecord="pet.pet"
+  childrenToBeRead="pet.visit"
+  defaultSheetName="petDetails"
 >
-	<fields>
-		<field
-			name="petId"
-			externalName="pet_id"
-			fieldType="primaryKey"
-			 />
-		<field
-			name="ownerId"
-			fieldType="parentKey"
-			referredRecord="pet.owner"
-			externalName="owner_id"
-			 />
-		<field
-			name="petName"
-			externalName="pet_name"
-			/>
-		<field
-			name="petDob"
-			externalName="birth_date"
-			dataType="date"
-			 />
-		<field
-			name="petTypeId"
-			externalName="type_id"
-			 />
-		<field
-			name="petType"
-			externalName="pet_type"
-			referredRecord="pet.petType"
-			 />
-		<field
-			name="firstName"
-			externalName="first_name"
-			referredRecord="pet.owner"/>
-		<field
-			name="lastName"
-			externalName="last_name"
-			referredRecord="pet.owner" />
-	</fields>
-</dbTable>
+  <fields>
+    <primaryKey
+      name="petId"
+      externalName="pet_id"
+      valueType="integer" />
+    <parentKey
+      name="ownerId"
+      valueType="integer"
+      referredRecord="pet.owner"
+      externalName="owner_id" />
+    <viewField
+      name="petName"
+      valueType="text"
+      externalName="pet_name" />
+    <viewField
+      name="petDob"
+      externalName="birth_date"
+      valueType="text"
+      />
+    <viewField
+      name="petTypeId"
+      valueType="text"
+      externalName="type_id" />
+    <viewField
+      name="petType"
+      valueType="text"
+      externalName="pet_type"
+      referredRecord="pet.petType" />
+    <viewField
+      name="firstName"
+      valueType="text"
+      externalName="first_name"
+      referredRecord="pet.owner" />
+    <viewField
+      name="lastName"
+      valueType="text"
+      externalName="last_name"
+      referredRecord="pet.owner" />
+  </fields>
+</dbView>

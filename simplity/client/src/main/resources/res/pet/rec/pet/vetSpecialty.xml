@@ -1,27 +1,25 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <dbTable
-	xmlns="http://www.simplity.org/schema"
-	name="vetSpecialty"
-	moduleName="pet"
-	tableName="vet_specialties"
-	defaultSheetName="vetSpecialties"
+  xmlns="http://www.simplity.org/schema"
+  name="vetSpecialty"
+  moduleName="pet"
+  tableName="vet_specialties"
+  defaultSheetName="vetSpecialties"
 >
-	<fields>
-		<field
-			name="vetId"
-			externalName="vet_id"
-			dataType="pet.id"
-			fieldType="parentKey"
-			referredRecord="pet.vets"
-			isRequired="true"
-			 />
-		<field
-			name="specialtyId"
-			externalName="specialty_id"
-			dataType="pet.id"
-			fieldType="foreignKey"
-			referredRecord="pet.specialty"
-			isRequired="true"
-			/>
-	</fields>
+  <fields>
+    <parentKey
+      name="vetId"
+      externalName="vet_id"
+      valueType="integer" />
+    <dbField
+      name="specialtyId"
+      externalName="specialty_id"
+      valueType="integer"
+      referredRecord="pet.specialty"
+    >
+      <fieldValidation
+        dataType="pet.text80"
+        isRequired="true" />
+    </dbField>
+  </fields>
 </dbTable>

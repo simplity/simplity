@@ -4,7 +4,6 @@
 	name="filterOwnersJava"
 	moduleName="pet"
 	description="Demonstrates use of java code to implement a service with the help of Simplity components"
-	dbAccessType="readOnly"
 >
 
 	<inputData>
@@ -14,21 +13,21 @@
 				purpose="filter" />
 		</inputRecords>
 	</inputData>
-
+<processor><transactionProcessor dbUsage="readOnly">
 	<actions>
 		<!-- complexLogic is does logic and i/o while logic is meant for pure logic -->
-		<complexLogic className="org.simplity.pet.action.FilterOwners" />
+		<logicWithDbAccess className="org.simplity.pet.action.FilterOwners" />
 	</actions>
-
+</transactionProcessor></processor>
 	<outputData>
 		<outputRecords>
-			<outputRecord sheetName="owners" />
+			<outputRecord name="owners" />
 			<!-- child table is to be output as child pf parent rows -->
-			<outputRecord
-				sheetName="petDetails"
+			<outputRecord 
+				name="petDetails"
 				parentSheetName="owners"
-				linkColumnInParentSheet="ownerId"
-				linkColumnInThisSheet="ownerId" />
+				linkFieldsInParentSheet="ownerId"
+				linkFieldsInThisSheet="ownerId" />
 		</outputRecords>
 	</outputData>
 </service>

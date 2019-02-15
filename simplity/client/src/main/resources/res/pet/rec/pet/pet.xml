@@ -26,17 +26,25 @@
         dataType="pet.name"
         isRequired="true" />
     </dbField>
-    <field
+    <dbField
       name="petDob"
       externalName="birth_date"
-      dataType="pet.date"
-      isRequired="true" />
-    <field
+      valueType="date"
+    >
+      <fieldValidation
+        dataType="pet.date"
+        isRequired="true" />
+
+    </dbField>
+    <foreignKey
       name="petTypeId"
       externalName="type_id"
-      dataType="pet.id"
-      fieldType="foreignKey"
+      valueType="integer"
       referredRecord="pet.petType"
-      isRequired="true" />
+    >
+      <fieldValidation
+        dataType="pet.id"
+        isRequired="true" />
+    </foreignKey>
   </fields>
 </dbTable>

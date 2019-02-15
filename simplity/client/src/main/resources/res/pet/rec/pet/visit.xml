@@ -1,36 +1,44 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <dbTable
-	xmlns="http://www.simplity.org/schema"
-	name="visit"
-	keyIsGenerated="true"
-	moduleName="pet"
-	defaultSheetName="visits"
-	tableName="visits"
+  xmlns="http://www.simplity.org/schema"
+  name="visit"
+  keyIsGenerated="true"
+  moduleName="pet"
+  defaultSheetName="visits"
+  tableName="visits"
 >
-	<fields>
-		<field
-			name="visitId"
-			externalName="id"
-			dataType="pet.id"
-			fieldType="primaryKey"
-			isRequired="true" />
-		<field
-			name="petId"
-			externalName="pet_id"
-			dataType="pet.id"
-			fieldType="parentKey"
-			referredRecord="pet.pet"
-			referredField="petId"
-			isRequired="true" />
-		<field
-			name="visitDate"
-			externalName="visit_date"
-			dataType="pet.date"
-			isRequired="true" />
-		<field
-			name="visitDescription"
-			externalName="description"
-			dataType="pet.description"
-			isRequired="true" />
-	</fields>
+  <fields>
+    <primaryKey
+      name="visitId"
+      externalName="visit_id"
+      valueType="integer" />
+    <parentKey
+      name="petId"
+      externalName="pet_id"
+      referredRecord="pet.pet"
+      referredField="petId"
+      valueType="integer"
+    >
+      <fieldValidation
+        dataType="pet.id"
+        isRequired="true" />
+    </parentKey>
+    <dbField
+      name="visitDate"
+      externalName="visit_date"
+      valueType="date"
+    >
+      <fieldValidation
+        dataType="pet.date"
+        isRequired="true" />
+    </dbField>
+    <dbField
+      name="visitDescription"
+      externalName="description"
+      valueType="text">
+      <fieldValidation
+      dataType="pet.description"
+      isRequired="true" /></dbField>
+      
+  </fields>
 </dbTable>

@@ -1,33 +1,36 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <dbTable
-	xmlns="http://www.simplity.org/schema"
-	name="vet"
-	moduleName="pet"
-	okToSelectAll="true"
-	keyIsGenerated="true"
-	childrenToBeRead="pet.vetSpecialtyDetail"
-	defaultSheetName="vets"
-	tableName="vets"
+  xmlns="http://www.simplity.org/schema"
+  name="vet"
+  moduleName="pet"
+  okToSelectAll="true"
+  keyIsGenerated="true"
+  childrenToBeRead="pet.vetSpecialtyDetail"
+  defaultSheetName="vets"
+  tableName="vets"
 >
-	<fields>
-		<field
-			name="vetId"
-			externalName="id"
-			dataType="pet.id"
-			fieldType="primaryKey"
-			isRequired="true"
-			 />
-		<field
-			name="firstName"
-			externalName="first_name"
-			dataType="pet.name"
-			isRequired="true"
-			 />
-		<field
-			name="lastName"
-			externalName="last_name"
-			dataType="pet.name"
-			isRequired="true"
-			/>
-	</fields>
+  <fields>
+    <primaryKey
+      name="vetId"
+      externalName="id"
+      valueType="integer" />
+    <dbField
+      name="firstName"
+      externalName="first_name"
+      valueType="text"
+    >
+      <fieldValidation
+        dataType="pet.name"
+        isRequired="true" />
+    </dbField>
+    <dbField
+      name="lastName"
+      externalName="last_name"
+      valueType="text"
+    >
+      <fieldValidation
+        dataType="pet.name"
+        isRequired="true" />
+    </dbField>
+  </fields>
 </dbTable>

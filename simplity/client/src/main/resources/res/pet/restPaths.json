@@ -2,8 +2,9 @@
 	"basePath": "v1/",
 	"serviceNamePrefix": "a.b.",
 	"paths": {
-		"corp/{corp}/{id}": {
-			"": "corpIq"
+		"corp/{corpId}/{customerId}": {
+			"put": "customer.create",
+			"get": "getCustomer"
 		},
 		"{c}": {
 			"": "fieldC"
