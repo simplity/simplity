@@ -32,6 +32,7 @@ public class ViewField extends DbField {
 	 *
 	 */
 	public ViewField() {
+		super();
 		this.fieldType = FieldType.VIEW;
 	}
 }

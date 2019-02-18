@@ -174,7 +174,7 @@ public class XmlUtil {
 	/**
 	 * a document builder instance that can be used to parse docs
 	 */
-	public static final DocumentBuilder docBuilder = newDocBuilder();
+	private static DocumentBuilderFactory docBuilderFactory = newDocumentBuilderFactory();
 
 	/**
 	 * a dom transformer for converting xml from one form to the other
@@ -506,7 +506,7 @@ public class XmlUtil {
 		String msg = null;
 
 		try {
-			doc = docBuilder.parse(stream);
+			doc = getDocBuilder().parse(stream);
 		} catch (SAXParseException e) {
 			msg = "Error while parsing xml text. " + e.getMessage() + "\n At line " + e.getLineNumber() + " and column "
 					+ e.getColumnNumber();
@@ -524,7 +524,7 @@ public class XmlUtil {
 	 *
 	 * @return Factory to create DOM
 	 */
-	private static DocumentBuilder newDocBuilder() {
+	private static DocumentBuilderFactory newDocumentBuilderFactory() {
 		/*
 		 * workaround for some APP servers that have classLoader related issue
 		 * with using xrececs
@@ -538,8 +538,16 @@ public class XmlUtil {
 		factory.setCoalescing(false);
 		factory.setXIncludeAware(false);
 		factory.setNamespaceAware(false);
+		return factory;
+	}
+
+	/**
+	 *
+	 * @return document builder suitable for the kind of docs we use
+	 */
+	public static DocumentBuilder getDocBuilder() {
 		try {
-			return factory.newDocumentBuilder();
+			return docBuilderFactory.newDocumentBuilder();
 		} catch (ParserConfigurationException e) {
 			logger.error("Error while creaing a dom builder. No XML will work. ERROR : {}", e.getMessage());
 			return null;
@@ -813,7 +821,7 @@ public class XmlUtil {
 		String eleName = object.getClass().getSimpleName();
 		eleName = eleName.substring(0, 1).toLowerCase() + eleName.substring(1);
 		try {
-			Document doc = docBuilder.newDocument();
+			Document doc = getDocBuilder().newDocument();
 			Element ele = doc.createElementNS("http://www.simplity.org/schema", eleName);
 			objectToEle(object, doc, ele);
 			doc.appendChild(ele);
@@ -1602,6 +1610,23 @@ public class XmlUtil {
 	 * @return an empty document
 	 */
 	public static Document newEmptyDocument() {
-		return docBuilder.newDocument();
+		return getDocBuilder().newDocument();
+	}
+
+	/**
+	 * pretty print an xml element
+	 *
+	 * @param domElement
+	 *            to be pretty printed
+	 * @return pretty printed document
+	 */
+	public static String prettyPrint(Element domElement) {
+		StringWriter writer = new StringWriter();
+		try {
+			transformer.transform(new DOMSource(domElement), new StreamResult(writer));
+			return writer.toString();
+		} catch (TransformerException e) {
+			return "Error while pretty printing the xml document with root node " + domElement.getTagName();
+		}
 	}
 }

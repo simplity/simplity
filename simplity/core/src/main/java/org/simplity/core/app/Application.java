@@ -454,7 +454,8 @@ public class Application implements IApp {
 		/*
 		 * is it accessible to user?
 		 */
-		if (this.plugins.getAccessController().okToServe(service, request) == false) {
+		IAccessController guard = this.plugins.getAccessController();
+		if (guard != null && guard.okToServe(service, request) == false) {
 			logger.error("Logged in user is not authorized for Service {} ", serviceName);
 			response.setResult(ServiceResult.INSUFFICIENT_PRIVILEGE, 0);
 			return;
@@ -507,6 +508,7 @@ public class Application implements IApp {
 
 		if (ctx.isInError()) {
 			logger.info("Input data had errors. Service not invoked.");
+			logger.error(FormattedMessage.toString(ctx.getMessages()));
 			return;
 		}
 
@@ -1115,6 +1117,7 @@ public class Application implements IApp {
 		for (int i = 0; i < nbr; i++) {
 			ComponentType ct = AppConventions.COMP_TYPES[i];
 			if (i == serviceIdx) {
+				logger.info("ServiceComp created for idx {}", i);
 				this.allComps[i] = new ServiceComp(ct, AppConventions.Name.COMP_FOLDER_NAMES[i]);
 			} else {
 				Comp comp = new Comp(ct, AppConventions.Name.COMP_FOLDER_NAMES[i]);
@@ -1210,7 +1213,7 @@ public class Application implements IApp {
 			Object obj = null;
 			try {
 				Document doc = XmlUtil.fromResource(fileName);
-				if (doc == null) {
+				if (doc == null || doc.getDocumentElement() == null) {
 					logger.error("Component {} is not loaded. Either it is not defined, or it has syntax errors.",
 							compName);
 					return null;
@@ -1223,21 +1226,12 @@ public class Application implements IApp {
 					return null;
 				}
 
-				if (XmlUtil.xmlToObject(fileName, obj) == false) {
-					/*
-					 * load failed. obj is not valid any more.
-					 */
-					obj = null;
-				}
+				XmlUtil.elementToObject(ele, obj);
 			} catch (Exception e) {
 				logger.error("error while loading component " + compName, e);
 				return null;
 			}
 
-			if (obj == null) {
-				logger.info("Component {} is not loaded. Either it is not defined, or it has syntax errors.", compName);
-				return null;
-			}
 			/*
 			 * we insist that components be stored with the right naming
 			 * convention
@@ -1361,19 +1355,21 @@ public class Application implements IApp {
 		}
 
 		@Override
-		IComponent getComp(String compName) {
-			IComponent comp = super.getComp(compName);
+		IComponent getComp(String serviceName) {
+			IComponent comp = super.getComp(serviceName);
 			if (comp != null) {
 				return comp;
 			}
-			comp = ServiceUtil.generateService(compName);
+			logger.info("{} is not defined as a service. We will try and generate it on-the-fly", serviceName);
+			comp = ServiceUtil.generateService(serviceName);
 			if (comp == null) {
+				logger.error("Service {} is not defined, nor is it meant to be generated.", serviceName);
 				return null;
 			}
-			logger.info("Service compName is generated on-the-fly and is used as a regular service");
+			logger.info("Service {}  is generated on-the-fly and is used as a regular service", serviceName);
 			comp.getReady();
 			if (this.cachedOnes != null) {
-				this.cachedOnes.put(compName, comp);
+				this.cachedOnes.put(serviceName, comp);
 			}
 			return comp;
 		}

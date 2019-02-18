@@ -462,8 +462,8 @@ var Simplity = (function() {
 		for (var i = 0; i < n; i++) {
 			var pair = data[i];
 			t.push('<option value="');
-			t.push(pair.key);
-			if (val && val == pair.key) {
+			t.push(pair.id);
+			if (val && val == pair.id) {
 				val = null;
 				t.push('" selected="selected">');
 			} else {
@@ -1289,7 +1289,7 @@ var Simplity = (function() {
 		 *            sampleItem an item that has all the attributes that can be
 		 *            used for filtering
 		 * @param {Object}
-		 *            json contains name-value pairs. nameOperator and nameTo
+		 *            json contains name-value pairs. nameComparator and nameTo
 		 *            are relatedFields
 		 * @returns {Array} filtered items that satisfy filtering criterion
 		 */
@@ -1308,23 +1308,23 @@ var Simplity = (function() {
 					op : '='
 				};
 				filters.push(filter);
-				var val = json[fieldName + 'Operator'];
+				var val = json[fieldName + 'Comparator'];
 				if (!val) {
 					continue;
 				}
 				/*
-				 * operator is specified
+				 * Comparator is specified
 				 */
 				filter.op = val;
 				if (val != '><') {
 					continue;
 				}
 
-				// to operator
+				// to Comparator
 				val = json[fieldName + 'To'];
 				if (!val) {
 					throw 'we expected a value for ' + fieldName
-							+ 'To because the operator is between (><)';
+							+ 'To because the Comparator is between (><)';
 				}
 				filter.to = val;
 			}

@@ -38,11 +38,13 @@ public class RecordArray extends ChildRecord {
 	@Override
 	public void getReady(Record parentRecord, Record defaultReferredRecord) {
 		super.getReady(parentRecord, defaultReferredRecord);
-		Record ref = parentRecord.getRefRecord(this.referredRecord);
-		if (ref.getSqlTypeName() == null) {
-			throw new ApplicationError("Record " + ref.getQualifiedName()
-					+ " is used as an array element of a stored procedure parameter by field " + this.name
-					+ " in record " + parentRecord.getQualifiedName() + " and hence it should have sqlTypeName");
+		if (this.sqlTypeName != null) {
+			Record ref = parentRecord.getRefRecord(this.referredRecord);
+			if (ref.getSqlTypeName() == null) {
+				throw new ApplicationError("Record " + ref.getQualifiedName()
+						+ " is used as an array element of a stored procedure parameter by field " + this.name
+						+ " in record " + parentRecord.getQualifiedName() + " and hence it should have sqlTypeName");
+			}
 		}
 	}
 }

@@ -5,46 +5,34 @@
   moduleName="pet"
   keyIsGenerated="true"
   defaultSheetName="pets"
+  okToSelectAll="true"
   tableName="pets"
 >
   <fields>
     <primaryKey
       name="petId"
-      externalName="id"
-      valueType="integer" />
+      columnName="id"
+      dataType="pet.id"
+      isRequired="true" />
     <parentKey
       name="ownerId"
-      valueType="integer"
-      externalName="owner_id"
-      referredRecord="pet.owner" />
+      columnName="owner_id"
+      referredRecord="pet.owner"
+      isRequired="true" />
     <dbField
       name="petName"
-      valueType="text"
-      externalName="name"
-    >
-      <fieldValidation
-        dataType="pet.name"
-        isRequired="true" />
-    </dbField>
+      columnName="name"
+      dataType="pet.name"
+      isRequired="true" />
     <dbField
       name="petDob"
-      externalName="birth_date"
-      valueType="date"
-    >
-      <fieldValidation
-        dataType="pet.date"
-        isRequired="true" />
-
-    </dbField>
+      columnName="birth_date"
+      dataType="pet.date"
+      isRequired="true" />
     <foreignKey
       name="petTypeId"
-      externalName="type_id"
-      valueType="integer"
+      columnName="type_id"
       referredRecord="pet.petType"
-    >
-      <fieldValidation
-        dataType="pet.id"
-        isRequired="true" />
-    </foreignKey>
+      isRequired="true" />
   </fields>
 </dbTable>

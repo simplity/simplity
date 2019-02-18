@@ -12,25 +12,17 @@
   <fields>
     <primaryKey
       name="vetId"
-      externalName="id"
-      valueType="integer" />
+      columnName="id"
+      dataType="pet.id" />
     <dbField
       name="firstName"
-      externalName="first_name"
-      valueType="text"
-    >
-      <fieldValidation
-        dataType="pet.name"
-        isRequired="true" />
-    </dbField>
+      columnName="first_name"
+      dataType="pet.name"
+      isRequired="true" />
     <dbField
       name="lastName"
-      externalName="last_name"
-      valueType="text"
-    >
-      <fieldValidation
-        dataType="pet.name"
-        isRequired="true" />
-    </dbField>
+      columnName="last_name"
+      dataType="pet.name"
+      isRequired="true" />
   </fields>
 </dbTable>

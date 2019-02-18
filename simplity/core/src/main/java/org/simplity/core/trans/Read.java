@@ -27,10 +27,9 @@ import org.simplity.core.app.Application;
 import org.simplity.core.comp.IValidationContext;
 import org.simplity.core.data.IDataSheet;
 import org.simplity.core.dm.DbTable;
-import org.simplity.core.dm.Record;
 import org.simplity.core.idb.IDbHandle;
 import org.simplity.core.rdb.DbUsage;
-import org.simplity.core.rdb.ReadonlyHandle;
+import org.simplity.core.rdb.ReadOnlyHandle;
 import org.simplity.core.service.ServiceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,20 +86,17 @@ public class Read extends AbstractDbAction {
 	 * @param record
 	 * @param children
 	 */
-	public Read(Record record, RelatedRecord[] children) {
-		this.recordName = record.getQualifiedName();
-		this.actionName = "read_" + record.getSimpleName();
-		this.cascadeFilterForChildren = true;
+	public Read(DbTable record, RelatedRecord[] children) {
+		this(record);
 		this.childRecords = children;
 	}
 
 	@Override
 	protected boolean actWithDb(ServiceContext ctx, IDbHandle handle) {
-		ReadonlyHandle dbHandle = (ReadonlyHandle) handle;
+		ReadOnlyHandle dbHandle = (ReadOnlyHandle) handle;
 		Application app = Application.getActiveInstance();
 		DbTable record = (DbTable) app.getRecord(this.recordName);
 		IDataSheet inSheet = null;
-		int result = 0;
 		if (this.inputSheetName != null && ctx.hasDataSheet(this.inputSheetName)) {
 			inSheet = ctx.getDataSheet(this.inputSheetName);
 		}
@@ -116,6 +112,9 @@ public class Read extends AbstractDbAction {
 			outSheet = record.readMany(inSheet, dbHandle, ctx.getUserId());
 		}
 		if (outSheet == null || outSheet.length() == 0) {
+			if (this.childRecords != null) {
+				logger.info("Child records are not read because this record has no rows");
+			}
 			return false;
 		}
 		if (this.outputSheetName != null) {
@@ -123,22 +122,18 @@ public class Read extends AbstractDbAction {
 		} else {
 			ctx.copyFrom(outSheet);
 		}
-		if (result == 0) {
-			return false;
-		}
 		if (this.childRecords != null) {
 			for (RelatedRecord rr : this.childRecords) {
 				DbTable cr = (DbTable) app.getRecord(rr.recordName);
-				logger.info("Going to read child record ");
-
+				logger.info("Going to read child record with sheetName = {}", rr.sheetName);
 				cr.filterForParents(outSheet, dbHandle, rr.sheetName, this.cascadeFilterForChildren, ctx);
 			}
-			return result > 0;
+			return true;
 		}
 		if (this.cascadeFilterForChildren) {
 			record.filterChildRecords(outSheet, dbHandle, ctx);
 		}
-		return result > 0;
+		return true;
 	}
 
 	@Override

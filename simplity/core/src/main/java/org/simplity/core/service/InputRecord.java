@@ -58,7 +58,7 @@ public class InputRecord {
 	private static final Logger logger = LoggerFactory.getLogger(InputRecord.class);
 
 	/**
-	 * name of sheet/object
+	 * name of sheet/object to extract data into. ignored if writeAs=fields
 	 */
 	String name = null;
 
@@ -313,7 +313,6 @@ public class InputRecord {
 	 *         if any, are added to the ctx
 	 */
 	public int read(IRequestReader reader, ServiceContext ctx) {
-		logger.info("Going to read input record {} as {} and save data as {}", this.name, this.readAs, this.writeAs);
 		if (this.parentSheetName != null) {
 			logger.info(
 					"Sheet {} is a child sheet and is read directly. It will be triggered as and when a row from its parent {} is read.",
@@ -323,13 +322,13 @@ public class InputRecord {
 		/*
 		 * are we going to get what we are expecting?
 		 */
-		InputValueType vt = InputValueType.NULL;
-		if (this.externalName != null) {
-			vt = reader.getValueType(this.externalName);
-		}
-		if (!this.isVtValid(vt)) {
-			logger.error("We expected input to be {} but got {} for ", this.readAs, vt, this.externalName);
-			return 0;
+		if (this.readAs != DataStructureType.FIELDS) {
+			String nameToUse = this.externalName == null ? this.name : this.externalName;
+			InputValueType vt = reader.getValueType(nameToUse);
+			if (!this.isVtValid(vt)) {
+				logger.error("We expected input to be {} but got {} for ", this.readAs, vt, this.externalName);
+				return 0;
+			}
 		}
 
 		/*
@@ -430,12 +429,12 @@ public class InputRecord {
 	}
 
 	private int readFields(IRequestReader reader, IFieldsCollection values, ServiceContext ctx) {
-		if (this.purpose == DataPurpose.FILTER) {
-			return this.readFilterFields(reader, values, ctx);
-		}
-
-		boolean allFieldsAreOptional = this.purpose == DataPurpose.SUBSET;
 		int nbr = 0;
+		if (this.purpose == DataPurpose.FILTER) {
+			nbr = this.readFilterFields(reader, values, ctx);
+			logger.info("{} filter fields read", nbr);
+			return nbr;
+		}
 
 		for (Field field : this.fields) {
 			if (field.isPrimitive() == false) {
@@ -445,13 +444,14 @@ public class InputRecord {
 
 			String fieldInuputName = field.getExternalName();
 			Object obj = reader.getValue(fieldInuputName);
-			Value value = field.parseObject(obj, allFieldsAreOptional, ctx);
+			boolean fieldIsOptional = this.purpose == DataPurpose.SAVE && field.getFieldType().isPrimaryKey();
+			Value value = field.parseObject(obj, fieldIsOptional, ctx);
 			if (value != null) {
 				values.setValue(field.getName(), value);
 				nbr++;
 			}
 		}
-
+		logger.info("{} fields read from inputRecord {} ", nbr, this.name);
 		if (ctx.isInError() == false) {
 			if (this.hasInterFieldValidations) {
 				for (Field field : this.fields) {
@@ -467,10 +467,12 @@ public class InputRecord {
 		int nbr = 0;
 		for (Field field : this.fields) {
 			String fieldName = field.getName();
-			String fieldInuputName = field.getExternalName();
+			String fieldInputName = field.getExternalName();
+			logger.info("Looking for input to filter field {} with externalName {}", fieldName, fieldInputName);
 
-			Object obj = reader.getValue(fieldInuputName);
+			Object obj = reader.getValue(fieldInputName);
 			if (obj == null) {
+				logger.info("no value found for externalName {}", fieldInputName);
 				continue;
 			}
 
@@ -478,13 +480,14 @@ public class InputRecord {
 			 * what is the comparator
 			 */
 			FilterCondition f = FilterCondition.Equal;
-			String compName = fieldInuputName + AppConventions.Name.COMPARATOR_SUFFIX;
+			String compName = fieldInputName + AppConventions.Name.COMPARATOR_SUFFIX;
 			Object otherObj = reader.getValue(compName);
-			logger.info("fieldName={} fieldValue={} compName={} compValue={}", fieldInuputName, obj, compName,
+			logger.info("fieldName={} fieldValue={} compName={} compValue={}", fieldInputName, obj, compName,
 					otherObj);
 			if (otherObj != null) {
 				f = FilterCondition.parse(otherObj.toString());
 				if (f == null) {
+					logger.error("{} is not a valid filter condition");
 					ctx.addValidationMessage(Messages.INVALID_DATA, null, compName, null, 0, otherObj.toString());
 					continue;
 				}
@@ -516,7 +519,8 @@ public class InputRecord {
 
 			value = valueType.fromObject(obj);
 			if (value == null) {
-				ctx.addValidationMessage(Messages.INVALID_DATA, null, fieldInuputName, null, 0, obj.toString());
+				logger.error("{} is not valid for field {}", obj, fieldInputName);
+				ctx.addValidationMessage(Messages.INVALID_DATA, null, fieldInputName, null, 0, obj.toString());
 				continue;
 			}
 
@@ -525,7 +529,7 @@ public class InputRecord {
 			 *
 			 */
 			if (f == FilterCondition.Between) {
-				String toName = fieldInuputName + AppConventions.Name.TO_FIELD_SUFFIX;
+				String toName = fieldInputName + AppConventions.Name.TO_FIELD_SUFFIX;
 				otherObj = reader.getValue(toName);
 				if (otherObj == null) {
 					ctx.addValidationMessage(Messages.VALUE_REQUIRED, null, toName, null, 0);
@@ -923,5 +927,37 @@ public class InputRecord {
 			logger.warn("data for record {} not copied because it has sheet name, but extraction type is {}", this.name,
 					this.writeAs);
 		}
+	}
+
+	/**
+	 * return an output record meant for list service
+	 *
+	 * @param recordName
+	 *
+	 * @param sheetName
+	 * @param purpose
+	 *            purpose of inputting data
+	 * @param asSheet
+	 *            is input expected in a sheet/object or is it part of root
+	 *            object fields
+	 * @return an output record meant for list service
+	 */
+	public static InputRecord getInputRecord(String recordName, String sheetName, DataPurpose purpose,
+			boolean asSheet) {
+		InputRecord rec = new InputRecord();
+		rec.recordName = recordName;
+		rec.name = rec.externalName = sheetName;
+		rec.purpose = purpose;
+		if (purpose == DataPurpose.SAVE) {
+			rec.saveActionExpected = true;
+		}
+		if (asSheet) {
+			rec.readAs = DataStructureType.ARRAY;
+			rec.writeAs = DataStructureType.SHEET;
+		} else {
+			rec.readAs = DataStructureType.FIELDS;
+			rec.writeAs = DataStructureType.FIELDS;
+		}
+		return rec;
 	}
 }

@@ -155,7 +155,7 @@ public class RdbSetup implements IDbDriver {
 
 			case READ_ONLY:
 				con.setReadOnly(true);
-				dbHandle = new ReadonlyHandle(con, this, schema);
+				dbHandle = new ReadOnlyHandle(con, this, schema);
 				break;
 
 			case SINGLE_TRANS:

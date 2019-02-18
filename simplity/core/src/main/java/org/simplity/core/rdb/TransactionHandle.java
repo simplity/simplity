@@ -42,7 +42,7 @@ import org.simplity.core.value.Value;
  * @author simplity.org
  *
  */
-public class TransactionHandle extends ReadonlyHandle implements ITransactionHandle {
+public class TransactionHandle extends ReadOnlyHandle implements ITransactionHandle {
 	private static final DbAccessType HANDLE_TYPE = DbAccessType.READ_ONLY;
 
 	TransactionHandle(Connection con, RdbSetup driver, String schema) {
@@ -74,9 +74,9 @@ public class TransactionHandle extends ReadonlyHandle implements ITransactionHan
 		}
 
 		if (result < 0) {
-			logger.info("Number of affected rows is not reliable as we got it as " + result);
+			logger.info("Number of affected rows is not reliable as we got it as {}", result);
 		} else {
-			logger.info(result + " rows affected.");
+			logger.info("{} rows affected.", result);
 		}
 		return result;
 	}
@@ -96,10 +96,8 @@ public class TransactionHandle extends ReadonlyHandle implements ITransactionHan
 			result = stmt.executeBatch();
 		} catch (SQLException e) {
 			if (treatSqlErrorAsNoAction) {
-
-				logger.info("SQLException code:" + e.getErrorCode() + " message :" + e.getMessage()
-						+ " is treated as zero rows affected.");
-
+				logger.info("SQLException is treated as zero rows affected. code: {} message : {}", e.getErrorCode(),
+						e.getMessage());
 			} else {
 				throw new ApplicationError(e, "Sql Error while executing batch ");
 			}
@@ -114,9 +112,9 @@ public class TransactionHandle extends ReadonlyHandle implements ITransactionHan
 			}
 		}
 		if (rows < 0) {
-			logger.info("Number of affected rows is not reliable as we got it as " + rows);
+			logger.info("Number of affected rows is not reliable as we got it as {}", rows);
 		} else {
-			logger.info(rows + " rows affected.");
+			logger.info("{} rows affected.", rows);
 		}
 		return result;
 	}
@@ -137,17 +135,17 @@ public class TransactionHandle extends ReadonlyHandle implements ITransactionHan
 			}
 		} catch (SQLException e) {
 			if (treatSqlErrorAsNoAction) {
-				logger.info("SQLException code:" + e.getErrorCode() + " message :" + e.getMessage()
-						+ " is treated as zero rows affected.");
+				logger.info("SQLException is treated as zero rows affected. code: {} message : {}", e.getErrorCode(),
+						e.getMessage());
 			} else {
 				throw new ApplicationError(e, "Sql Error while executing sql ");
 			}
 		}
 
 		if (result < 0) {
-			logger.info("Number of affected rows is not reliable as we got it as " + result);
+			logger.info("Number of affected rows is not reliable as we got it as {}", result);
 		} else {
-			logger.info(result + " rows affected.");
+			logger.info("{} rows affected.", result);
 		}
 		return result;
 	}

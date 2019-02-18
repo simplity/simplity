@@ -271,21 +271,6 @@
       type="xs:string"
       use="optional" />
     <xs:attribute
-      name="valueType"
-      use="required"
-    >
-      <xs:simpleType>
-        <xs:restriction base="xs:string">
-          <xs:enumeration value="text" />
-          <xs:enumeration value="integer" />
-          <xs:enumeration value="decimal" />
-          <xs:enumeration value="boolean" />
-          <xs:enumeration value="date" />
-          <xs:enumeration value="timestamp" />
-        </xs:restriction>
-      </xs:simpleType>
-    </xs:attribute>
-    <xs:attribute
       name="inputOutputType"
       type="inputOutputType"
       use="optional"
@@ -319,9 +304,6 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-  </xs:attributeGroup>
-
-  <xs:attributeGroup name="fieldValidationAttributes">
     <xs:attribute
       name="valueList"
       type="xs:string"
@@ -427,7 +409,7 @@
     </xs:attribute>
     <xs:attribute
       name="dataType"
-      use="required"
+      use="optional"
       type="declaredDataTypes" />
   </xs:attributeGroup>
 
@@ -436,6 +418,16 @@
       name="isNullable"
       type="booleanType"
       use="optional" />
+    <xs:attribute
+      name="columnName"
+      type="xs:string"
+      use="optional"
+    >
+      <xs:annotation>
+        <xs:documentation>If the column name used in the db is different
+          from name.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:attributeGroup>
 
   <xs:attributeGroup name="complexFieldAttributes">
@@ -452,29 +444,12 @@
     </xs:attribute>
   </xs:attributeGroup>
 
-  <xs:element name="fieldValidation">
-    <xs:complexType>
-      <xs:attributeGroup ref="fieldValidationAttributes" />
-    </xs:complexType>
-  </xs:element>
   <xs:complexType name="dbField">
-    <xs:choice
-      minOccurs="0"
-      maxOccurs="1"
-    >
-      <xs:element ref="fieldValidation" />
-    </xs:choice>
     <xs:attributeGroup ref="fieldAttributes" />
     <xs:attributeGroup ref="dbFieldAttributes" />
   </xs:complexType>
 
   <xs:complexType name="complexField">
-    <xs:choice
-      minOccurs="0"
-      maxOccurs="1"
-    >
-      <xs:element ref="fieldValidation" />
-    </xs:choice>
     <xs:attributeGroup ref="fieldAttributes" />
     <xs:attributeGroup ref="complexFieldAttributes" />
   </xs:complexType>
@@ -484,12 +459,6 @@
 
   <xs:element name="field">
     <xs:complexType>
-      <xs:choice
-        minOccurs="0"
-        maxOccurs="1"
-      >
-        <xs:element ref="fieldValidation" />
-      </xs:choice>
       <xs:attributeGroup ref="fieldAttributes" />
     </xs:complexType>
   </xs:element>
@@ -533,6 +502,7 @@
   <xs:element name="viewField">
     <xs:complexType>
       <xs:attributeGroup ref="fieldAttributes" />
+      <xs:attributeGroup ref="dbFieldAttributes" />
     </xs:complexType>
   </xs:element>
 
@@ -908,6 +878,7 @@
                 <xs:element ref="viewField" />
                 <xs:element ref="primaryKey" />
                 <xs:element ref="parentKey" />
+                <xs:element ref="foreignKey" />
                 <xs:element ref="primaryAndParentKey" />
                 <xs:element ref="tenantKey" />
               </xs:choice>
@@ -4123,14 +4094,21 @@
             </xs:documentation>
           </xs:annotation>
         </xs:element>
-        <xs:element name="gateWays" type="gateWays" minOccurs="0">
+        <xs:element
+          name="gateWays"
+          type="gateWays"
+          minOccurs="0"
+        >
           <xs:annotation>
             <xs:documentation>gateway details for each external appliction
               that this app depends on
             </xs:documentation>
           </xs:annotation>
         </xs:element>
-        <xs:element name="plugins" type="plugins" minOccurs="0" />
+        <xs:element
+          name="plugins"
+          type="plugins"
+          minOccurs="0" />
       </xs:all>
       <xs:attribute
         name="applicationId"
@@ -4225,25 +4203,25 @@
   </xs:element>
 
   <xs:complexType name="gateWays">
-  <xs:annotation >
-    <xs:documentation>external applications used by this app. Specify a
-      gateway for each app
-    </xs:documentation>
-  </xs:annotation>
+    <xs:annotation>
+      <xs:documentation>external applications used by this app. Specify a
+        gateway for each app
+      </xs:documentation>
+    </xs:annotation>
     <xs:choice
       minOccurs="1"
       maxOccurs="unbounded"
     >
-    
+
       <xs:element
         name="httpGateway"
         type="httpGateway"
         minOccurs="0"
         maxOccurs="unbounded" />
     </xs:choice>
-    
+
   </xs:complexType>
-  
+
   <xs:complexType name="httpGateway">
     <xs:attribute
       name="applicationName"
@@ -4462,7 +4440,8 @@
           the
           batch job is run on a different container than the
           regular
-          on-line, in which case you may have custom-made
+          on-line,
+          in which case you may have custom-made
           application.xmlfor
           each.
         </xs:documentation>
@@ -4486,8 +4465,10 @@
     >
       <xs:annotation>
         <xs:documentation>If the app is run inside any
-          framework/container, this is the JNDI name for the factory
-          class. Else unpooled threads will be used
+          framework/container,
+          this is the JNDI name for the factory
+          class. Else unpooled threads
+          will be used
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
@@ -4655,7 +4636,8 @@
       <xs:annotation>
         <xs:documentation>class that extends data adapter used for copying
           data back and forth between different type of data structures
-          used in the App.must implement IDataAdapterExtension
+          used
+          in the App.must implement IDataAdapterExtension
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>

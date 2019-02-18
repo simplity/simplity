@@ -30,6 +30,7 @@ import org.simplity.core.comp.IValidationContext;
 import org.simplity.core.data.IDataSheet;
 import org.simplity.core.data.SingleRowSheet;
 import org.simplity.core.dm.DbTable;
+import org.simplity.core.dm.field.DbField;
 import org.simplity.core.idb.IDbHandle;
 import org.simplity.core.idb.IReadOnlyHandle;
 import org.simplity.core.idb.ITransactionHandle;
@@ -109,8 +110,10 @@ public class ReplaceAttachment extends AbstractDbAction {
 		this.keyFieldName = record.getPrimaryKeyFields()[0].getName();
 
 		String tableName = record.getTableName();
-		String attColName = record.getField(this.attachmentFieldName).getExternalName();
-		String keyColName = record.getField(this.keyFieldName).getExternalName();
+		DbField field = (DbField) record.getField(this.attachmentFieldName);
+		String attColName = field.getColumnName();
+		field = (DbField) record.getField(this.keyFieldName);
+		String keyColName = field.getColumnName();
 
 		this.selectSql = "SELECT " + attColName + " FROM " + tableName + " WHERE " + keyColName + " =?";
 		this.updateSql = "UPDATE " + tableName + " SET " + attColName + " = ? " + " WHERE " + keyColName + " =?";

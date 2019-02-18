@@ -8,6 +8,7 @@
 	dbVendor="mysql"
 	dbDriverClassName="com.mysql.jdbc.Driver"
 	connectionString="jdbc:mysql://localhost:3306/petclinic?user=pc&amp;password=pc"
+    logSqls="true"
   
 />
 <!-- 

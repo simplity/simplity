@@ -40,12 +40,15 @@ import org.simplity.core.sql.ProcedureParameter;
 import org.simplity.core.util.RdbUtil;
 import org.simplity.core.value.Value;
 import org.simplity.core.value.ValueType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author simplity.org
  *
  */
-public class ReadonlyHandle extends AbstractHandle implements IReadOnlyHandle {
+public class ReadOnlyHandle extends AbstractHandle implements IReadOnlyHandle {
+	protected static final Logger logger = LoggerFactory.getLogger(ReadOnlyHandle.class);
 	private static final String ERROR = "SQLException while extracting data using prepared statement";
 	private static final DbAccessType HANDLE_TYPE = DbAccessType.READ_ONLY;
 
@@ -53,7 +56,7 @@ public class ReadonlyHandle extends AbstractHandle implements IReadOnlyHandle {
 	 * @param con
 	 * @param driver
 	 */
-	ReadonlyHandle(Connection con, RdbSetup driver, String schema) {
+	ReadOnlyHandle(Connection con, RdbSetup driver, String schema) {
 		super(con, driver, schema);
 	}
 
@@ -76,6 +79,7 @@ public class ReadonlyHandle extends AbstractHandle implements IReadOnlyHandle {
 				nbr += reader.read(rs);
 				rs.close();
 			}
+			logger.info("{} rows read using readBatch()", nbr);
 			return nbr;
 		} catch (SQLException e) {
 			throw new ApplicationError(e, ERROR);
@@ -93,6 +97,7 @@ public class ReadonlyHandle extends AbstractHandle implements IReadOnlyHandle {
 			ResultSet rs = stmt.executeQuery();
 			int nbr = reader.read(rs);
 			rs.close();
+			logger.info("{} rows read using read()", nbr);
 			return nbr;
 		} catch (SQLException e) {
 			throw new ApplicationError(e, ERROR);
@@ -111,6 +116,7 @@ public class ReadonlyHandle extends AbstractHandle implements IReadOnlyHandle {
 						consumer.consume(RdbUtil.resultToValueRow(rs, outputTypes));
 						nbr++;
 					}
+					logger.info("{} rows read using readBatch()", nbr);
 					return nbr;
 				} catch (SQLException e) {
 					throw new ApplicationError(e, "");
@@ -131,6 +137,7 @@ public class ReadonlyHandle extends AbstractHandle implements IReadOnlyHandle {
 						consumer.consume(RdbUtil.resultToValueRow(rs, outputTypes));
 						nbr++;
 					}
+					logger.info("{} rows read using read()", nbr);
 					return nbr;
 				} catch (SQLException e) {
 					throw new ApplicationError(e, "");
@@ -196,10 +203,13 @@ public class ReadonlyHandle extends AbstractHandle implements IReadOnlyHandle {
 					sheet = RdbUtil.getDataSheetForSqlResult(rs);
 					types = sheet.getValueTypes();
 				}
+				int nbr = 0;
 				while (rs.next()) {
 					sheet.addRow(RdbUtil.resultToValueRow(rs, types));
+					nbr++;
 				}
 				rs.close();
+				logger.info("{} rows read into data a sheet", nbr);
 			}
 		} catch (SQLException e) {
 			throw new ApplicationError(e, ERROR);
@@ -218,10 +228,13 @@ public class ReadonlyHandle extends AbstractHandle implements IReadOnlyHandle {
 			ResultSet rs = stmt.executeQuery();
 			IDataSheet sheet = RdbUtil.getDataSheetForSqlResult(rs);
 			ValueType[] types = sheet.getValueTypes();
+			int nbr = 0;
 			while (rs.next()) {
 				sheet.addRow(RdbUtil.resultToValueRow(rs, types));
+				nbr++;
 			}
 			rs.close();
+			logger.info("{} rows read into data a sheet", nbr);
 			return sheet;
 		} catch (SQLException e) {
 			throw new ApplicationError(e, ERROR);
@@ -293,7 +306,7 @@ public class ReadonlyHandle extends AbstractHandle implements IReadOnlyHandle {
 		if (err != null) {
 			throw new ApplicationError(err, "Sql Error while extracting data using stored procedure");
 		}
-		logger.info(result + " rows extracted.");
+		logger.info("{} rows extracted using sp.", result);
 
 		if (result > 0) {
 			return result;

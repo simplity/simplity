@@ -31,27 +31,29 @@ import org.simplity.core.dm.Record;
 /**
  * Primary key field
  */
-public class ForeignKey extends Field {
+public class ForeignKey extends DbField {
 	/**
 	 *
 	 */
 	public ForeignKey() {
 		this.fieldType = FieldType.FOREIGN_KEY;
+		this.toBeInput = true;
+		this.insertable = true;
 	}
 
 	@Override
 	public void validate(IValidationContext vtx, Record record, Set<String> referredFields) {
 		super.validate(vtx, record, referredFields);
-		if (this.referredRecord != null) {
-			vtx.message(new ValidationMessage(record, ValidationMessage.SEVERITY_ERROR,
-					"ChildRecord/array field must refer to a record", "referredRecord"));
+		if (this.referredRecord == null) {
+			vtx.message(new ValidationMessage(this, ValidationMessage.SEVERITY_ERROR,
+					"foreignKey field must refer to a record using referredRecord attribute", null));
 		}
 	}
 
 	@Override
 	public void getReady(Record parentRecord, Record defaultReferredRecord) {
 		super.getReady(parentRecord, defaultReferredRecord);
-		if (this.referredRecord != null) {
+		if (this.referredRecord == null) {
 			throw new ApplicationError("Field " + this.name + " in record " + parentRecord.getQualifiedName()
 					+ " should use referredRecord attribute to refer to another record");
 		}

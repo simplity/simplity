@@ -28,22 +28,64 @@ package org.simplity.core.dm.field;
  */
 public enum FieldType {
   /** an attribute of this entity, holds data about this entity */
-  DATA
+  DATA{
+		@Override
+		public boolean isDbField() {
+			return false;
+		}
+  }
+
+  /** simple data base column not a key or special field */
+  ,
+  DB_COLUMN
 
   /** primary key : normally internally and auto generated. example customerId */
   ,
-  PRIMARY_KEY
+  PRIMARY_KEY{
+	@Override
+	public boolean isPrimaryKey() {
+		return true;
+	}
+  }
 
   /** link to its parent table */
   ,
-  PARENT_KEY
+  PARENT_KEY{
+	@Override
+	public boolean isParentKey() {
+		return true;
+	}
+	@Override
+	public boolean requiresReference() {
+		return true;
+	}
+  }
 
   /** rare but useful setting when db designer uses composite keys */
   ,
-  PRIMARY_AND_PARENT_KEY
+  PRIMARY_AND_PARENT_KEY{
+		@Override
+		public boolean isPrimaryKey() {
+			return true;
+		}
+		@Override
+		public boolean isParentKey() {
+			return true;
+		}
+		@Override
+		public boolean requiresReference() {
+			return true;
+		}
+	  
+  }
   /** link to another table */
   ,
-  FOREIGN_KEY
+  FOREIGN_KEY{
+	@Override
+	public boolean requiresReference() {
+		return true;
+	}
+  }
 
   /** created time stamp */
   ,
@@ -64,43 +106,88 @@ public enum FieldType {
    * column type
    */
   ,
-  VIEW
+  VIEW{
+		@Override
+		public boolean requiresReference() {
+			return true;
+		}
+  }
 
   /** This is an array of values. Valid only for records that represent data structure */
   ,
-  VALUE_ARRAY
+  VALUE_ARRAY{
+	@Override
+	public boolean isPrimitive() {
+		return false;
+	}
+	@Override
+	public boolean isDbField() {
+		return false;
+	}
+  }
   /** this is a child-record. Valid only for records that represent data structure */
   ,
-  RECORD
+  RECORD{
+		@Override
+		public boolean isPrimitive() {
+			return false;
+		}
+		
+		@Override
+		public boolean isDbField() {
+			return false;
+		}
+	  }
   /** this is array of child-records. Valid only for records that represent data structure */
   ,
-  RECORD_ARRAY
+  RECORD_ARRAY{
+		@Override
+		public boolean isPrimitive() {
+			return false;
+		}
+		@Override
+		public boolean isDbField() {
+		return false;
+		}
+	  }
   /**
    * key column that is put in all tables to save milti-tenant data in a single data base 
    * instead of creating separate database for each tenant
    */
   ,TENANT_KEY;
   /**
-   * @param ft
    * @return true if the type is primary or primary as well as parent
    */
-  public static boolean isPrimaryKey(FieldType ft) {
-    return ft == FieldType.PRIMARY_KEY || ft == FieldType.PRIMARY_AND_PARENT_KEY;
+  public boolean isPrimaryKey() {
+	  return false;
   }
   /**
-   * @param ft
    * @return true if the type is parent key, or primary as well as parent
    */
-  public static boolean isParentKey(FieldType ft) {
-    return ft == FieldType.PARENT_KEY || ft == FieldType.PRIMARY_AND_PARENT_KEY;
+  public boolean isParentKey() {
+	  return false;
   }
 
   /**
-   * does the field type represent a primitive value, (and not a data structure or array)
-   * @param ft
    * @return true if the value is primitive. false if it represents an array or a data structure
    */
-  public static boolean isPrimitive(FieldType ft) {
-	  return ft != FieldType.VALUE_ARRAY && ft != FieldType.RECORD && ft != FieldType.RECORD_ARRAY;
+  public boolean isPrimitive() {
+	  return true;
+  }
+  
+  /**
+   * 
+   * @return does this field require a reference field
+   */
+  public boolean requiresReference() {
+	  return false;
+  }
+ 
+  /**
+   * 
+   * @return is this field associated with a db
+   */
+  public boolean isDbField() {
+	  return true;
   }
 }

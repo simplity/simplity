@@ -150,7 +150,7 @@ public class OutputData {
 			children.clear();
 			OutputRecord parent = null;
 			for (OutputRecord rec : this.outputRecords) {
-				if (rec.name.equals(parentSheetName)) {
+				if (parentSheetName.equals(rec.name)) {
 					parent = rec;
 				} else if (parentSheetName.equals(rec.parentSheetName)) {
 					children.add(rec);
@@ -300,6 +300,7 @@ public class OutputData {
 	 * @param ctx
 	 */
 	public void write(IResponseWriter writer, ServiceContext ctx) {
+		this.prepareForOutput(ctx);
 		/*
 		 * extract attachments if required
 		 */

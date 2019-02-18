@@ -286,8 +286,8 @@ public class MultiRowsSheet implements IDataSheet {
 			return this.data.get(zeroBasedRowNumber)[idx];
 		} catch (Exception e) {
 
-			logger.info("Request to get value for column" + columnName + " and index " + zeroBasedRowNumber
-					+ " is not valid. going to return null");
+			logger.info("Request to get value for column " + columnName + " and row index " + zeroBasedRowNumber
+					+ " is not valid. going to return null.");
 
 			return null;
 		}
@@ -299,7 +299,7 @@ public class MultiRowsSheet implements IDataSheet {
 			int idx = this.columnIndexes.get(columnName).intValue();
 			this.data.get(zeroBasedRowNumber)[idx] = value;
 		} catch (Exception e) {
-			throw new ApplicationError(e, "Request to set value  for column" + columnName + " and index "
+			throw new ApplicationError(e, "Request to set value  for column " + columnName + " and row index "
 					+ zeroBasedRowNumber + " is not valid.");
 		}
 	}

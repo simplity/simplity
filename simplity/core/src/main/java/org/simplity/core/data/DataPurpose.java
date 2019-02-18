@@ -40,12 +40,6 @@ public enum DataPurpose {
   /** each row may ask for different action. specific field will have the desired action. */
   ,
   SAVE
-  /**
-   * meant for elective update or any other purpose where we accept any subset of expected fields.
-   * That is, every field is optional.
-   */
-  ,
-  SUBSET
 
   /** when the purpose is not directly related to rdbms operations. */
   ,

@@ -5,21 +5,18 @@
   moduleName="pet"
   tableName="vet_specialties"
   defaultSheetName="vetSpecialties"
+  okToSelectAll="true"
 >
   <fields>
     <parentKey
       name="vetId"
-      externalName="vet_id"
-      valueType="integer" />
-    <dbField
+      columnName="vet_id"
+      referredRecord="pet.vet"
+      isRequired="true" />
+    <foreignKey
       name="specialtyId"
-      externalName="specialty_id"
-      valueType="integer"
+      columnName="specialty_id"
       referredRecord="pet.specialty"
-    >
-      <fieldValidation
-        dataType="pet.text80"
-        isRequired="true" />
-    </dbField>
+      isRequired="true" />
   </fields>
 </dbTable>

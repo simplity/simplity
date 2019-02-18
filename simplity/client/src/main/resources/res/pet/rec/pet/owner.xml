@@ -12,63 +12,33 @@
   <fields>
     <primaryKey
       name="ownerId"
-      externalName="id"
-      valueType="integer" />
+      columnName="id"
+      dataType="pet.id"
+      isRequired="true" />
     <dbField
       name="firstName"
-      externalName="first_name"
-      valueType="text"
-    >
-      <fieldValidation
-        dataType="pet.name"
-        isRequired="true" />
-    </dbField>
-
-    <dbField
-      name="firstName"
-      externalName="first_name"
-      valueType="text"
-    >
-      <fieldValidation
-        dataType="pet.name"
-        isRequired="true" />
-    </dbField>
+      columnName="first_name"
+      dataType="pet.name"
+      isRequired="true" />
 
     <dbField
       name="lastName"
-      externalName="last_name"
-      valueType="text"
-    >
-      <fieldValidation
-        dataType="pet.name"
-        isRequired="true" />
-    </dbField>
+      columnName="last_name"
+      dataType="pet.name"
+      isRequired="true" />
 
     <dbField
       name="address"
-      valueType="text"
-    >
-      <fieldValidation
-        dataType="pet.address"
-        isRequired="true" />
-    </dbField>
+      dataType="pet.address"
+      isRequired="true" />
 
     <dbField
       name="city"
-      valueType="text"
-    >
-      <fieldValidation
-        dataType="pet.city"
-        isRequired="true" />
-    </dbField>
+      dataType="pet.city"
+      isRequired="true" />
 
     <dbField
       name="telephone"
-      valueType="text"
-    >
-      <fieldValidation
-        dataType="pet.phone"
-        />
-    </dbField>
+      dataType="pet.phone" />
   </fields>
 </dbTable>

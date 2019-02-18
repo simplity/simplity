@@ -22,8 +22,6 @@
 
 package org.simplity.core.dm.field;
 
-import org.simplity.core.value.ValueType;
-
 /**
  * @author simplity.org
  *
@@ -33,6 +31,11 @@ public class DbField extends Field {
 	 * can this field be null in the db
 	 */
 	boolean isNullable;
+
+	/**
+	 * name in which this field is saved in the table. Defaults to name
+	 */
+	String columnName;
 
 	/*
 	 * these attributes are set by concrete classes on init
@@ -45,24 +48,28 @@ public class DbField extends Field {
 	 *
 	 */
 	public DbField() {
-		this.fieldType = FieldType.DATA;
+		this.fieldType = FieldType.DB_COLUMN;
+		this.updatable = true;
+		this.toBeInput = true;
+		this.insertable = true;
 	}
 
 	/**
 	 * used by utility that generates fields from the database
 	 *
 	 * @param name
-	 * @param externalName
+	 * @param columnName
 	 * @param description
-	 * @param vt
+	 * @param dataType
 	 * @param isNullable
 	 */
-	public DbField(String name, String externalName, String description, ValueType vt, boolean isNullable) {
+	public DbField(String name, String columnName, String description, String dataType, boolean isNullable) {
+		this();
 		this.name = name;
-		this.externalName = externalName;
-		this.valueType = vt;
+		this.columnName = columnName;
 		this.description = description;
 		this.isNullable = isNullable;
+		this.dataType = dataType;
 	}
 
 	/**
@@ -97,4 +104,14 @@ public class DbField extends Field {
 		return this.isNullable;
 	}
 
+	/**
+	 *
+	 * @return name of the column in the db.
+	 */
+	public String getColumnName() {
+		if (this.columnName != null) {
+			return this.columnName;
+		}
+		return this.name;
+	}
 }

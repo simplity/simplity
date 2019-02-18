@@ -41,12 +41,13 @@
 			 />
 		<textDataType
 			name="pet.text80"
-			description="max of 80 characters allwed."
+			description="max of 80 characters allowed."
 			maxLength="80"
 			/>
 		<dateDataType
 			name="pet.date"
 			maxDaysIntoFuture="730000"
-			maxDaysIntoPast="3650000" />
+			maxDaysIntoPast="3650000"
+       />
 	</components>
 </dataTypes>

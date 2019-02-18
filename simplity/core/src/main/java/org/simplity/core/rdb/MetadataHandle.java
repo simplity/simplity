@@ -35,12 +35,15 @@ import org.simplity.core.idb.IMetadataHandle;
 import org.simplity.core.value.IntegerValue;
 import org.simplity.core.value.Value;
 import org.simplity.core.value.ValueType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author simplity.org
  *
  */
 public class MetadataHandle extends AbstractHandle implements IMetadataHandle {
+	private static final Logger logger = LoggerFactory.getLogger(MetadataHandle.class);
 	private static final DbAccessType HANDLE_TYPE = DbAccessType.META_DATA;
 	/*
 	 * we are going to use value types s many time, it is ugly to use full name.

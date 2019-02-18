@@ -11,40 +11,34 @@
   <fields>
     <primaryKey
       name="petId"
-      externalName="pet_id"
-      valueType="integer" />
+      columnName="pet_id"
+      />
     <parentKey
       name="ownerId"
-      valueType="integer"
       referredRecord="pet.owner"
-      externalName="owner_id" />
+      columnName="owner_id" />
     <viewField
       name="petName"
-      valueType="text"
-      externalName="pet_name" />
+      columnName="pet_name" />
     <viewField
       name="petDob"
-      externalName="birth_date"
-      valueType="text"
+      columnName="birth_date"
       />
-    <viewField
+    <foreignKey
       name="petTypeId"
-      valueType="text"
-      externalName="type_id" />
+      columnName="type_id"
+      referredRecord="pet.petType" />
     <viewField
       name="petType"
-      valueType="text"
-      externalName="pet_type"
+      columnName="pet_type"
       referredRecord="pet.petType" />
     <viewField
       name="firstName"
-      valueType="text"
-      externalName="first_name"
+      columnName="first_name"
       referredRecord="pet.owner" />
     <viewField
       name="lastName"
-      valueType="text"
-      externalName="last_name"
+      columnName="last_name"
       referredRecord="pet.owner" />
   </fields>
 </dbView>

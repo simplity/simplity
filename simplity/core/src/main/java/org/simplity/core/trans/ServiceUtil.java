@@ -63,16 +63,6 @@ public class ServiceUtil {
 			return null;
 		}
 
-		String recordName = serviceName.substring(0, idx);
-		DbTable record = null;
-		try {
-			record = (DbTable) Application.getActiveInstance().getRecord(recordName);
-		} catch (Exception e) {
-			logger.info("{} is not defined as a record, and hence we did not attempt generating service for {}.",
-					recordName, serviceName);
-			return null;
-		}
-
 		String operation = serviceName.substring(idx + 1);
 		ServiceOperation oper = null;
 		try {
@@ -85,7 +75,23 @@ public class ServiceUtil {
 					operation, serviceName);
 			return null;
 		}
-		return oper.generateService(serviceName, record);
+
+		String recordName = serviceName.substring(0, idx);
+		DbTable record = null;
+		try {
+			record = (DbTable) Application.getActiveInstance().getRecord(recordName);
+		} catch (Exception e) {
+			logger.info("{} is not defined as a record, and hence we did not attempt generating service for {}.",
+					recordName, serviceName);
+			return null;
+		}
+
+		Service service = oper.generateService(serviceName, record);
+		if (service == null) {
+			logger.error(
+					"{} is a valid operation, but ServiceUtil failed to generate service on-the-fly for it. returning null as service");
+		}
+		return service;
 	}
 
 	/**
@@ -105,18 +111,12 @@ public class ServiceUtil {
 				String recordName = record.getQualifiedName();
 				Service service = new Service();
 				service.setName(serviceName);
-				TransactionProcessor task = new TransactionProcessor();
-				service.processor = task;
-				task.dbUsage = DbUsage.READ_ONLY;
-				task.schemaName = record.getSchemaName();
 
 				/*
 				 * what is to be input
 				 */
-				InputRecord inRec = new InputRecord();
-				inRec.setRecordName(recordName);
-				inRec.setPurpose(DataPurpose.READ);
-				InputRecord[] inRecs = { inRec };
+				InputRecord[] inRecs = {
+						InputRecord.getInputRecord(recordName, record.getDefaultSheetName(), DataPurpose.READ, false) };
 				InputData inData = new InputData();
 				inData.setRecords(inRecs);
 				service.inputData = inData;
@@ -124,11 +124,15 @@ public class ServiceUtil {
 				/*
 				 * We have just one action : read action
 				 */
-				AbstractAction action = new Read(record);
+				AbstractAction action = new Read(record, record.getChildRecordsAsRelatedRecords(true));
 				action.failureMessageName = Messages.NO_ROWS;
 
 				AbstractAction[] actions = { action };
+				TransactionProcessor task = new TransactionProcessor();
 				task.actions = actions;
+				task.dbUsage = DbUsage.READ_ONLY;
+				task.schemaName = record.getSchemaName();
+				service.processor = task;
 
 				/*
 				 * output fields from record.
@@ -148,42 +152,22 @@ public class ServiceUtil {
 			public Service generateService(String serviceName, DbTable record) {
 				String recordName = record.getQualifiedName();
 				Service service = new Service();
-				TransactionProcessor task = new TransactionProcessor();
-				service.processor = task;
-				task.dbUsage = DbUsage.READ_WRITE;
 				service.setName(serviceName);
-				task.schemaName = record.getSchemaName();
 
 				/*
 				 * data for this record is expected in fields, while rows for
 				 * child-records in data sheets
 				 */
 				InputData inData = new InputData();
-				inData.setRecords(getInputRecords(record));
+				inData.setRecords(record.getInputRecords());
 				service.inputData = inData;
 
 				/*
-				 * save action
-				 */
-				RelatedRecord[] rrs = record.getChildRecordsAsRelatedRecords(false);
-				Save action = new Save(record, rrs);
-				action.failureMessageName = Messages.NO_UPDATE;
-				AbstractAction[] actions = { action };
-				task.actions = actions;
-				/*
-				 * we think we have to read back the row, but not sure.. Here
-				 * the action commented for that
-				 */
-				// Read action1 = new Read();
-				// action1.executeOnCondition = "saveResult != 0";
-				// action1.name = "read";
-				// action1.recordName = recordName;
-				// action1.childRecords = getChildRecords(record, true);
-				// Abstractaction[] actions = { action, action1 };
-
-				/*
-				 * what should we output? We are not sure. As of now let us send
-				 * back fields
+				 * what should we output? We are not sure.
+				 *
+				 * May be we should read back the row that is updated?
+				 *
+				 * As of now, we just send back data that is received
 				 */
 				OutputRecord outRec = new OutputRecord();
 				outRec.setRecordName(recordName);
@@ -192,6 +176,18 @@ public class ServiceUtil {
 				outData.setOutputRecords(outRecs);
 				service.outputData = outData;
 
+				/*
+				 * processing
+				 */
+				RelatedRecord[] rrs = record.getChildRecordsAsRelatedRecords(false);
+				Save action = new Save(record, rrs, false);
+				action.failureMessageName = Messages.NO_UPDATE;
+				AbstractAction[] actions = { action };
+				TransactionProcessor task = new TransactionProcessor();
+				task.actions = actions;
+				task.dbUsage = DbUsage.READ_WRITE;
+				task.schemaName = record.getSchemaName();
+				service.processor = task;
 				return service;
 			}
 		},
@@ -203,50 +199,37 @@ public class ServiceUtil {
 			public Service generateService(String serviceName, DbTable record) {
 				String recordName = record.getQualifiedName();
 				Service service = new Service();
-				TransactionProcessor task = new TransactionProcessor();
-				service.processor = task;
-				task.dbUsage = DbUsage.READ_ONLY;
-				service.setName(serviceName);
-				task.schemaName = record.getSchemaName();
 
 				/*
-				 * input for filter
+				 * input as fields for filter
 				 */
-				InputRecord inRec = new InputRecord();
-				inRec.setRecordName(recordName);
-				inRec.setPurpose(DataPurpose.FILTER);
-				InputRecord[] inRecs = { inRec };
+				InputRecord[] inRecs = { InputRecord.getInputRecord(recordName, record.getDefaultSheetName(),
+						DataPurpose.FILTER, false) };
 				InputData inData = new InputData();
 				inData.setRecords(inRecs);
 				service.inputData = inData;
 
-				AbstractAction action;
-				OutputData outData = new OutputData();
-				service.outputData = outData;
 				/*
-				 * if we have to read children, we use filter action, else we
-				 * use filterToJson
+				 * output to named array
 				 */
-				// if (record.getChildrenToOutput() == null) {
-				// action = new FilterToJson(record);
-				// outData.enableOutputFromWriter();
-				// } else {
-				// action = new Filter(record);
-				// outData.setOutputRecords(record.getOutputRecords(true));
-				// }
-
-				action = new Filter(record);
+				OutputData outData = new OutputData();
 				outData.setOutputRecords(record.getOutputRecords(true));
+				service.outputData = outData;
 
+				AbstractAction action = new Filter(record);
 				action.failureMessageName = Messages.NO_ROWS;
 				AbstractAction[] actions = { action };
+				TransactionProcessor task = new TransactionProcessor();
+				task.dbUsage = DbUsage.READ_ONLY;
+				service.setName(serviceName);
+				task.schemaName = record.getSchemaName();
 				task.actions = actions;
+				service.processor = task;
 
 				/*
 				 * getReady() is called by component manager any ways..
 				 */
 				return service;
-
 			}
 		},
 		/**
@@ -256,19 +239,7 @@ public class ServiceUtil {
 			@Override
 			public Service generateService(String serviceName, DbTable record) {
 				Service service = new Service();
-				TransactionProcessor task = new TransactionProcessor();
-				service.processor = task;
-				task.dbUsage = DbUsage.READ_ONLY;
 				service.setName(serviceName);
-				task.schemaName = record.getSchemaName();
-				if (record.okToCache()) {
-					String keyName = record.getValueListKeyName();
-					if (keyName == null) {
-						keyName = "";
-					}
-					String[] list = { keyName };
-					service.cacheKeyNames = list;
-				}
 
 				/*
 				 * do we need any input? we are flexible
@@ -281,23 +252,39 @@ public class ServiceUtil {
 				InputData inData = new InputData();
 				inData.setInputFields(inFields);
 				service.inputData = inData;
+
+				/*
+				 * output as sheet
+				 */
+				String sheetName = record.getDefaultSheetName();
+				OutputRecord outRec = OutputRecord.getOutputRecordForList(sheetName,
+						record.listServiceUsesTwoColumns());
+				OutputRecord[] outRecs = { outRec };
+				OutputData outData = new OutputData();
+				outData.setOutputRecords(outRecs);
+				service.outputData = outData;
+				/*
+				 * processing logic
+				 */
+				TransactionProcessor task = new TransactionProcessor();
+				task.dbUsage = DbUsage.READ_ONLY;
+				task.schemaName = record.getSchemaName();
+				if (record.okToCache()) {
+					String keyName = record.getValueListKeyName();
+					if (keyName == null) {
+						keyName = "";
+					}
+					String[] list = { keyName };
+					service.cacheKeyNames = list;
+				}
+
 				/*
 				 * use a List action to do the job
 				 */
 				AbstractAction action = new KeyValueList(record);
 				AbstractAction[] actions = { action };
 				task.actions = actions;
-
-				/*
-				 * output as sheet
-				 */
-				String sheetName = record.getDefaultSheetName();
-				OutputRecord outRec = new OutputRecord(sheetName, sheetName, record.getQualifiedName(), false,
-						DataStructureType.ARRAY);
-				OutputRecord[] outRecs = { outRec };
-				OutputData outData = new OutputData();
-				outData.setOutputRecords(outRecs);
-				service.outputData = outData;
+				service.processor = task;
 
 				/*
 				 * getReady() is called by component manager any ways..
@@ -344,7 +331,8 @@ public class ServiceUtil {
 				 * output as sheet
 				 */
 				String sheetName = record.getDefaultSheetName();
-				OutputRecord outRec = new OutputRecord(sheetName, sheetName, record.getQualifiedName(), false,
+				OutputRecord outRec = new OutputRecord(sheetName, sheetName, record.getQualifiedName(),
+						DataStructureType.SHEET,
 						DataStructureType.ARRAY);
 				OutputRecord[] outRecs = { outRec };
 				OutputData outData = new OutputData();
@@ -358,38 +346,8 @@ public class ServiceUtil {
 
 			}
 		};
+
 		abstract Service generateService(String ServiceName, DbTable record);
-
-		/**
-		 * @param record
-		 * @return
-		 */
-		protected static InputRecord[] getInputRecords(DbTable record) {
-			String recordName = record.getQualifiedName();
-			String[] children = record.getChildrenToInput();
-			int nrecs = 1;
-			if (children != null) {
-				nrecs = children.length + 1;
-			}
-
-			InputRecord inRec = new InputRecord();
-			inRec.setRecordName(recordName);
-			inRec.setPurpose(DataPurpose.SAVE);
-			inRec.enableSaveAction();
-
-			InputRecord[] recs = new InputRecord[nrecs];
-			recs[0] = inRec;
-			Application app = Application.getActiveInstance();
-
-			if (children != null) {
-				String sheetName = record.getDefaultSheetName();
-				int i = 1;
-				for (String child : children) {
-					recs[i++] = app.getRecord(child).getInputRecord(sheetName);
-				}
-			}
-			return recs;
-		}
 	}
 
 }

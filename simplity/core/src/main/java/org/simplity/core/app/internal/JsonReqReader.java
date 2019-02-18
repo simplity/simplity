@@ -43,7 +43,7 @@ public class JsonReqReader implements IRequestReader {
 	/**
 	 * payload parsed into a JSON Object. Null if input is not a json
 	 */
-	private final JSONObject inputJson;
+	private final Object inputJson;
 
 	/**
 	 * stack of open objects.
@@ -61,12 +61,25 @@ public class JsonReqReader implements IRequestReader {
 	private JSONArray currentArray;
 
 	/**
-	 * instantiate input translator for a json
+	 * instantiate input reader for a json object
 	 *
 	 * @param json
 	 */
 	public JsonReqReader(JSONObject json) {
-		this.currentObject = this.inputJson = json;
+		this.currentObject = json;
+		this.inputJson = json;
+		this.openObjects.push(json);
+	}
+
+	/**
+	 * instantiate input reader for a json array
+	 *
+	 * @param array
+	 */
+	public JsonReqReader(JSONArray array) {
+		this.currentArray = array;
+		this.inputJson = array;
+		this.openObjects.push(array);
 	}
 
 	@Override
@@ -101,6 +114,7 @@ public class JsonReqReader implements IRequestReader {
 	@Override
 	public Object getValue(String fieldName) {
 		if (this.currentObject == null) {
+			logger.error("Current object is null but a value is expected for field {}", fieldName);
 			return null;
 		}
 		return this.currentObject.opt(fieldName);
@@ -241,9 +255,13 @@ public class JsonReqReader implements IRequestReader {
 	@Override
 	public void pushDataToContext(ServiceContext ctx) {
 		if (this.inputJson == null) {
-			logger.info("No input json assigned to the reader before extracting data.");
+			logger.error("No input json assigned to the reader before extracting data.");
 			return;
 		}
-		JsonUtil.extractAll(this.inputJson, ctx);
+		if (this.inputJson instanceof JSONObject == false) {
+			logger.error("input is an array, and we do not know how to extract all of that into context.");
+			return;
+		}
+		JsonUtil.extractAll((JSONObject) this.inputJson, ctx);
 	}
 }

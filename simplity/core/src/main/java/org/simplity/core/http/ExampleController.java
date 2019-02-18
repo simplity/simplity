@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package org.simplity.core.app.internal;
+package org.simplity.core.http;
 
 import java.util.Map;
 
@@ -29,7 +29,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.simplity.core.app.AppUser;
-import org.simplity.core.http.HttpAgent;
+import org.simplity.core.app.internal.ServiceRequest;
+import org.simplity.core.app.internal.ServiceResponse;
 import org.simplity.core.value.Value;
 
 /**
@@ -40,7 +41,7 @@ import org.simplity.core.value.Value;
  * @author simplity.org
  *
  */
-public class ExampleClient extends HttpAgent {
+public class ExampleController extends HttpAgent {
 
 	private static final long serialVersionUID = 1L;
 

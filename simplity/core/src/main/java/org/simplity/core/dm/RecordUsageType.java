@@ -30,7 +30,12 @@ public enum RecordUsageType {
 	 * that are used in more than one occasion. represented
 	 * by<code>Record</code>
 	 */
-	DATA_STRUCTURE,
+	DATA_STRUCTURE {
+		@Override
+		public boolean isDbRelated() {
+			return false;
+		}
+	},
 
 	/**
 	 * represents a row of a table being stored in an rdbms. represented
@@ -48,5 +53,32 @@ public enum RecordUsageType {
 	 * data structure that allows arrays and object as member. Arbitrary data
 	 * structure represented by<code>ComplexRecord</code>
 	 */
-	OBJECT_STRUCTURE
+	OBJECT_STRUCTURE {
+		@Override
+		public boolean canTakeNonPrimitives() {
+			return true;
+		}
+
+		@Override
+		public boolean isDbRelated() {
+			return false;
+		}
+	};
+
+	/**
+	 *
+	 * @return can this record take non-primitive fields
+	 */
+	public boolean canTakeNonPrimitives() {
+		return false;
+	}
+
+	/**
+	 *
+	 * @return is this record related to a db, there by requiring its field to
+	 *         be dbFields
+	 */
+	public boolean isDbRelated() {
+		return true;
+	}
 }

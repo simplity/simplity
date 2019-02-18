@@ -23,6 +23,7 @@
 package org.simplity.core.dm;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -36,6 +37,7 @@ import org.simplity.core.comp.ComponentType;
 import org.simplity.core.comp.FieldMetaData;
 import org.simplity.core.comp.IValidationContext;
 import org.simplity.core.comp.ValidationMessage;
+import org.simplity.core.data.DataPurpose;
 import org.simplity.core.data.IDataSheet;
 import org.simplity.core.data.IFieldsCollection;
 import org.simplity.core.data.MultiRowsSheet;
@@ -54,7 +56,6 @@ import org.simplity.core.service.OutputRecord;
 import org.simplity.core.service.ServiceContext;
 import org.simplity.core.trans.RelatedRecord;
 import org.simplity.core.util.RdbUtil;
-import org.simplity.core.util.TextUtil;
 import org.simplity.core.value.Value;
 import org.simplity.core.value.ValueType;
 import org.slf4j.Logger;
@@ -70,7 +71,7 @@ public class DbTable extends Record {
 	/** header row of returned sheet when there is only one column */
 	private static String[] SINGLE_HEADER = { "value" };
 	/** header row of returned sheet when there are two columns */
-	private static String[] DOUBLE_HEADER = { "key", "value" };
+	private static String[] DOUBLE_HEADER = { "id", "value" };
 
 	private static final char COMMA = ',';
 	private static final char PARAM = '?';
@@ -171,9 +172,9 @@ public class DbTable extends Record {
 	/*
 	 * standard fields are cached
 	 */
-	private Field modifiedStampField;
-	private Field modifiedUserField;
-	private Field createdUserField;
+	private DbField modifiedStampField;
+	private DbField modifiedUserField;
+	private DbField createdUserField;
 
 	/** sql for reading a row for given primary key value */
 	private String readSql;
@@ -208,17 +209,17 @@ public class DbTable extends Record {
 	 * have designed it that way to keep the single key case as simple as
 	 * possible
 	 */
-	private Field[] allPrimaryKeys;
+	private DbField[] allPrimaryKeys;
 
 	/** parent key, in case parent has composite primary key */
-	private Field[] allParentKeys;
+	private DbField[] allParentKeys;
 
 	/** " WHERE key1=?,key2=? */
 	private String primaryWhereClause;
 
-	// private int nbrUpdateFields = 0;
-
+	private int nbrUpdateFields = 0;
 	private int nbrInsertFields = 0;
+	private Field[] fieldsToInput;
 
 	/**
 	 *
@@ -235,16 +236,17 @@ public class DbTable extends Record {
 	}
 
 	/**
-	 * @return dependent children to be input for saving
+	 * @return dependent child records that are read whenever this rec is read
 	 */
-	public String[] getChildrenToInput() {
-		return this.childrenToBeSaved;
+	public String[] getChildrenToBeRead() {
+		return this.childrenToBeRead;
 	}
 
 	/**
-	 * @return dependent child records that are read along
+	 *
+	 * @return child recs that have to be saved whenever this rec is saved
 	 */
-	public String[] getChildrenToOutput() {
+	public String[] getChildrenToBeSaved() {
 		return this.childrenToBeRead;
 	}
 
@@ -443,13 +445,16 @@ public class DbTable extends Record {
 		/*
 		 * we have to create where clause with ? and corresponding values[]
 		 */
+		logger.info("Starting with filter sql = {}", this.filterSql);
 		StringBuilder sql = new StringBuilder(this.filterSql);
 		List<Value> filterValues = new ArrayList<Value>();
 		boolean firstTime = true;
-		for (Field field : inputRecord.getFields()) {
+		for (Field f : inputRecord.getFields()) {
+			DbField field = (DbField) f;
 			String fieldName = field.getName();
 			Value value = inData.getValue(fieldName);
 			if (Value.isNull(value) || value.toString().isEmpty()) {
+				logger.info("No condition on filter field {}", field.getName());
 				continue;
 			}
 			if (firstTime) {
@@ -460,7 +465,7 @@ public class DbTable extends Record {
 
 			FilterCondition condition = FilterCondition.Equal;
 			Value otherValue = inData.getValue(fieldName + AppConventions.Name.COMPARATOR_SUFFIX);
-			if (otherValue != null && otherValue.isUnknown() == false) {
+			if (Value.isNull(otherValue) == false) {
 				String text = otherValue.toString();
 				/*
 				 * it could be raw text like "~" or parsed value like
@@ -487,7 +492,7 @@ public class DbTable extends Record {
 					throw new ApplicationError(
 							value + " is not a valid comma separated list for field " + field.getName());
 				}
-				sql.append(field.getExternalName()).append(" in (?");
+				sql.append(field.getColumnName()).append(" in (?");
 				filterValues.add(values[0]);
 				for (int i = 1; i < values.length; i++) {
 					sql.append(",?");
@@ -504,7 +509,7 @@ public class DbTable extends Record {
 				value = Value.newTextValue(handle.escapeForLike(value.toString()) + DbTable.PERCENT);
 			}
 
-			sql.append(field.getExternalName()).append(condition.getSql()).append("?");
+			sql.append(field.getColumnName()).append(condition.getSql()).append("?");
 			filterValues.add(value);
 
 			if (condition == FilterCondition.Between) {
@@ -538,6 +543,7 @@ public class DbTable extends Record {
 			sql.append(" ORDER BY ").append(sorts.toString());
 		}
 
+		logger.info("final filter sql is {} ", sql);
 		IDataSheet result = this.createSheet(false, false);
 		handle.read(sql.toString(), values, result);
 		if (this.encryptedFields != null) {
@@ -570,7 +576,7 @@ public class DbTable extends Record {
 		if (this.allPrimaryKeys == null) {
 			this.noPrimaryKey();
 		}
-		Field pkey = this.allPrimaryKeys[0];
+		DbField pkey = this.allPrimaryKeys[0];
 		Value[] values = new Value[this.fields.length];
 		/*
 		 * modified user field, even if sent by client, must be over-ridden
@@ -589,6 +595,8 @@ public class DbTable extends Record {
 			 * is valid
 			 */
 			saveAction = SaveActionType.parse(action.toString());
+			logger.info("Service has requested a specific save action={} for record {}", saveAction,
+					this.getQualifiedName());
 		}
 		if (saveAction == SaveActionType.SAVE) {
 			/*
@@ -608,6 +616,7 @@ public class DbTable extends Record {
 					saveAction = SaveActionType.ADD;
 				}
 			}
+			logger.info("Save request translated into {} action for record {}", saveAction, this.getQualifiedName());
 		}
 		if (saveAction == SaveActionType.ADD) {
 			if (this.createdUserField != null) {
@@ -616,7 +625,7 @@ public class DbTable extends Record {
 			values = this.getInsertValues(row, userId);
 			if (this.keyIsGenerated) {
 				long[] generatedKeys = new long[1];
-				String[] generatedColumns = { pkey.getExternalName() };
+				String[] generatedColumns = { pkey.getColumnName() };
 				handle.insertAndGetKeys(this.insertSql, values, generatedKeys, generatedColumns,
 						treatSqlErrorAsNoResult);
 				row.setValue(pkey.getName(), Value.newIntegerValue(generatedKeys[0]));
@@ -701,14 +710,14 @@ public class DbTable extends Record {
 	 * @return
 	 */
 	private Value[] getInsertValues(IFieldsCollection row, Value userId) {
-		/*
-		 * we may not fill all fields, but let us handle that exception later
-		 */
 		Value[] values = new Value[this.nbrInsertFields];
 		int valueIdx = 0;
 		for (Field f : this.fields) {
 			DbField field = (DbField) f;
 			if (field.canInsert() == false) {
+				continue;
+			}
+			if (this.keyIsGenerated && field.getFieldType().isPrimaryKey()) {
 				continue;
 			}
 			if (field.getFieldType() == FieldType.CREATED_BY_USER
@@ -720,7 +729,7 @@ public class DbTable extends Record {
 					if (field.isNullable()) {
 						value = Value.newUnknownValue(field.getValueType());
 					} else {
-						throw new ApplicationError("Column " + field.getExternalName() + " in table " + this.tableName
+						throw new ApplicationError("Column " + field.getColumnName() + " in table " + this.tableName
 								+ " is designed to be non-null, but a row is being inserted with a null value in it.");
 					}
 				}
@@ -1107,7 +1116,7 @@ public class DbTable extends Record {
 		sql.append(this.tableName).append(" WHERE ").append(this.getParentWhereClause());
 		if (this.allParentKeys.length > 1) {
 			for (int i = 1; i < this.allParentKeys.length; i++) {
-				sql.append(" AND " + this.allParentKeys[i].getExternalName() + EQUAL_PARAM);
+				sql.append(" AND " + this.allParentKeys[i].getColumnName() + EQUAL_PARAM);
 			}
 		}
 		return handle.execute(sql.toString(), values, false);
@@ -1131,7 +1140,7 @@ public class DbTable extends Record {
 
 	private int insertWorker(ITransactionHandle handle, String sql, Value[][] values, long[] generatedKeys,
 			boolean treatSqlErrorAsNoResult) {
-		String[] keyNames = { this.allPrimaryKeys[0].getExternalName() };
+		String[] keyNames = { this.allPrimaryKeys[0].getColumnName() };
 		if (values.length == 1) {
 			return handle.insertAndGetKeys(sql, values[0], generatedKeys, keyNames, treatSqlErrorAsNoResult);
 		}
@@ -1178,7 +1187,7 @@ public class DbTable extends Record {
 			sn = this.getDefaultSheetName();
 		}
 		ctx.putDataSheet(sn, result);
-
+		logger.info("Added child sheet {} to context with {} rows", sn, result.length());
 		if (result.length() > 0 && cascadeFilter) {
 			this.filterChildRecords(result, handle, ctx);
 		}
@@ -1194,7 +1203,7 @@ public class DbTable extends Record {
 		int n = parentData.length();
 		Value[] values = parentData.getColumnValues(keyName);
 		StringBuilder sbf = new StringBuilder(this.filterSql);
-		sbf.append(this.allParentKeys[0].getExternalName());
+		sbf.append(this.allParentKeys[0].getColumnName());
 		/*
 		 * for single key we use where key = ?
 		 *
@@ -1277,9 +1286,9 @@ public class DbTable extends Record {
 
 	private String getParentWhereClause() {
 		StringBuilder sbf = new StringBuilder();
-		sbf.append(this.allParentKeys[0].getExternalName()).append(EQUAL_PARAM);
+		sbf.append(this.allParentKeys[0].getColumnName()).append(EQUAL_PARAM);
 		for (int i = 1; i < this.allParentKeys.length; i++) {
-			sbf.append(" AND ").append(this.allParentKeys[i].getExternalName()).append(EQUAL_PARAM);
+			sbf.append(" AND ").append(this.allParentKeys[i].getColumnName()).append(EQUAL_PARAM);
 		}
 		return sbf.toString();
 	}
@@ -1289,19 +1298,21 @@ public class DbTable extends Record {
 	 */
 	private void cacheSpecialFields(int nbrPrimaries, int nbrParents) {
 		if (nbrPrimaries > 0) {
-			this.allPrimaryKeys = new Field[nbrPrimaries];
+			this.allPrimaryKeys = new DbField[nbrPrimaries];
 		}
 		if (nbrParents > 0) {
-			this.allParentKeys = new Field[nbrParents];
+			this.allParentKeys = new DbField[nbrParents];
 		}
 		int primaryIdx = 0;
 		int parentIdx = 0;
-		for (Field field : this.fields) {
-			if (FieldType.isPrimaryKey(field.getFieldType())) {
+		for (Field f : this.fields) {
+			DbField field = (DbField) f;
+			FieldType ft = field.getFieldType();
+			if (ft.isPrimaryKey()) {
 				this.allPrimaryKeys[primaryIdx] = field;
 				primaryIdx++;
 			}
-			if (FieldType.isParentKey(field.getFieldType())) {
+			if (ft.isParentKey()) {
 				this.allParentKeys[parentIdx] = field;
 				parentIdx++;
 			}
@@ -1326,11 +1337,17 @@ public class DbTable extends Record {
 	 * @param parentKey
 	 */
 	private void addOutputRecordsCascaded(List<OutputRecord> recs, DbTable parentRec, boolean thisIsSheet) {
-
-		OutputRecord outRec = null;
-		String thisSheetName = thisIsSheet ? this.defaultSheetName : null;
-		outRec = new OutputRecord(thisSheetName, thisSheetName, this.getQualifiedName(), false,
-				DataStructureType.ARRAY);
+		String sheetName = this.getDefaultSheetName();
+		DataStructureType readAs;
+		DataStructureType writeAs;
+		if (thisIsSheet) {
+			readAs = DataStructureType.SHEET;
+			writeAs = DataStructureType.ARRAY;
+		} else {
+			readAs = DataStructureType.FIELDS;
+			writeAs = DataStructureType.FIELDS;
+		}
+		OutputRecord outRec = new OutputRecord(sheetName, sheetName, this.getQualifiedName(), readAs, writeAs);
 		if (parentRec != null) {
 			String parentSheetName = parentRec.getDefaultSheetName();
 			Field[] parentKeys = parentRec.allPrimaryKeys;
@@ -1365,6 +1382,56 @@ public class DbTable extends Record {
 	}
 
 	/**
+	 * @return list of output which output records are to be added
+	 */
+	public InputRecord[] getInputRecords() {
+		int nrecs = 1;
+		if (this.childrenToBeSaved != null) {
+			nrecs = this.childrenToBeSaved.length + 1;
+		}
+		InputRecord[] recs = new InputRecord[nrecs];
+		recs[0] = InputRecord.getInputRecord(this.getQualifiedName(), this.getDefaultSheetName(), DataPurpose.SAVE,
+				false);
+		Application app = Application.getActiveInstance();
+		if (this.childrenToBeSaved != null) {
+			int i = 1;
+			for (String child : this.childrenToBeSaved) {
+				Record childRec = app.getRecord(child);
+				String sheetName = childRec.getDefaultSheetName();
+				recs[i] = InputRecord.getInputRecord(child, sheetName, DataPurpose.SAVE, true);
+				i++;
+			}
+		}
+
+		return recs;
+	}
+
+	@Override
+	public Field[] getFieldsToBeInput(String[] names, DataPurpose purpose, boolean extractSaveAction) {
+		/*
+		 * is the caller choosing a subset of fields?
+		 */
+		if (names != null || purpose == null || purpose == DataPurpose.OTHERS) {
+			return super.getFieldsToBeInput(names, purpose, extractSaveAction);
+		}
+
+		if (purpose == DataPurpose.READ) {
+			/*
+			 * we read only keys field
+			 */
+			return this.allPrimaryKeys;
+		}
+		return this.fieldsToInput;
+	}
+
+	/**
+	 * @param recs
+	 *            list to which output records are to be added
+	 * @param parentSheetName
+	 * @param parentKey
+	 */
+
+	/**
 	 * @param parentSheetName
 	 *            if this sheet is to be output as a child. null if a normal
 	 *            sheet
@@ -1396,51 +1463,35 @@ public class DbTable extends Record {
 	 * @return
 	 */
 	private Value[] getUpdateValues(IFieldsCollection row, Value userId) {
-		List<Value> values = new ArrayList<Value>();
-		String timeStamp = this.getTimeStamp();
-		/*
-		 * we have two buffers for insert as fields are to be inserted at two
-		 * parts
-		 */
-		StringBuilder update = new StringBuilder("UPDATE ");
-		update.append(this.tableName).append(" SET ");
-
-		boolean isFirstField = true;
+		Value[] values = new Value[this.nbrUpdateFields];
+		int i = 0;
 		for (Field f : this.fields) {
 			DbField field = (DbField) f;
-			if (field.getFieldType() == FieldType.MODIFIED_BY_USER) {
-				this.updateValSql(userId, values, timeStamp, update, isFirstField, field);
-				isFirstField = false;
-				continue;
-			}
-			if (field.getFieldType() == FieldType.MODIFIED_TIME_STAMP) {
-				this.updateValSql(userId, values, timeStamp, update, isFirstField, field);
-				isFirstField = false;
-				continue;
-			}
 			/*
 			 * some fields are not updatable
 			 */
-			if (field.canUpdate()) {
-				if (!row.hasValue(field.getName())) {
-					continue;
-				}
-				Value value = field.getValue(row, null);
-				if (Value.isNull(value)) {
-					if (field.isNullable()) {
-						value = Value.newUnknownValue(field.getValueType());
-					} else {
-						throw new ApplicationError("Column " + field.getExternalName() + " in table " + this.tableName
-								+ " is designed to be non-null, but a row is being updated with a null value in it.");
-					}
-				}
-				if (field.isEncrypted()) {
-					value = this.crypt(value, false);
-				}
-				this.updateValSql(value, values, timeStamp, update, isFirstField, field);
-				isFirstField = false;
+			if (!field.canUpdate()) {
+				continue;
 			}
-
+			if (field.getFieldType() == FieldType.MODIFIED_BY_USER) {
+				values[i] = userId;
+				i++;
+				continue;
+			}
+			Value value = field.getValue(row, null);
+			if (Value.isNull(value)) {
+				if (field.isNullable()) {
+					value = Value.newUnknownValue(field.getValueType());
+				} else {
+					throw new ApplicationError("Column " + field.getColumnName() + " in table " + this.tableName
+							+ " is designed to be non-null, but a row is being updated with a null value in it.");
+				}
+			}
+			if (field.isEncrypted()) {
+				value = this.crypt(value, false);
+			}
+			values[i] = value;
+			i++;
 		}
 		/*
 		 * where clause of delete and update are same, but they are valid only
@@ -1448,60 +1499,38 @@ public class DbTable extends Record {
 		 */
 
 		for (Field field : this.allPrimaryKeys) {
-			values.add(row.getValue(field.getName()));
+			values[i] = row.getValue(field.getName());
+			i++;
 		}
 
-		if (this.allPrimaryKeys != null) {
-			if (this.useTimestampForConcurrency) {
-				String clause = " AND " + this.modifiedStampField.getExternalName() + "=?";
-				this.updateSql = update.append(this.primaryWhereClause).append(clause).toString();
-				if (!row.hasValue(this.modifiedStampField.getName())) {
-					throw new ApplicationError("Timestamp field for concurrency is required "
-							+ this.modifiedStampField.getName() + " is not available ");
-				}
-				values.add(row.getValue(this.modifiedStampField.getName()));
-			} else {
-				this.updateSql = update.append(this.primaryWhereClause).toString();
+		if (this.useTimestampForConcurrency) {
+			if (!row.hasValue(this.modifiedStampField.getName())) {
+				throw new ApplicationError("Timestamp field for concurrency is required "
+						+ this.modifiedStampField.getName() + " is not available ");
 			}
+			values[i] = row.getValue(this.modifiedStampField.getName());
+			i++;
 		}
-
-		return values.toArray(new Value[values.size()]);
-
-	}
-
-	private void updateValSql(Value value, List<Value> values, String timeStamp, StringBuilder update,
-			boolean isFirstField, Field field) {
-
-		if (!isFirstField) {
-			update.append(COMMA);
-		}
-		update.append(field.getExternalName()).append(DbTable.EQUAL);
-		if (field.getFieldType() == FieldType.MODIFIED_TIME_STAMP) {
-			update.append(timeStamp);
-		} else {
-			update.append(DbTable.PARAM);
-			values.add(value);
-		}
+		return values;
 	}
 
 	private void setPrimaryWhere() {
 		StringBuilder where = new StringBuilder(" WHERE ");
 
 		boolean firstTime = true;
-		for (Field field : this.allPrimaryKeys) {
+		for (DbField field : this.allPrimaryKeys) {
 			if (firstTime) {
 				firstTime = false;
 			} else {
 				where.append(" AND ");
 			}
-			where.append(field.getExternalName()).append(DbTable.EQUAL).append(DbTable.PARAM);
+			where.append(field.getColumnName()).append(DbTable.EQUAL).append(DbTable.PARAM);
 		}
-
 		this.primaryWhereClause = where.toString();
 	}
 
 	private void setListSql() {
-		Field field = this.getField(this.listFieldName);
+		DbField field = (DbField) this.getField(this.listFieldName);
 		if (field == null) {
 			this.invalidFieldName(this.listFieldName);
 			return;
@@ -1519,27 +1548,36 @@ public class DbTable extends Record {
 			/*
 			 * we have to select the primary key and the list field
 			 */
-			Field keyField = this.allPrimaryKeys[0];
-			sbf.append(keyField.getExternalName()).append(" id,");
+			DbField keyField = this.allPrimaryKeys[0];
+			sbf.append(keyField.getColumnName()).append(" id,");
 			this.valueListTypes = new ValueType[2];
 			this.valueListTypes[0] = keyField.getValueType();
 			this.valueListTypes[1] = field.getValueType();
 		}
-		sbf.append(field.getExternalName()).append(" value from ").append(this.tableName);
+		sbf.append(field.getColumnName()).append(" value from ").append(this.tableName);
 		if (this.listGroupKeyName != null) {
-			field = this.getField(this.listGroupKeyName);
+			field = (DbField) this.getField(this.listGroupKeyName);
 			if (field == null) {
 				this.invalidFieldName(this.listGroupKeyName);
 				return;
 			}
-			sbf.append(" WHERE ").append(field.getExternalName()).append(EQUAL_PARAM);
+			sbf.append(" WHERE ").append(field.getColumnName()).append(EQUAL_PARAM);
 			this.valueListKeyType = field.getValueType();
 		}
 		this.listSql = sbf.toString();
 	}
 
+	/**
+	 * does the list service from this record need two columns?
+	 *
+	 * @return true if this record specifies an intenal key and value as list
+	 */
+	public boolean listServiceUsesTwoColumns() {
+		return this.valueListTypes.length > 1;
+	}
+
 	private void setSuggestSql() {
-		Field field = this.getField(this.suggestionKeyName);
+		DbField field = (DbField) this.getField(this.suggestionKeyName);
 		if (field == null) {
 			this.invalidFieldName(this.suggestionKeyName);
 			return;
@@ -1551,15 +1589,15 @@ public class DbTable extends Record {
 		StringBuilder sbf = new StringBuilder();
 		sbf.append("SELECT ");
 		for (String fieldName : this.suggestionOutputNames) {
-			Field f = this.getField(fieldName);
+			DbField f = (DbField) this.getField(fieldName);
 			if (f == null) {
 				this.invalidFieldName(this.suggestionKeyName);
 				return;
 			}
-			sbf.append(f.getExternalName()).append(' ').append(f.getName()).append(COMMA);
+			sbf.append(f.getColumnName()).append(' ').append(f.getName()).append(COMMA);
 		}
 		sbf.setLength(sbf.length() - 1);
-		sbf.append(" from ").append(this.tableName).append(" WHERE ").append(field.getExternalName()).append(" LIKE ?");
+		sbf.append(" from ").append(this.tableName).append(" WHERE ").append(field.getColumnName()).append(" LIKE ?");
 		this.suggestSql = sbf.toString();
 	}
 
@@ -1581,21 +1619,12 @@ public class DbTable extends Record {
 			values[0] = Value.parseValue(keyValue, this.valueListKeyType);
 		}
 		IDataSheet sheet = null;
-		if (this.okToCache) {
-			sheet = this.getListFromCache(keyValue);
-			if (sheet != null) {
-				return sheet;
-			}
-		}
 		if (this.valueListTypes.length == 1) {
 			sheet = new MultiRowsSheet(SINGLE_HEADER, this.valueListTypes);
 		} else {
 			sheet = new MultiRowsSheet(DOUBLE_HEADER, this.valueListTypes);
 		}
 		handle.read(this.listSql, values, sheet);
-		if (this.okToCache) {
-			this.cacheList(keyValue, sheet);
-		}
 		return sheet;
 	}
 
@@ -1603,7 +1632,13 @@ public class DbTable extends Record {
 	public void getReadyExtension(Record refRecord) {
 		int nbrPrimaries = 0;
 		int nbrParents = 0;
-
+		/*
+		 * fields that are to be input from client for this dbTable.
+		 *
+		 * One extra for SAVE action
+		 */
+		Field[] inpFields = new Field[this.fields.length + 1];
+		int inpIdx = 0;
 		for (int i = 0; i < this.fields.length; i++) {
 			Field f = this.fields[i];
 			if (f instanceof DbField == false) {
@@ -1611,11 +1646,15 @@ public class DbTable extends Record {
 						"Non-db field " + f.getName() + " defined inside a db table " + this.getQualifiedName());
 			}
 			DbField field = (DbField) f;
+			if (field.toBeInput()) {
+				inpFields[inpIdx] = f;
+				inpIdx++;
+			}
 			FieldType ft = field.getFieldType();
-			if (FieldType.isPrimaryKey(ft)) {
+			if (ft.isPrimaryKey()) {
 				nbrPrimaries++;
 			}
-			if (FieldType.isParentKey(ft)) {
+			if (ft.isParentKey()) {
 				nbrParents++;
 			}
 			if (ft == FieldType.MODIFIED_TIME_STAMP) {
@@ -1627,6 +1666,17 @@ public class DbTable extends Record {
 			} else if (ft == FieldType.MODIFIED_BY_USER) {
 				this.checkDuplicateError(this.modifiedUserField);
 				this.modifiedUserField = field;
+			}
+		}
+		inpFields[inpIdx] = TABLE_ACTION_FIELD;
+
+		if (inpIdx == this.fields.length) {
+			this.fieldsToInput = inpFields;
+		} else {
+			try {
+				this.fieldsToInput = Arrays.copyOf(inpFields, inpIdx + 1);
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 		/*
@@ -1661,7 +1711,7 @@ public class DbTable extends Record {
 		/*
 		 * is this record writable?
 		 */
-		if (this.readOnly == false) {
+		if (this.readOnly == false && this.allPrimaryKeys != null) {
 			this.createWriteSqls();
 		}
 	}
@@ -1679,19 +1729,17 @@ public class DbTable extends Record {
 	/** Create read and filter sqls */
 	private void createReadSqls() {
 
-		/*
-		 * start with read sqls
-		 */
 		StringBuilder select = new StringBuilder("SELECT ");
 
 		boolean isFirstField = true;
-		for (Field field : this.fields) {
+		for (Field f : this.fields) {
+			DbField field = (DbField) f;
 			if (isFirstField) {
 				isFirstField = false;
 			} else {
 				select.append(DbTable.COMMA);
 			}
-			select.append(field.getExternalName()).append(" \"").append(field.getName()).append('"');
+			select.append(field.getColumnName()).append(" \"").append(field.getName()).append('"');
 		}
 
 		select.append(" FROM ").append(this.tableName);
@@ -1760,28 +1808,28 @@ public class DbTable extends Record {
 				} else {
 					update.append(COMMA);
 				}
-				update.append(field.getExternalName()).append(DbTable.EQUAL);
+				update.append(field.getColumnName()).append(DbTable.EQUAL);
 				if (field.getFieldType() == FieldType.MODIFIED_TIME_STAMP) {
 					update.append(timeStamp);
 				} else {
 					update.append(DbTable.PARAM);
-					// this.nbrUpdateFields++;
+					this.nbrUpdateFields++;
 				}
 			}
-			FieldType fieldType = field.getFieldType();
-			/*
-			 * if primary key is managed by rdbms, we do not bother about it?
-			 */
-			if (FieldType.isPrimaryKey(fieldType) && this.keyIsGenerated) {
+			if (field.canInsert() == false) {
 				continue;
 			}
+			if (this.keyIsGenerated && field.getFieldType().isPrimaryKey()) {
+				continue;
+			}
+
 			if (firstInsertField) {
 				firstInsertField = false;
 			} else {
 				insert.append(DbTable.COMMA);
 				vals.append(DbTable.COMMA);
 			}
-			insert.append(field.getExternalName());
+			insert.append(field.getColumnName());
 			/*
 			 * value is hard coded for time stamps
 			 */
@@ -1799,20 +1847,16 @@ public class DbTable extends Record {
 		insert.append(vals.append(')'));
 		this.insertSql = insert.toString();
 
-		/*
-		 * where clause of delete and update are same, but they are valid only
-		 * if we have a primary key
-		 */
-		if (this.allPrimaryKeys != null) {
-			if (this.useTimestampForConcurrency) {
-				String clause = " AND " + this.modifiedStampField.getExternalName() + "=?";
-				this.updateSql = update.append(this.primaryWhereClause).append(clause).toString();
-				this.deleteSql = "DELETE FROM " + this.tableName + this.primaryWhereClause + clause;
+		this.nbrUpdateFields += this.allPrimaryKeys.length;
+		if (this.useTimestampForConcurrency) {
+			String clause = " AND " + this.modifiedStampField.getColumnName() + "=?";
+			this.updateSql = update.append(this.primaryWhereClause).append(clause).toString();
+			this.deleteSql = "DELETE FROM " + this.tableName + this.primaryWhereClause + clause;
+			this.nbrUpdateFields++;
 
-			} else {
-				this.updateSql = update.append(this.primaryWhereClause).toString();
-				this.deleteSql = "DELETE FROM " + this.tableName + this.primaryWhereClause;
-			}
+		} else {
+			this.updateSql = update.append(this.primaryWhereClause).toString();
+			this.deleteSql = "DELETE FROM " + this.tableName + this.primaryWhereClause;
 		}
 	}
 
@@ -1834,9 +1878,9 @@ public class DbTable extends Record {
 	public RelatedRecord[] getChildRecordsAsRelatedRecords(boolean forRead) {
 		String[] children;
 		if (forRead) {
-			children = this.getChildrenToOutput();
+			children = this.getChildrenToBeRead();
 		} else {
-			children = this.getChildrenToInput();
+			children = this.getChildrenToBeSaved();
 		}
 		if (children == null) {
 			return null;
@@ -1844,7 +1888,8 @@ public class DbTable extends Record {
 		RelatedRecord[] recs = new RelatedRecord[children.length];
 		int i = 0;
 		for (String child : children) {
-			RelatedRecord rr = new RelatedRecord(child, TextUtil.getSimpleName(child));
+			Record childRecord = Application.getActiveInstance().getRecord(child);
+			RelatedRecord rr = new RelatedRecord(child, childRecord.getDefaultSheetName());
 			rr.getReady();
 			recs[i++] = rr;
 		}
@@ -1980,7 +2025,8 @@ public class DbTable extends Record {
 		StringBuilder sql = new StringBuilder(this.filterSql);
 		List<Value> filterValues = new ArrayList<Value>();
 		boolean firstTime = true;
-		for (Field field : inRecord.fields) {
+		for (Field f : inRecord.fields) {
+			DbField field = (DbField) f;
 			String fieldName = field.getName();
 			Value value = inData.getValue(fieldName);
 			if (Value.isNull(value) || value.toString().isEmpty()) {
@@ -2009,7 +2055,7 @@ public class DbTable extends Record {
 					throw new ApplicationError(
 							value + " is not a valid comma separated list for field " + field.getName());
 				}
-				sql.append(field.getExternalName()).append(" in (?");
+				sql.append(field.getColumnName()).append(" in (?");
 				filterValues.add(values[0]);
 				for (int i = 1; i < values.length; i++) {
 					sql.append(",?");
@@ -2026,7 +2072,7 @@ public class DbTable extends Record {
 				value = Value.newTextValue(handle.escapeForLike(value.toString()) + DbTable.PERCENT);
 			}
 
-			sql.append(field.getExternalName()).append(condition.getSql()).append("?");
+			sql.append(field.getColumnName()).append(condition.getSql()).append("?");
 			filterValues.add(value);
 
 			if (condition == FilterCondition.Between) {
@@ -2079,42 +2125,6 @@ public class DbTable extends Record {
 		}
 		logger.info("Row located in cache for primary key {} and secondary key {}", key1, key2);
 		return (IDataSheet) obj;
-	}
-
-	/**
-	 * get a list of rows for this input
-	 *
-	 * @param values
-	 *            required if this.listGroupKeyName. can be null otherwise.
-	 * @return data sheet that is retrieved from cache. null if not found
-	 */
-	private IDataSheet getListFromCache(String groupkeyValue) {
-		IAppDataCacher cacher = Application.getActiveInstance().getAppDataCacher();
-		if (cacher == null) {
-			return null;
-		}
-		String key = this.getCachingKey(groupkeyValue);
-		Object obj = cacher.get(key);
-		if (obj == null) {
-			return null;
-		}
-		logger.info("Data sheet located in cache for key {}", key);
-		return (IDataSheet) obj;
-	}
-
-	/**
-	 * cache a list of rows
-	 *
-	 * @param values
-	 *            that contains input values. required if this.listGroupKeyName
-	 * @param list
-	 */
-	private void cacheList(String groupKey, IDataSheet list) {
-		IAppDataCacher cacher = Application.getActiveInstance().getAppDataCacher();
-		if (cacher == null) {
-			return;
-		}
-		cacher.put(this.getCachingKey(groupKey), list);
 	}
 
 	/**

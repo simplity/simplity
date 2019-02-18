@@ -33,15 +33,12 @@ import org.simplity.core.idb.DbAccessType;
 import org.simplity.core.idb.IDbDriver;
 import org.simplity.core.idb.IDbHandle;
 import org.simplity.core.value.Value;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author simplity.org
  *
  */
 public abstract class AbstractHandle implements IDbHandle {
-	protected static final Logger logger = LoggerFactory.getLogger(AbstractHandle.class);
 	/**
 	 * connection object. null if this is closed.
 	 */

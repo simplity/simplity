@@ -12,16 +12,13 @@
   <fields>
     <primaryKey
       name="petTypeId"
-      externalName="id"
-      valueType="integer" />
+      columnName="id"
+      dataType="pet.id" 
+      isRequired="true"/>
     <dbField
       name="petType"
-      externalName="name"
-      valueType="text"
-    >
-      <fieldValidation
-        dataType="pet.text80"
-        isRequired="true" />
-    </dbField>
+      columnName="name"
+      dataType="pet.text80"
+      isRequired="true" />
   </fields>
 </dbTable>

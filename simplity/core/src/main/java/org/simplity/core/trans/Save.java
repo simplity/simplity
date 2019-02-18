@@ -86,9 +86,14 @@ public class Save extends AbstractDbAction {
 	 *
 	 * @param record
 	 * @param children
+	 * @param inputIsSheet
+	 *            true if input data to be saved is in a sheet, false if input
+	 *            as fields from ctx
 	 */
-	public Save(Record record, RelatedRecord[] children) {
-		this.inputSheetName = record.getDefaultSheetName();
+	public Save(Record record, RelatedRecord[] children, boolean inputIsSheet) {
+		if (inputIsSheet) {
+			this.inputSheetName = record.getDefaultSheetName();
+		}
 		this.recordName = record.getQualifiedName();
 		this.childRecords = children;
 	}
@@ -150,7 +155,7 @@ public class Save extends AbstractDbAction {
 		 * if action is 'save' it will be set to either add or modify later
 		 */
 		SaveActionType action = this.saveAction;
-		if (this.saveAction == SaveActionType.DELETE) {
+		if (action == SaveActionType.DELETE) {
 			if (this.childRecords == null) {
 				return record.delete(ctx, dbHandle, this.treatSqlErrorAsNoResult);
 			}
@@ -174,9 +179,9 @@ public class Save extends AbstractDbAction {
 		/*
 		 * it is either update or insert, implicitly or explicitly
 		 */
-		if (this.saveAction == SaveActionType.MODIFY) {
+		if (action == SaveActionType.MODIFY) {
 			nbrRowsAffected = record.update(ctx, dbHandle, userId, this.treatSqlErrorAsNoResult);
-		} else if (this.saveAction == SaveActionType.ADD) {
+		} else if (action == SaveActionType.ADD) {
 			nbrRowsAffected = record.insert(ctx, dbHandle, userId, this.treatSqlErrorAsNoResult);
 		} else {
 			action = record.saveOne(ctx, dbHandle, userId, this.treatSqlErrorAsNoResult);

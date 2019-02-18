@@ -6,39 +6,29 @@
   moduleName="pet"
   defaultSheetName="visits"
   tableName="visits"
+  okToSelectAll="true"
 >
   <fields>
     <primaryKey
       name="visitId"
-      externalName="visit_id"
-      valueType="integer" />
+      columnName="id"
+      dataType="pet.id"
+      isRequired="true" />
     <parentKey
       name="petId"
-      externalName="pet_id"
+      columnName="pet_id"
       referredRecord="pet.pet"
-      referredField="petId"
-      valueType="integer"
-    >
-      <fieldValidation
-        dataType="pet.id"
-        isRequired="true" />
-    </parentKey>
+      isRequired="true" />
     <dbField
       name="visitDate"
-      externalName="visit_date"
-      valueType="date"
-    >
-      <fieldValidation
-        dataType="pet.date"
-        isRequired="true" />
-    </dbField>
+      columnName="visit_date"
+      dataType="pet.date"
+      isRequired="true" />
     <dbField
       name="visitDescription"
-      externalName="description"
-      valueType="text">
-      <fieldValidation
+      columnName="description"
       dataType="pet.description"
-      isRequired="true" /></dbField>
-      
+      isRequired="true" />
+
   </fields>
 </dbTable>

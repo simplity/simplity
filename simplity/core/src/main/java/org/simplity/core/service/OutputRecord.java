@@ -89,19 +89,17 @@ public class OutputRecord {
 	 * linkFieldsInThisSheet.
 	 */
 	String[] linkFieldsInParentSheet;
-	/**
-	 * when name is non-null, source of data for this record could be either an
-	 * object, or a data sheet. set this to true to use object, false for data
-	 * sheet.
-	 */
-	boolean sourceIsAnObject;
 
 	/**
 	 * how is the data expected by the client. Useful in dealing with external
 	 * client who may choose different data structure than the one used by
 	 * server. Different combinations of source and out put are possible.
 	 */
-	DataStructureType outputAs = DataStructureType.FIELDS;
+	DataStructureType writeAs = DataStructureType.FIELDS;
+	/**
+	 * How is data for this record made available ?
+	 */
+	DataStructureType readAs = DataStructureType.FIELDS;
 	/*
 	 * we cache child records for convenience
 	 */
@@ -131,18 +129,21 @@ public class OutputRecord {
 	 * @param recordName
 	 *            null if data from the source to be sent as it is. non-null to
 	 *            provide list of fields to be output
-	 * @param sourceIsAnObject
-	 *            relevant if name is non-null. true if data is an object, false
-	 *            if it is a data sheet
-	 * @param outputAs
+	 * @param readAs
+	 *            how is data made available ?
+	 *
+	 * @param writeAs
+	 *            how should the data be written out to the client
+	 *
+	 *
 	 */
-	public OutputRecord(String name, String externalName, String recordName, boolean sourceIsAnObject,
-			DataStructureType outputAs) {
+	public OutputRecord(String name, String externalName, String recordName, DataStructureType readAs,
+			DataStructureType writeAs) {
 		this.name = name;
 		this.externalName = externalName;
 		this.recordName = recordName;
-		this.sourceIsAnObject = sourceIsAnObject;
-		this.outputAs = outputAs;
+		this.writeAs = writeAs;
+		this.readAs = readAs;
 	}
 
 	/**
@@ -187,21 +188,20 @@ public class OutputRecord {
 	 *
 	 */
 	public void getReady() {
-		if (this.recordName == null) {
-			if (this.name != null) {
-				return;
-			}
-			throw new ApplicationError("Output record should have either sheet name or record name specified.");
+		if (this.externalName == null) {
+			this.externalName = this.name;
 		}
 		if (this.recordIsForDocumentation) {
 			return;
 		}
-		Record record = Application.getActiveInstance().getRecord(this.recordName);
-		this.fields = record.getFields();
-		if (this.fields == null) {
-			logger.info("Record " + this.recordName + " yielded no fields");
-		} else {
-			this.isComplexStructure = record.hasNonPrimitiveFields();
+		if (this.recordName != null) {
+			Record record = Application.getActiveInstance().getRecord(this.recordName);
+			this.fields = record.getFields();
+			if (this.fields == null) {
+				logger.info("Record " + this.recordName + " yielded no fields");
+			} else {
+				this.isComplexStructure = record.getRecordUsageType().canTakeNonPrimitives();
+			}
 		}
 
 	}
@@ -233,8 +233,7 @@ public class OutputRecord {
 		 * at the problem
 		 *
 		 *
-		 * 1. data source has 4 possibilities. root-object(this.name = null),
-		 * JsonObject, jsonArray or dataSheet
+		 * 1. data source has 4 options. Fields, object, array, sheet
 		 *
 		 * 2. output-type has 4 options. Fields, object, array, sheet.
 		 *
@@ -250,46 +249,71 @@ public class OutputRecord {
 		 * drastically. We gave primary importance to readability and came up
 		 * with this way of dividing the tasks
 		 *
-		 * a. We define sheet, array, and json. At most one of these three is
-		 * non-null (3 cases) and all null (4th case when name=null)
 		 *
-		 * b. we define 8 methods at top level. We expect each of these 8
-		 * methods to take care of four possibilities to cover all 32
-		 * possibilities
+		 * a. we define three private fields. json, sheet, arr. only one of this
+		 * can be non-null. that is three possibilities. All being null is the
+		 * fourth possibility.
+		 *
+		 * b. we define 8 methods at top level and invoke them with these three
+		 * fields as parameters.
+		 *
+		 * c. each method takes care of four possibilities based on these three
+		 * field values.
+		 *
 		 */
+
 		JSONObject json = null;
 		IDataSheet sheet = null;
 		JSONArray arr = null;
-		if (this.name != null) {
-			if (this.sourceIsAnObject) {
-				Object obj = ctx.getObject(this.name);
-				if (obj == null) {
-					logger.info("No object named {} found in context. Data not written out", this.name);
-					return;
-				}
-				if (obj instanceof JSONObject) {
-					json = (JSONObject) obj;
-				} else if (obj instanceof JSONArray) {
-					arr = (JSONArray) obj;
-				} else {
-					logger.error("We expected a JSONObject/JSONArray named {}, but found {}. Data not written out",
-							this.name, obj.getClass().getName());
-					return;
-				}
-			} else {
-				sheet = ctx.getDataSheet(this.name);
-				if (sheet == null) {
-					logger.info("Data sheet named {} not found in context. Data not written out", this.name);
-					return;
-				}
+		Object obj; // temp
+		switch (this.readAs) {
+		case FIELDS:
+			break;
+
+		case SHEET:
+			sheet = ctx.getDataSheet(this.name);
+			if (sheet == null) {
+				logger.warn("Data sheet named {} not found in context. Data not written out", this.name);
+				return;
 			}
+			break;
+		/*
+		 * we keep it flexible between array and object..
+		 */
+		case OBJECT:
+		case ARRAY:
+			obj = ctx.getObject(this.name);
+			if (obj == null) {
+				logger.warn("No object named {} found in context. Data not written out", this.name);
+				return;
+			}
+			if (obj instanceof JSONObject) {
+				json = (JSONObject) obj;
+				break;
+			}
+			if (obj instanceof JSONArray) {
+				arr = (JSONArray) obj;
+				break;
+			}
+			logger.warn("Object {} is expected to be a JSONObject or JSONArray but it is {}. Data not written out",
+					this.name,
+					obj.getClass().getName());
+			return;
+
+		default:
+			throw new ApplicationError(
+					"Design Error: OutputRecord is not designed to handle DataStructureType=" + this.readAs);
 		}
 		/*
-		 * at this point, we have ensured that either this.name==null or one and
-		 * only one of(json, arr, sheet) is non-null
+		 * at this point, we have ensured that either no more than one of(json,
+		 * arr, sheet) is non-null
+		 */
+		/*
+		 * this.fields == null implies that we are to output fields based on
+		 * input.
 		 */
 		if (this.fields == null) {
-			switch (this.outputAs) {
+			switch (this.writeAs) {
 			case FIELDS:
 				this.writeFieldsWithNoSpec(writer, json, arr, sheet, ctx);
 				return;
@@ -308,7 +332,7 @@ public class OutputRecord {
 				this.logNoData();
 			}
 		} else {
-			switch (this.outputAs) {
+			switch (this.writeAs) {
 			case FIELDS:
 				this.writeFieldsWithSpec(writer, json, arr, sheet, ctx);
 				return;
@@ -463,7 +487,7 @@ public class OutputRecord {
 	}
 
 	private void logNoData() {
-		logger.error("Reord has no fields and no name. No output possible");
+		logger.error("Reord has no fields and has no input object to choose fields from. No output possible");
 	}
 
 	/**
@@ -546,6 +570,7 @@ public class OutputRecord {
 	 */
 	private void writeFieldsWithSpec(IResponseWriter writer, JSONObject json, JSONArray arr, IDataSheet sheet,
 			ServiceContext ctx) {
+		logger.info("GOing to write fields from output record {} as fields ", this.name);
 		if (json != null) {
 			this.writeOurFields(writer, new JSONFields(json), ctx);
 		} else if (arr != null) {
@@ -844,7 +869,8 @@ public class OutputRecord {
 		}
 		IDataSheet sheet = ctx.getDataSheet(this.name);
 		if (sheet == null) {
-			logger.info("No data sheet available for child {}", this.name);
+			logger.info("No data for record {}. Parent for this will have go with empty child-object for tthis recprd",
+					this.name);
 			return;
 		}
 		/*
@@ -855,13 +881,14 @@ public class OutputRecord {
 		ValueType[] valueTypes = sheet.getValueTypes();
 		int[] keyIndexes = this.getKeyIndexes(sheet);
 		int nbrRows = sheet.length();
-
+		logger.info("going to break sheet {} into child-sheets to be output inside parent rows", this.name);
 		for (int i = 0; i < nbrRows; i++) {
 			Value[] row = sheet.getRow(i);
 			String key = this.createKeyString(row, keyIndexes);
 			IDataSheet child = ctx.getDataSheet(key);
 			if (child == null) {
 				child = new MultiRowsSheet(columnNames, valueTypes);
+				logger.info("Child sheet fragment created with key-name={}", key);
 				ctx.putDataSheet(key, child);
 			}
 			child.addRow(row);
@@ -928,7 +955,7 @@ public class OutputRecord {
 	private String createKeyString(Value[] row, int[] indexes) {
 		StringBuilder sbf = new StringBuilder(this.name);
 		for (int i : indexes) {
-			sbf.append('.').append(row[indexes[i]].toString());
+			sbf.append('.').append(row[i].toString());
 		}
 		return sbf.toString();
 	}
@@ -943,23 +970,26 @@ public class OutputRecord {
 	}
 
 	/**
+	 * output data to service context
+	 *
 	 * @param fromCtx
 	 * @param toCtx
 	 */
 	void copy(ServiceContext fromCtx, ServiceContext toCtx) {
-		if (this.name == null) {
+		if (this.writeAs == DataStructureType.FIELDS) {
 			if (this.fields != null) {
 				for (Field field : this.fields) {
 					String fieldName = field.getName();
 					toCtx.setValue(fieldName, fromCtx.getValue(fieldName));
 				}
 			}
+			logger.warn("Record {} has no fields defined, Hence it can not copy fields to context");
 			return;
 		}
-		if (this.sourceIsAnObject) {
-			toCtx.setObject(this.name, fromCtx.getObject(this.name));
-		} else {
+		if (this.readAs == DataStructureType.SHEET) {
 			toCtx.putDataSheet(this.name, fromCtx.getDataSheet(this.name));
+		} else {
+			toCtx.setObject(this.name, fromCtx.getObject(this.name));
 		}
 	}
 
@@ -980,5 +1010,29 @@ public class OutputRecord {
 			writer.endObject();
 		}
 		writer.endArray();
+	}
+
+	/**
+	 * return an output record meant for list service
+	 *
+	 * @param sheetName
+	 * @param forTwoColumns
+	 * @return an output record meant for list service
+	 */
+	public static OutputRecord getOutputRecordForList(String sheetName, boolean forTwoColumns) {
+		OutputRecord rec = new OutputRecord();
+		rec.name = rec.externalName = sheetName;
+		rec.readAs = DataStructureType.SHEET;
+		rec.writeAs = DataStructureType.ARRAY;
+		Field f = Field.getDefaultField("value", ValueType.TEXT);
+		if (forTwoColumns) {
+			rec.fields = new Field[2];
+			rec.fields[0] = Field.getDefaultField("id", ValueType.TEXT);
+			rec.fields[1] = f;
+		} else {
+			rec.fields = new Field[1];
+			rec.fields[0] = f;
+		}
+		return rec;
 	}
 }

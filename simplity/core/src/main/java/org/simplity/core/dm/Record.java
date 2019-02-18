@@ -59,11 +59,11 @@ import org.slf4j.LoggerFactory;
 public class Record implements IComponent {
 	private static final Logger logger = LoggerFactory.getLogger(Record.class);
 
-	private static String TABLE_ACTION_FIELD_NAME = AppConventions.Name.TABLE_ACTION;
+	protected static String TABLE_ACTION_FIELD_NAME = AppConventions.Name.TABLE_ACTION;
 	/*
 	 * initialization deferred because it needs bootstrapping..
 	 */
-	private static Field TABLE_ACTION_FIELD = null;
+	protected static Field TABLE_ACTION_FIELD = null;
 
 	/**
 	 * * simple name, unique within a group
@@ -166,7 +166,10 @@ public class Record implements IComponent {
 	 * @return sheet name
 	 */
 	public String getDefaultSheetName() {
-		return this.defaultSheetName;
+		if (this.defaultSheetName != null) {
+			return this.defaultSheetName;
+		}
+		return this.name;
 	}
 
 	/**
@@ -517,6 +520,7 @@ public class Record implements IComponent {
 	 * @param names
 	 *            null if all fields are to be extracted
 	 * @param purpose
+	 *            null if this is not relevant.
 	 * @param extractSaveAction
 	 * @return fields
 	 */

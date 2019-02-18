@@ -46,14 +46,17 @@ public class ServiceRequest implements IServiceRequest {
 	private static final Logger logger = LoggerFactory.getLogger(ServiceRequest.class);
 	private String serviceName;
 	private AppUser appUser;
-	private Document xmlPayload;
-	private JSONObject jsonPayload;
-	/**
-	 * actual payload. null if reader is non-null, or there is no payload at
-	 * all. generally json or document, except for internal services when
-	 * service context is used as input source.
+	/*
+	 * only one of the three payload would be non-null
 	 */
-	private Object payload;
+	/**
+	 * if the pyload is xml.
+	 */
+	private Document xmlPayload;
+	/**
+	 * if the payload if json.
+	 */
+	private JSONObject jsonPayload;
 	/**
 	 * fields that are meant to be from client, but are not in payload. like the
 	 * fields in REST url, query strings, cookies and session fields
@@ -125,13 +128,17 @@ public class ServiceRequest implements IServiceRequest {
 	public ServiceRequest(String serviceName, InputStream inStream, boolean isXml) throws Exception {
 		this.serviceName = serviceName;
 		if (isXml) {
-			this.xmlPayload = XmlUtil.fromStream(inStream);
+			Document doc = XmlUtil.fromStream(inStream);
+			this.xmlPayload = doc;
+			logger.info("Input XML = {}", XmlUtil.prettyPrint(doc.getDocumentElement()));
 		} else {
 
 			String str = IoUtil.streamToText(inStream);
 			if (str == null || str.isEmpty()) {
+				logger.info("No input in payload. EMpty payload created.");
 				str = "{}";
 			}
+			logger.info("Iput JSON = {}", str);
 			this.jsonPayload = new JSONObject(str);
 		}
 	}
@@ -204,14 +211,14 @@ public class ServiceRequest implements IServiceRequest {
 
 	@Override
 	public IRequestReader getPayloadReader() {
-		if (this.xmlPayload == null) {
-			if (this.jsonPayload == null) {
-				logger.info("null reader returned as there is no payload");
-				return null;
-			}
-			return new JsonReqReader((JSONObject) this.payload);
+		if (this.jsonPayload != null) {
+			return new JsonReqReader(this.jsonPayload);
 		}
-		return new XmlReqReader((Document) this.payload);
+		if (this.xmlPayload != null) {
+			return new XmlReqReader(this.xmlPayload);
+		}
+		logger.error("null reader returned as there is no payload");
+		return null;
 	}
 
 	/**
@@ -269,6 +276,7 @@ public class ServiceRequest implements IServiceRequest {
 		if (this.xmlPayload != null) {
 			return this.xmlPayload;
 		}
-		return this.payload;
+		logger.error("No payload is set. returning null as payload");
+		return null;
 	}
 }
