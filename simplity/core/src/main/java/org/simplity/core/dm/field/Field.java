@@ -285,7 +285,7 @@ public class Field {
 	 * @param values
 	 */
 	public void write(IResponseWriter writer, IFieldsCollection values) {
-		writer.setField(this.externalName, values.getValue(this.name));
+		writer.setField(this.externalName, this.dataTypeObject.formatValue(values.getValue(this.name)));
 	}
 
 	/**
@@ -295,7 +295,7 @@ public class Field {
 	 * @param value
 	 */
 	public void write(IResponseWriter writer, Value value) {
-		writer.setField(this.externalName, value);
+		writer.setField(this.externalName, this.dataTypeObject.formatValue(value));
 	}
 
 	/**

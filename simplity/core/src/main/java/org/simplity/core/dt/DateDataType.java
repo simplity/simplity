@@ -170,6 +170,9 @@ public class DateDataType extends DataType {
 			logger.error("Value of type " + value.getValueType() + " passed for frmatting as date.");
 			return "";
 		}
-		return DateUtil.formatDateTime(date);
+		if (this.hasTime) {
+			return DateUtil.formatDateTime(date);
+		}
+		return DateUtil.formatDate(date);
 	}
 }

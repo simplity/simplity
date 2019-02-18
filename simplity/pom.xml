@@ -10,8 +10,8 @@
 	<packaging>pom</packaging>
 	<name>simplity</name>
 	<modules>
-		<module>kernel</module>
-		<module>js</module>
+		<module>core</module>
+		<module>client</module>
 	</modules>
 	<build>
 		<plugins>
