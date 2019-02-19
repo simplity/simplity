@@ -24,12 +24,9 @@ package org.simplity.core.dm.field;
 /**
  * modified time stamp. We may read it from client if this is meant for update
  */
-public class ModifiedTimestamp extends CreatedByUser {
-	/**
-	 *
-	 */
-	public ModifiedTimestamp() {
-		this.fieldType = FieldType.MODIFIED_TIME_STAMP;
-		this.toBeInput = true;
+public class ModifiedTimestamp extends DbField {
+	@Override
+	public boolean canInsert() {
+		return false;
 	}
 }

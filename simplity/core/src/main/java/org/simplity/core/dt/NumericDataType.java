@@ -38,6 +38,38 @@ import org.slf4j.LoggerFactory;
  * @author simplity.org
  */
 public class NumericDataType extends DataType {
+	private static NumericDataType defaultInstance = createDefault();
+	private static NumericDataType defaultDecimalInstance = createDecimalDefault();
+
+	private static NumericDataType createDefault() {
+		NumericDataType dt = new NumericDataType();
+		dt.name = BuiltInDataTypes.NUMBER;
+		return dt;
+	}
+
+	/**
+	 *
+	 * @return default NumericDataType
+	 */
+	public static NumericDataType getDefaultInstance() {
+		return defaultInstance;
+	}
+
+	private static NumericDataType createDecimalDefault() {
+		NumericDataType dt = new NumericDataType();
+		dt.nbrFractionDigits = 4;
+		dt.name = BuiltInDataTypes.DECIMAL;
+		return dt;
+	}
+
+	/**
+	 *
+	 * @return default NumericDataType
+	 */
+	public static NumericDataType getDefaultDecimalInstance() {
+		return defaultDecimalInstance;
+	}
+
 	private static final Logger logger = LoggerFactory.getLogger(NumericDataType.class);
 
 	/** min digits before decimal places required for this value */

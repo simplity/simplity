@@ -29,13 +29,15 @@ import org.simplity.core.value.Value;
  * column that is used in every table in a multi-tenancy design to store data
  * about different customer-organizations in the same database
  */
-public class TenantKey extends CreatedByUser {
-	/**
-	 *
-	 */
-	public TenantKey() {
-		this.fieldType = FieldType.TENANT_KEY;
-		this.insertable = true;
+public class TenantKey extends DbField {
+	@Override
+	public boolean toBeInput() {
+		return false;
+	}
+
+	@Override
+	public boolean canUpdate() {
+		return false;
 	}
 
 	@Override

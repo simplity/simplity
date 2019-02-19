@@ -21,42 +21,12 @@
  */
 package org.simplity.core.dm.field;
 
-import java.util.Set;
-
-import org.simplity.core.ApplicationError;
-import org.simplity.core.comp.IValidationContext;
-import org.simplity.core.comp.ValidationMessage;
 import org.simplity.core.dm.Record;
 
 /**
- * Primary key field
+ * data structure that is defined in another record
  */
-public class ChildRecord extends ValueArray {
-
-	/**
-	 *
-	 */
-	public ChildRecord() {
-		this.fieldType = FieldType.RECORD;
-	}
-
-	@Override
-	public void validate(IValidationContext vtx, Record record, Set<String> referredFields) {
-		super.validate(vtx, record, referredFields);
-		if (this.referredRecord != null) {
-			vtx.message(new ValidationMessage(record, ValidationMessage.SEVERITY_ERROR,
-					"ChildRecord/array field must refer to a record", "referredRecord"));
-		}
-	}
-
-	@Override
-	public void getReady(Record parentRecord, Record defaultReferredRecord) {
-		super.getReady(parentRecord, defaultReferredRecord);
-		if (this.referredRecord != null) {
-			throw new ApplicationError("Field " + this.name + " in record " + parentRecord.getQualifiedName()
-					+ " should use referredRecord attribute to refer to another record");
-		}
-	}
+public class ChildRecord extends DataStructureField {
 
 	@Override
 	protected void resolverReference(Record parentRecord, Record defaultRefferedRecord) {

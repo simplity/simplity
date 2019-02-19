@@ -22,6 +22,8 @@
 
 package org.simplity.core.dm.field;
 
+import org.simplity.core.dt.DataType;
+
 /**
  * @author simplity.org
  *
@@ -37,64 +39,26 @@ public class DbField extends Field {
 	 */
 	String columnName;
 
-	/*
-	 * these attributes are set by concrete classes on init
-	 */
-	protected boolean updatable;
-	protected boolean insertable;
-	protected boolean toBeInput;
-
-	/**
-	 *
-	 */
-	public DbField() {
-		this.fieldType = FieldType.DB_COLUMN;
-		this.updatable = true;
-		this.toBeInput = true;
-		this.insertable = true;
-	}
-
 	/**
 	 * used by utility that generates fields from the database
 	 *
 	 * @param name
 	 * @param columnName
 	 * @param description
-	 * @param dataType
+	 * @param dt
 	 * @param isNullable
+	 * @return an DbField instance
 	 */
-	public DbField(String name, String columnName, String description, String dataType, boolean isNullable) {
-		this();
-		this.name = name;
-		this.columnName = columnName;
-		this.description = description;
-		this.isNullable = isNullable;
-		this.dataType = dataType;
-	}
-
-	/**
-	 * @return false if this is one of the standard fields that are not to be
-	 *         touched. retained once inserted
-	 */
-	public boolean canUpdate() {
-		return this.updatable;
-	}
-
-	/**
-	 * @return false if this is one of the standard fields that are not to be
-	 *         touched retained once inserted
-	 */
-	public boolean canInsert() {
-		return this.insertable;
-	}
-
-	/**
-	 * @return false if this is one of the standard fields that are not to be
-	 *         touched retained once inserted
-	 */
-	@Override
-	public boolean toBeInput() {
-		return this.toBeInput;
+	public static DbField createDbField(String name, String columnName, String description, DataType dt,
+			boolean isNullable) {
+		DbField f = new DbField();
+		f.name = name;
+		f.columnName = columnName;
+		f.description = description;
+		f.isNullable = isNullable;
+		f.dataTypeObject = dt;
+		f.dataType = dt.getQualifiedName();
+		return f;
 	}
 
 	/**
@@ -114,4 +78,47 @@ public class DbField extends Field {
 		}
 		return this.name;
 	}
+
+	@Override
+	public boolean isDbField() {
+		return true;
+	}
+
+	/**
+	 * @return true if the type is primary or primary as well as parent
+	 */
+	public boolean isPrimaryKey() {
+		return false;
+	}
+
+	/**
+	 * @return true if the type is parent key, or primary as well as parent
+	 */
+	public boolean isParentKey() {
+		return false;
+	}
+
+	/**
+	 * @return false if this is one of the standard fields that are not to be
+	 *         touched. retained once inserted
+	 */
+	public boolean canUpdate() {
+		return true;
+	}
+
+	/**
+	 * @return false for time stamp fields. Managed b the geerted sql
+	 */
+	public boolean canInsert() {
+		return true;
+	}
+
+	/**
+	 * @return false if this is one of the standard fields that are not to be
+	 *         touched retained once inserted
+	 */
+	public boolean toBeInput() {
+		return true;
+	}
+
 }

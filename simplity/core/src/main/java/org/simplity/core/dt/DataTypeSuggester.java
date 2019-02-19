@@ -97,7 +97,7 @@ public class DataTypeSuggester {
 
 		ValueType vt = RdbUtil.sqlTypeToValueType(sqlTypeInt);
 		if (vt != ValueType.TEXT) {
-			return vt.getDefaultDataType();
+			return vt.getDefaultDataType().getQualifiedName();
 		}
 		if (this.lengths != null) {
 			int i = 0;
@@ -108,7 +108,7 @@ public class DataTypeSuggester {
 				i++;
 			}
 		}
-		return ValueType.TEXT.getDefaultDataType() + size;
+		return "text-" + size;
 	}
 
 }

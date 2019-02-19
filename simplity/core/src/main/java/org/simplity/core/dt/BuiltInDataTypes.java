@@ -61,6 +61,11 @@ public class BuiltInDataTypes {
 	public static final String DECIMAL = "_decimal";
 
 	/**
+	 * like 1234.456
+	 */
+	public static final String BOOLEAN = "_boolean";
+
+	/**
 	 * qualified name of components.
 	 */
 	public static final String ENTITY_NAME = "_entityName";

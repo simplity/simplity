@@ -36,6 +36,22 @@ import org.simplity.core.value.ValueType;
  * @author simplity.org
  */
 public class ClobDataType extends DataType {
+	private static ClobDataType defaultInstance = createDefault();
+
+	private static ClobDataType createDefault() {
+		ClobDataType dt = new ClobDataType();
+		dt.name = BuiltInDataTypes.CLOB;
+		return dt;
+	}
+
+	/**
+	 *
+	 * @return default ClobDataType
+	 */
+	public static ClobDataType getDefaultInstance() {
+		return defaultInstance;
+	}
+
 	/**
 	 * max number of characters expected. Let us keep it safe for possible key
 	 * length

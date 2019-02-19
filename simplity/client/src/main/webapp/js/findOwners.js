@@ -24,7 +24,7 @@ var find = function() {
 		 */
 		txt = {
 			lastName : txt,
-			lastNameOperator : '~'
+			lastNameComparator : '~'
 		};
 		txt = JSON.stringify(txt);
 	}

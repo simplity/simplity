@@ -28,9 +28,9 @@ import java.sql.Struct;
 
 import org.simplity.core.ApplicationError;
 import org.simplity.core.app.Application;
+import org.simplity.core.data.DataPurpose;
 import org.simplity.core.dm.field.ChildRecord;
 import org.simplity.core.dm.field.Field;
-import org.simplity.core.dm.field.FieldType;
 import org.simplity.core.dm.field.RecordArray;
 import org.simplity.core.dm.field.ValueArray;
 import org.simplity.core.idb.IReadOnlyHandle;
@@ -119,7 +119,7 @@ public class ComplexRecord extends Record {
 			/*
 			 * array of values
 			 */
-			if (field.getFieldType() == FieldType.VALUE_ARRAY) {
+			if (field instanceof ValueArray) {
 				if (obj instanceof JSONArray == false) {
 					ctx.addMessage(new FormattedMessage(Messages.INVALID_DATA,
 							"Input value for parameter. " + field.getName()
@@ -134,7 +134,7 @@ public class ComplexRecord extends Record {
 			/*
 			 * struct (record or object)
 			 */
-			if (field.getFieldType() == FieldType.RECORD) {
+			if (field instanceof ChildRecord) {
 				if (obj instanceof JSONObject == false) {
 					ctx.addMessage(new FormattedMessage(Messages.INVALID_DATA,
 							"Input value for parameter. " + field.getName() + " is expected to be an objects."));
@@ -150,7 +150,7 @@ public class ComplexRecord extends Record {
 			/*
 			 * array of struct
 			 */
-			if (field.getFieldType() == FieldType.RECORD_ARRAY) {
+			if (field instanceof RecordArray) {
 				if (obj instanceof JSONArray == false) {
 					ctx.addMessage(new FormattedMessage(Messages.INVALID_DATA,
 							"Input value for parameter. " + field.getName()
@@ -166,7 +166,7 @@ public class ComplexRecord extends Record {
 			/*
 			 * simple value
 			 */
-			Value value = field.parseObject(obj, false, ctx);
+			Value value = field.parseObject(obj, DataPurpose.OTHERS, ctx);
 			if (value != null) {
 				data[i] = value.toObject();
 			}
@@ -233,7 +233,7 @@ public class ComplexRecord extends Record {
 			/*
 			 * array of values
 			 */
-			if (field.getFieldType() == FieldType.VALUE_ARRAY) {
+			if (field instanceof ValueArray) {
 				if (obj instanceof Object[] == false) {
 					throw this.getAppError(-1, field, " is an array of primitives ", obj);
 				}
@@ -244,7 +244,7 @@ public class ComplexRecord extends Record {
 			/*
 			 * struct (record or object)
 			 */
-			if (field.getFieldType() == FieldType.RECORD) {
+			if (field instanceof ChildRecord) {
 				if (obj instanceof Object[] == false) {
 					throw this.getAppError(-1, field, " is a record that expects an array of objects ", obj);
 				}
@@ -257,7 +257,7 @@ public class ComplexRecord extends Record {
 			/*
 			 * array of struct
 			 */
-			if (field.getFieldType() == FieldType.RECORD_ARRAY) {
+			if (field instanceof RecordArray) {
 				if (obj instanceof Object[][] == false) {
 					throw this.getAppError(-1, field, " is an array record that expects an array of array of objects ",
 							obj);
@@ -340,7 +340,7 @@ public class ComplexRecord extends Record {
 			/*
 			 * array of values
 			 */
-			if (field.getFieldType() == FieldType.VALUE_ARRAY) {
+			if (field instanceof ValueArray) {
 				if (obj instanceof Array == false) {
 					throw this.getAppError(-1, field, " is an array of primitives ", obj);
 				}
@@ -355,7 +355,7 @@ public class ComplexRecord extends Record {
 			/*
 			 * struct (record or object)
 			 */
-			if (field.getFieldType() == FieldType.RECORD) {
+			if (field instanceof ChildRecord) {
 				if (obj instanceof Struct == false) {
 					throw this.getAppError(-1, field, " is an array of records ", obj);
 				}
@@ -368,7 +368,7 @@ public class ComplexRecord extends Record {
 			/*
 			 * array of struct
 			 */
-			if (field.getFieldType() == FieldType.RECORD_ARRAY) {
+			if (field instanceof RecordArray) {
 				if (obj instanceof Array == false) {
 					throw new ApplicationError("Error while creating JSON from output of stored procedure. Field "
 							+ field.getName()

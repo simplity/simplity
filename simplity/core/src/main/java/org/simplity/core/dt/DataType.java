@@ -44,28 +44,6 @@ public abstract class DataType implements IComponent {
 	/** max digits that java supports */
 	static final int MAX_DIGITS = 17;
 
-	/** data type for entity name */
-	public static final String ENTITY_NAME = "_entityName";
-
-	/** data type for list of entity names */
-	public static final String ENTITY_LIST = "_entityList";
-
-	/** default data type name for text field */
-	public static final String DEFAULT_TEXT = "_text";
-
-	/** default boolean data type name */
-	public static final String DEFAULT_BOOLEAN = "_boolean";
-
-	/** default data type name for date */
-	public static final String DEFAULT_DATE = "_date";
-
-	/** default data type name for date */
-	public static final String DEFAULT_DATE_TIME = "_dateTime";
-	/** default data type name for integral number */
-	public static final String DEFAULT_NUMBER = "_number";
-
-	/** default data type name for a decimal number */
-	public static final String DEFAULT_DECIMAL = "_decimal";
 	/**
 	 * data type is identified by its name that is unique across all modules in
 	 * an application.

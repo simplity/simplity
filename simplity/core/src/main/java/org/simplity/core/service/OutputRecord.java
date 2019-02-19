@@ -31,7 +31,7 @@ import org.simplity.core.data.MultiRowsSheet;
 import org.simplity.core.dm.Record;
 import org.simplity.core.dm.field.ChildRecord;
 import org.simplity.core.dm.field.Field;
-import org.simplity.core.dm.field.FieldType;
+import org.simplity.core.dm.field.RecordArray;
 import org.simplity.core.value.Value;
 import org.simplity.core.value.ValueType;
 import org.simplity.json.JSONArray;
@@ -591,7 +591,7 @@ public class OutputRecord {
 			return;
 		}
 		for (Field field : this.fields) {
-			writer.setField(field.getExternalName(), values.getValue(field.getName()));
+			field.write(writer, values);
 		}
 	}
 
@@ -611,22 +611,21 @@ public class OutputRecord {
 		}
 		for (Field field : this.fields) {
 			if (field.isPrimitive()) {
-				writer.setField(field.getExternalName(), values.getValue(field.getName()));
+				field.write(writer, values);
 				continue;
 			}
 			/*
 			 * child is not primitive. We have to delegate it to a child
 			 * outputRecord
 			 */
-			FieldType ft = field.getFieldType();
 			String fieldName = field.getName();
-			if (ft == FieldType.RECORD) {
+			if (field instanceof ChildRecord) {
 				this.writeComplexChildObject(writer, (ChildRecord) field, parentJson, ctx);
 				continue;
 			}
 
-			if (ft == FieldType.RECORD_ARRAY) {
-				this.writeComplexChildArray(writer, (ChildRecord) field, parentJson, ctx);
+			if (field instanceof RecordArray) {
+				this.writeComplexChildArray(writer, (RecordArray) field, parentJson, ctx);
 				continue;
 			}
 
@@ -672,7 +671,7 @@ public class OutputRecord {
 		}
 	}
 
-	private void writeComplexChildArray(IResponseWriter writer, ChildRecord field, JSONObject parentJson,
+	private void writeComplexChildArray(IResponseWriter writer, RecordArray field, JSONObject parentJson,
 			ServiceContext ctx) {
 		OutputRecord child = field.getOutputRecord(DataStructureType.ARRAY);
 		String fieldName = field.getName();

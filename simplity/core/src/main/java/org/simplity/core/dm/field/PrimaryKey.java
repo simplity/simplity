@@ -21,6 +21,7 @@
  */
 package org.simplity.core.dm.field;
 
+import org.simplity.core.data.DataPurpose;
 import org.simplity.core.dm.DbTable;
 import org.simplity.core.dm.Record;
 
@@ -28,19 +29,31 @@ import org.simplity.core.dm.Record;
  * Primary key field
  */
 public class PrimaryKey extends DbField {
-	/**
-	 *
-	 */
-	public PrimaryKey() {
-		this.fieldType = FieldType.PRIMARY_KEY;
-		this.toBeInput = true;
+	private boolean isGenerated;
+
+	@Override
+	public boolean canUpdate() {
+		return false;
 	}
 
 	@Override
 	public void getReady(Record parentRecord, Record defaultReferredRecord) {
 		super.getReady(parentRecord, defaultReferredRecord);
-		if (((DbTable) parentRecord).isKeyGenerated() == false) {
-			this.insertable = true;
-		}
+		this.isGenerated = ((DbTable) parentRecord).isKeyGenerated();
+	}
+
+	@Override
+	public boolean canInsert() {
+		return !this.isGenerated;
+	}
+
+	@Override
+	public boolean isPrimaryKey() {
+		return true;
+	}
+
+	@Override
+	protected boolean isNullOk(DataPurpose purpose) {
+		return purpose == DataPurpose.SAVE && this.isGenerated;
 	}
 }

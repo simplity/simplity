@@ -30,6 +30,22 @@ import org.slf4j.LoggerFactory;
 
 /** @author simplity.org */
 public class BooleanDataType extends DataType {
+	private static BooleanDataType defaultInstance = createDefault();
+
+	private static BooleanDataType createDefault() {
+		BooleanDataType dt = new BooleanDataType();
+		dt.name = BuiltInDataTypes.BOOLEAN;
+		return dt;
+	}
+
+	/**
+	 *
+	 * @return default BooleanDataType
+	 */
+	public static BooleanDataType getDefaultInstance() {
+		return defaultInstance;
+	}
+
 	private static final Logger logger = LoggerFactory.getLogger(BooleanDataType.class);
 
 	private static final String DESC = "1 for yes/true and 0 for false/no";

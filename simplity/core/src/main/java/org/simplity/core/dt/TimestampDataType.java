@@ -42,6 +42,22 @@ import org.simplity.core.value.ValueType;
  * @author simplity.org
  */
 public class TimestampDataType extends DataType {
+	private static TimestampDataType defaultInstance = createDefault();
+
+	private static TimestampDataType createDefault() {
+		TimestampDataType dt = new TimestampDataType();
+		dt.name = BuiltInDataTypes.TIMESTAMP;
+		return dt;
+	}
+
+	/**
+	 *
+	 * @return default TimestampDataType
+	 */
+	public static TimestampDataType getDefaultInstance() {
+		return defaultInstance;
+	}
+
 	/**
 	 * max number of characters expected. Let us keep it safe for possible key
 	 * length

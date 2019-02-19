@@ -38,8 +38,10 @@ import org.simplity.core.data.IDataSheet;
 import org.simplity.core.data.IFieldsCollection;
 import org.simplity.core.data.MultiRowsSheet;
 import org.simplity.core.dm.Record;
+import org.simplity.core.dm.field.ChildRecord;
 import org.simplity.core.dm.field.Field;
-import org.simplity.core.dm.field.FieldType;
+import org.simplity.core.dm.field.RecordArray;
+import org.simplity.core.dm.field.ValueArray;
 import org.simplity.core.dt.DataType;
 import org.simplity.core.msg.MessageType;
 import org.simplity.core.msg.Messages;
@@ -444,8 +446,7 @@ public class InputRecord {
 
 			String fieldInuputName = field.getExternalName();
 			Object obj = reader.getValue(fieldInuputName);
-			boolean fieldIsOptional = this.purpose == DataPurpose.SAVE && field.getFieldType().isPrimaryKey();
-			Value value = field.parseObject(obj, fieldIsOptional, ctx);
+			Value value = field.parseObject(obj, this.purpose, ctx);
 			if (value != null) {
 				values.setValue(field.getName(), value);
 				nbr++;
@@ -468,7 +469,6 @@ public class InputRecord {
 		for (Field field : this.fields) {
 			String fieldName = field.getName();
 			String fieldInputName = field.getExternalName();
-			logger.info("Looking for input to filter field {} with externalName {}", fieldName, fieldInputName);
 
 			Object obj = reader.getValue(fieldInputName);
 			if (obj == null) {
@@ -482,8 +482,6 @@ public class InputRecord {
 			FilterCondition f = FilterCondition.Equal;
 			String compName = fieldInputName + AppConventions.Name.COMPARATOR_SUFFIX;
 			Object otherObj = reader.getValue(compName);
-			logger.info("fieldName={} fieldValue={} compName={} compValue={}", fieldInputName, obj, compName,
-					otherObj);
 			if (otherObj != null) {
 				f = FilterCondition.parse(otherObj.toString());
 				if (f == null) {
@@ -751,13 +749,12 @@ public class InputRecord {
 				continue;
 			}
 			Object val = null;
-			FieldType ft = field.getFieldType();
-			if (ft == FieldType.VALUE_ARRAY) {
-				val = this.readValueArray(reader, field, vt, ctx);
-			} else if (ft == FieldType.RECORD) {
+			if (field instanceof ValueArray) {
+				val = this.readValueArray(reader, (ValueArray) field, vt, ctx);
+			} else if (field instanceof ChildRecord) {
 				val = this.readChildObject(reader, field, vt, ctx);
 			} else {
-				val = this.readChildArray(reader, field, vt, ctx);
+				val = this.readChildArray(reader, (RecordArray) field, vt, ctx);
 			}
 			if (val != null) {
 				parentJson.put(field.getName(), val);
@@ -804,7 +801,7 @@ public class InputRecord {
 	 * @param ctx
 	 * @return
 	 */
-	private Object readChildArray(IRequestReader reader, Field field, InputValueType vt, ServiceContext ctx) {
+	private Object readChildArray(IRequestReader reader, RecordArray field, InputValueType vt, ServiceContext ctx) {
 		if (vt != InputValueType.ARRAY && vt != InputValueType.ARRAY_OR_OBJECT) {
 			logger.error("attribute {} is exptected to be an array but we found {}", field.getExternalName(), vt);
 			this.invalidContent(ctx);
@@ -833,7 +830,7 @@ public class InputRecord {
 	 * @param ctx
 	 * @return
 	 */
-	private JSONArray readValueArray(IRequestReader reader, Field field, InputValueType vt, ServiceContext ctx) {
+	private JSONArray readValueArray(IRequestReader reader, ValueArray field, InputValueType vt, ServiceContext ctx) {
 		String[] texts = null;
 		if (vt == InputValueType.VALUE) {
 			String text = reader.getValue(field.getExternalName()).toString();

@@ -41,9 +41,12 @@ import org.simplity.core.data.DataPurpose;
 import org.simplity.core.data.IDataSheet;
 import org.simplity.core.data.IFieldsCollection;
 import org.simplity.core.data.MultiRowsSheet;
+import org.simplity.core.dm.field.CreatedByUser;
+import org.simplity.core.dm.field.CreatedTimestamp;
 import org.simplity.core.dm.field.DbField;
 import org.simplity.core.dm.field.Field;
-import org.simplity.core.dm.field.FieldType;
+import org.simplity.core.dm.field.ModifiedByUser;
+import org.simplity.core.dm.field.ModifiedTimestamp;
 import org.simplity.core.idb.IDbDriver;
 import org.simplity.core.idb.IMetadataHandle;
 import org.simplity.core.idb.IReadOnlyHandle;
@@ -717,11 +720,11 @@ public class DbTable extends Record {
 			if (field.canInsert() == false) {
 				continue;
 			}
-			if (this.keyIsGenerated && field.getFieldType().isPrimaryKey()) {
+			if (this.keyIsGenerated && field.isPrimaryKey()) {
 				continue;
 			}
-			if (field.getFieldType() == FieldType.CREATED_BY_USER
-					|| field.getFieldType() == FieldType.MODIFIED_BY_USER) {
+			if (field instanceof CreatedByUser
+					|| field instanceof ModifiedByUser) {
 				values[valueIdx] = userId;
 			} else {
 				Value value = field.getValue(row, null);
@@ -1307,12 +1310,11 @@ public class DbTable extends Record {
 		int parentIdx = 0;
 		for (Field f : this.fields) {
 			DbField field = (DbField) f;
-			FieldType ft = field.getFieldType();
-			if (ft.isPrimaryKey()) {
+			if (field.isPrimaryKey()) {
 				this.allPrimaryKeys[primaryIdx] = field;
 				primaryIdx++;
 			}
-			if (ft.isParentKey()) {
+			if (field.isParentKey()) {
 				this.allParentKeys[parentIdx] = field;
 				parentIdx++;
 			}
@@ -1473,7 +1475,7 @@ public class DbTable extends Record {
 			if (!field.canUpdate()) {
 				continue;
 			}
-			if (field.getFieldType() == FieldType.MODIFIED_BY_USER) {
+			if (field instanceof ModifiedByUser) {
 				values[i] = userId;
 				i++;
 				continue;
@@ -1650,21 +1652,20 @@ public class DbTable extends Record {
 				inpFields[inpIdx] = f;
 				inpIdx++;
 			}
-			FieldType ft = field.getFieldType();
-			if (ft.isPrimaryKey()) {
+			if (field.isPrimaryKey()) {
 				nbrPrimaries++;
 			}
-			if (ft.isParentKey()) {
+			if (field.isParentKey()) {
 				nbrParents++;
 			}
-			if (ft == FieldType.MODIFIED_TIME_STAMP) {
-				this.checkDuplicateError(this.modifiedStampField);
+			if (field instanceof ModifiedTimestamp) {
+				this.checkDuplicateError(this.modifiedStampField, ModifiedTimestamp.class);
 				this.modifiedStampField = field;
-			} else if (ft == FieldType.CREATED_BY_USER) {
-				this.checkDuplicateError(this.createdUserField);
+			} else if (field instanceof CreatedByUser) {
+				this.checkDuplicateError(this.createdUserField, CreatedByUser.class);
 				this.createdUserField = field;
-			} else if (ft == FieldType.MODIFIED_BY_USER) {
-				this.checkDuplicateError(this.modifiedUserField);
+			} else if (field instanceof ModifiedByUser) {
+				this.checkDuplicateError(this.modifiedUserField, ModifiedByUser.class);
 				this.modifiedUserField = field;
 			}
 		}
@@ -1802,14 +1803,15 @@ public class DbTable extends Record {
 			/*
 			 * some fields are not updatable
 			 */
-			if (field.canUpdate() || field.getFieldType() == FieldType.MODIFIED_TIME_STAMP) {
+			boolean isModSTamp = field instanceof ModifiedTimestamp;
+			if (field.canUpdate() || isModSTamp) {
 				if (firstUpdatableField) {
 					firstUpdatableField = false;
 				} else {
 					update.append(COMMA);
 				}
 				update.append(field.getColumnName()).append(DbTable.EQUAL);
-				if (field.getFieldType() == FieldType.MODIFIED_TIME_STAMP) {
+				if (field instanceof ModifiedTimestamp) {
 					update.append(timeStamp);
 				} else {
 					update.append(DbTable.PARAM);
@@ -1819,7 +1821,7 @@ public class DbTable extends Record {
 			if (field.canInsert() == false) {
 				continue;
 			}
-			if (this.keyIsGenerated && field.getFieldType().isPrimaryKey()) {
+			if (this.keyIsGenerated && field.isPrimaryKey()) {
 				continue;
 			}
 
@@ -1833,8 +1835,7 @@ public class DbTable extends Record {
 			/*
 			 * value is hard coded for time stamps
 			 */
-			if (field.getFieldType() == FieldType.MODIFIED_TIME_STAMP
-					|| field.getFieldType() == FieldType.CREATED_TIME_STAMP) {
+			if (isModSTamp || field instanceof CreatedTimestamp) {
 				vals.append(timeStamp);
 			} else {
 				vals.append(DbTable.PARAM);
@@ -1860,13 +1861,13 @@ public class DbTable extends Record {
 		}
 	}
 
-	private void checkDuplicateError(Field savedField) {
+	private void checkDuplicateError(Field savedField, Class<?> cls) {
 		if (savedField == null) {
 			return;
 		}
 
 		throw new ApplicationError("Record " + this.getQualifiedName() + " defines more than one field with field type "
-				+ savedField.getFieldType() + ". This feature is not supported");
+				+ cls.getSimpleName() + ". This feature is not supported");
 	}
 
 	/**
@@ -2231,6 +2232,11 @@ public class DbTable extends Record {
 	 */
 	public boolean okToCache() {
 		return this.okToCache;
+	}
+
+	@Override
+	public boolean isKeyGenerated() {
+		return this.keyIsGenerated;
 	}
 
 }

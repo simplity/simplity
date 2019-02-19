@@ -31,11 +31,14 @@ import org.simplity.core.app.internal.ParameterRetriever;
 import org.simplity.core.comp.ComponentType;
 import org.simplity.core.comp.FieldMetaData;
 import org.simplity.core.comp.IValidationContext;
+import org.simplity.core.comp.ValidationMessage;
 import org.simplity.core.comp.ValidationUtil;
+import org.simplity.core.data.DataPurpose;
 import org.simplity.core.data.IFieldsCollection;
 import org.simplity.core.dm.Record;
 import org.simplity.core.dm.RecordUsageType;
 import org.simplity.core.dt.DataType;
+import org.simplity.core.dt.TextDataType;
 import org.simplity.core.expr.BinaryOperator;
 import org.simplity.core.expr.InvalidOperationException;
 import org.simplity.core.msg.FormattedMessage;
@@ -56,7 +59,6 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class Field {
-	private static final String DEFAULT_DATA_TYPE = ValueType.TEXT.getDefaultDataType();
 
 	protected static Logger logger = LoggerFactory.getLogger(Field.class);
 
@@ -70,6 +72,9 @@ public class Field {
 	public static Field getDefaultField(String fieldName, ValueType valueType) {
 		Field field = new Field();
 		field.externalName = field.name = fieldName;
+		DataType dt = valueType.getDefaultDataType();
+		field.dataTypeObject = dt;
+		field.dataType = dt.getQualifiedName();
 		return field;
 	}
 
@@ -78,11 +83,6 @@ public class Field {
 	 */
 	@FieldMetaData(isRequired = true)
 	String name = null;
-
-	/**
-	 * Type of column, if this record is associated with a table
-	 */
-	FieldType fieldType = FieldType.DATA;
 
 	/**
 	 * If this is a column in the database, and we use a different naming
@@ -203,7 +203,7 @@ public class Field {
 	@FieldMetaData(isReferenceToComp = true, referredCompType = ComponentType.MSG)
 	String messageName = null;
 
-	private DataType dataTypeObject;
+	protected DataType dataTypeObject;
 	private ValueType valueType;
 	/**
 	 * default values is parsed into a Value object for performance
@@ -230,13 +230,6 @@ public class Field {
 	}
 
 	/**
-	 * @return field type
-	 */
-	public FieldType getFieldType() {
-		return this.fieldType;
-	}
-
-	/**
 	 * @return true if a value for this field is required, false if it is
 	 *         optional
 	 */
@@ -252,30 +245,10 @@ public class Field {
 	}
 
 	/**
-	 * @return true if an input is expected for this field, false otherwise
-	 */
-	public boolean toBeInput() {
-		/*
-		 * db record based read operations use this concept. will be over-ridden
-		 * by dbField
-		 */
-		return true;
-	}
-
-	/**
-	 * @return name with which this fiel dis known column name of this field
+	 * @return name with which this field is known column name of this field
 	 */
 	public String getExternalName() {
 		return this.externalName;
-	}
-
-	/**
-	 *
-	 * @return true if this field is a primitive type. false if it is a
-	 *         record/array
-	 */
-	public boolean isPrimitive() {
-		return true;
 	}
 
 	/**
@@ -313,15 +286,13 @@ public class Field {
 	 * @param inputValue
 	 *            could be a primitive value or string, could be null if the
 	 *            input source had no value for this field
-	 * @param allFieldsAreOptional
-	 *            true if the input scenario is such that all fields are
-	 *            optional. Any parameter for the field in this regard is to be
-	 *            ignored
+	 * @param purpose
+	 *            relevant if this is for db operation
 	 * @param ctx
 	 * @return parse value, or null if the value could not be parsed. Error
 	 *         message if any, is added to the context
 	 */
-	public Value parseObject(Object inputValue, boolean allFieldsAreOptional, ServiceContext ctx) {
+	public Value parseObject(Object inputValue, DataPurpose purpose, ServiceContext ctx) {
 		Value value = null;
 		/*
 		 * is this of the right value type?
@@ -334,15 +305,17 @@ public class Field {
 			}
 		}
 
-		return this.validateValue(value, allFieldsAreOptional, ctx);
+		return this.validateValue(value, purpose, ctx);
 	}
 
-	private Value validateValue(Value inputValue, boolean allFieldsAreOptional, ServiceContext ctx) {
+	private Value validateValue(Value inputValue, DataPurpose purpose, ServiceContext ctx) {
 		Value value = null;
 		if (inputValue == null || inputValue.isUnknown()) {
 			value = this.getDefaultValue(ctx);
-			if (value == null && allFieldsAreOptional == false && this.isRequired && ctx != null) {
-				ctx.addMessage(new FormattedMessage(Messages.VALUE_REQUIRED, this.externalName));
+			if (value == null && ctx != null && purpose != null) {
+				if (this.isNullOk(purpose) == false) {
+					ctx.addMessage(new FormattedMessage(Messages.VALUE_REQUIRED, this.externalName));
+				}
 			}
 			return value;
 		}
@@ -364,7 +337,18 @@ public class Field {
 		return value;
 	}
 
-	Value getDefaultValue(ServiceContext ctx) {
+	/**
+	 * over-ridden by primary key to allow null if the key is generated for save
+	 * operation
+	 *
+	 * @param purpose
+	 * @return
+	 */
+	protected boolean isNullOk(DataPurpose purpose) {
+		return !this.isRequired;
+	}
+
+	private Value getDefaultValue(ServiceContext ctx) {
 		if (this.defaultValueObject != null) {
 			return this.defaultValueObject;
 		}
@@ -416,9 +400,6 @@ public class Field {
 	 *         valid validation errors if any are added to the ctx
 	 */
 	public Value[] parseArray(Object[] values, String recordName, ServiceContext ctx) {
-		if (this.toBeInput() == false) {
-			return null;
-		}
 		if (values == null || values.length == 0) {
 			if (this.isRequired && ctx != null) {
 				ctx.addMessage(new FormattedMessage(Messages.VALUE_REQUIRED, recordName, this.externalName, null, 0));
@@ -431,7 +412,7 @@ public class Field {
 			if (val == null) {
 				continue;
 			}
-			Value value = this.parseObject(val, false, ctx);
+			Value value = this.parseObject(val, DataPurpose.OTHERS, ctx);
 			if (value != null) {
 				result[i] = value;
 			}
@@ -541,11 +522,12 @@ public class Field {
 		this.assertCompatibility(parentRecord.getRecordUsageType(), parentRecord.getQualifiedName());
 		this.resolverReference(parentRecord, defaultReferredRecord);
 		if (this.dataType == null) {
-			this.dataType = DEFAULT_DATA_TYPE;
-			logger.info("Field {} is assigned defeault data type {}", this.name, DEFAULT_DATA_TYPE);
+			this.dataTypeObject = TextDataType.getDefaultInstance();
+			this.dataType = this.dataTypeObject.getQualifiedName();
+			logger.info("Field {} is assigned defeault data type {}", this.name, this.dataType);
+		} else {
+			this.dataTypeObject = Application.getActiveInstance().getDataType(this.dataType);
 		}
-		this.dataTypeObject = Application.getActiveInstance().getDataType(this.dataType);
-
 		if (this.messageName == null) {
 			this.messageName = this.dataTypeObject.getMessageName();
 		}
@@ -570,7 +552,7 @@ public class Field {
 					+ recordName + ". non-primitive fields are allowed only in object-strucres");
 		}
 
-		if (this.fieldType.isDbField()) {
+		if (this.isDbField()) {
 			if (ut.isDbRelated()) {
 				return;
 			}
@@ -589,9 +571,10 @@ public class Field {
 	 *
 	 * @param vtx
 	 * @param record
+	 * @param defaultRefRecord
 	 * @param referredFields
 	 */
-	public void validate(IValidationContext vtx, Record record, Set<String> referredFields) {
+	public void validate(IValidationContext vtx, Record record, String defaultRefRecord, Set<String> referredFields) {
 		ValidationUtil.validateMeta(vtx, this);
 		/*
 		 * add referred fields
@@ -608,6 +591,10 @@ public class Field {
 		if (this.basedOnField != null) {
 			referredFields.add(this.fromField);
 		}
+		if (this.requiresReference() && this.referredRecord == null && defaultRefRecord == null) {
+			vtx.message(new ValidationMessage(this, ValidationMessage.SEVERITY_ERROR,
+					"foreignKey field must refer to a record using referredRecord attribute", null));
+		}
 	}
 
 	/*
@@ -620,6 +607,10 @@ public class Field {
 		} else if (this.referredField != null || parentRecord.getRecordUsageType() == RecordUsageType.VIEW) {
 			refRecord = defaultRefferedRecord;
 		} else {
+			if (this.requiresReference()) {
+				throw new ApplicationError("Field " + this.name + " in record " + parentRecord.getQualifiedName()
+						+ " requires reference to a field in another record");
+			}
 			/*
 			 * no reference
 			 */
@@ -702,4 +693,30 @@ public class Field {
 		rec.getReady();
 		return rec;
 	}
+
+	/**
+	 *
+	 * @return true if this field is a primitive type. false if it is a
+	 *         record/array
+	 */
+	public boolean isPrimitive() {
+		return true;
+	}
+
+	/**
+	 *
+	 * @return does this field require a reference field
+	 */
+	public boolean requiresReference() {
+		return false;
+	}
+
+	/**
+	 *
+	 * @return is this field associated with a db
+	 */
+	public boolean isDbField() {
+		return false;
+	}
+
 }

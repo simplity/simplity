@@ -25,14 +25,13 @@ import org.simplity.core.ApplicationError;
 import org.simplity.core.dm.Record;
 
 /**
- * Primary key field
+ * array of data structure that is defined in another record
  */
-public class RecordArray extends ChildRecord {
-	/**
-	 *
-	 */
-	public RecordArray() {
-		this.fieldType = FieldType.RECORD_ARRAY;
+public class RecordArray extends DataStructureField {
+
+	@Override
+	protected void resolverReference(Record parentRecord, Record defaultRefferedRecord) {
+		// reference has different meaning in this context
 	}
 
 	@Override

@@ -26,7 +26,8 @@ import org.simplity.core.app.AppConventions;
 import org.simplity.core.app.Application;
 import org.simplity.core.data.DataPurpose;
 import org.simplity.core.dm.DbTable;
-import org.simplity.core.dt.DataType;
+import org.simplity.core.dt.BooleanDataType;
+import org.simplity.core.dt.TextDataType;
 import org.simplity.core.msg.Messages;
 import org.simplity.core.rdb.DbUsage;
 import org.simplity.core.service.DataStructureType;
@@ -245,7 +246,8 @@ public class ServiceUtil {
 				 * do we need any input? we are flexible
 				 */
 
-				InputField f1 = new InputField(AppConventions.Name.LIST_SERVICE_KEY, DataType.DEFAULT_TEXT, false,
+				InputField f1 = InputField.createInputField(AppConventions.Name.LIST_SERVICE_KEY,
+						TextDataType.getDefaultInstance(), false,
 						null,
 						AppConventions.Name.LIST_SERVICE_KEY, null);
 				InputField[] inFields = { f1 };
@@ -308,9 +310,11 @@ public class ServiceUtil {
 				/*
 				 * input for suggest
 				 */
-				InputField f1 = new InputField(AppConventions.Name.LIST_SERVICE_KEY, DataType.DEFAULT_TEXT, true, null,
+				InputField f1 = InputField.createInputField(AppConventions.Name.LIST_SERVICE_KEY,
+						TextDataType.getDefaultInstance(), true, null,
 						AppConventions.Name.LIST_SERVICE_KEY, null);
-				InputField f2 = new InputField(AppConventions.Name.SUGGEST_STARTING, DataType.DEFAULT_BOOLEAN, false,
+				InputField f2 = InputField.createInputField(AppConventions.Name.SUGGEST_STARTING,
+						BooleanDataType.getDefaultInstance(), false,
 						null,
 						AppConventions.Name.SUGGEST_STARTING, null);
 

@@ -28,11 +28,8 @@ package org.simplity.core.dm.field;
  */
 public class ViewField extends DbField {
 
-	/**
-	 *
-	 */
-	public ViewField() {
-		super();
-		this.fieldType = FieldType.VIEW;
+	@Override
+	public boolean requiresReference() {
+		return true;
 	}
 }

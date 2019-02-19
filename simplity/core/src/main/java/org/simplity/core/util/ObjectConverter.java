@@ -26,9 +26,12 @@ import java.io.IOException;
 import java.io.Writer;
 
 import org.simplity.core.app.Application;
+import org.simplity.core.data.DataPurpose;
 import org.simplity.core.dm.Record;
+import org.simplity.core.dm.field.ChildRecord;
 import org.simplity.core.dm.field.Field;
-import org.simplity.core.dm.field.FieldType;
+import org.simplity.core.dm.field.RecordArray;
+import org.simplity.core.dm.field.ValueArray;
 import org.simplity.core.msg.FormattedMessage;
 import org.simplity.core.msg.Messages;
 import org.simplity.core.service.ServiceContext;
@@ -75,30 +78,19 @@ public class ObjectConverter {
 		boolean allOk = true;
 
 		for (Field field : fields) {
-			FieldType ft = field.getFieldType();
 			boolean fieldAdded = false;
 
-			switch (ft) {
-			case RECORD:
-				fieldAdded = addRecordField(json, field, xml, ctx);
-				break;
-
-			case RECORD_ARRAY:
-				fieldAdded = addRecordArrayField(json, field, xml, ctx);
-				break;
-
-			case VALUE_ARRAY:
-				fieldAdded = addValueArrayField(json, field, xml, ctx);
-				break;
-
-			default:
+			if (field.isPrimitive()) {
 				fieldAdded = addValueField(json, field, xml, ctx);
-				break;
+			} else if (field instanceof ChildRecord) {
+				fieldAdded = addRecordField(json, field, xml, ctx);
+			} else if (field instanceof RecordArray) {
+				fieldAdded = addRecordArrayField(json, field, xml, ctx);
+			} else {
+				fieldAdded = addValueArrayField(json, field, xml, ctx);
 			}
-
 			allOk = allOk && fieldAdded;
 		}
-
 		if (allOk) {
 			return json;
 		}
@@ -338,30 +330,22 @@ public class ObjectConverter {
 				continue;
 			}
 
-			FieldType ft = field.getFieldType();
 			Element child = doc.createElement(fieldName);
 			xml.appendChild(child);
 			boolean fieldAdded = false;
 
-			switch (ft) {
-			case RECORD:
-				fieldAdded = addXmlRecord(obj, field, child, ctx);
-				break;
-			case RECORD_ARRAY:
-				fieldAdded = addXmlRecordArray(obj, field, child, ctx);
-				break;
-
-			case VALUE_ARRAY:
-				fieldAdded = addXmlValueArray(obj, field, child, ctx);
-				break;
-
-			default:
-				Value value = field.parseObject(obj, false, ctx);
+			if (field.isPrimitive()) {
+				Value value = field.parseObject(obj, DataPurpose.OTHERS, ctx);
 				if (value != null) {
 					fieldAdded = true;
 					child.setTextContent(value.toString());
 				}
-				break;
+			} else if (field instanceof ChildRecord) {
+				fieldAdded = addXmlRecord(obj, (ChildRecord) field, child, ctx);
+			} else if (field instanceof RecordArray) {
+				fieldAdded = addXmlRecordArray(obj, (RecordArray) field, child, ctx);
+			} else {
+				fieldAdded = addXmlValueArray(obj, (ValueArray) field, child, ctx);
 			}
 			allOk = allOk && fieldAdded;
 		}
@@ -385,7 +369,7 @@ public class ObjectConverter {
 	 *            element to which this JSON object is to be added
 	 * @return true if all OK. false in case of any error.
 	 */
-	private static boolean addXmlRecord(Object jsonObject, Field field, Element xml, ServiceContext ctx) {
+	private static boolean addXmlRecord(Object jsonObject, ChildRecord field, Element xml, ServiceContext ctx) {
 		String fieldName = field.getName();
 		if (jsonObject instanceof JSONObject == false) {
 			ctx.addMessage(new FormattedMessage(Messages.INVALID_DATA, fieldName));
@@ -408,7 +392,7 @@ public class ObjectConverter {
 	 *            xml element to which the array is to be added to
 	 * @return true if all ok. false in case of any error.
 	 */
-	private static boolean addXmlValueArray(Object jsonArray, Field field, Element xml, ServiceContext ctx) {
+	private static boolean addXmlValueArray(Object jsonArray, ValueArray field, Element xml, ServiceContext ctx) {
 		String fieldName = field.getName();
 		if (jsonArray instanceof JSONArray == false) {
 			ctx.addMessage(new FormattedMessage(Messages.INVALID_DATA, fieldName));
@@ -421,7 +405,7 @@ public class ObjectConverter {
 
 		for (int i = 0; i < nbr; i++) {
 			Object obj = arr.get(i);
-			Value value = field.parseObject(obj, false, ctx);
+			Value value = field.parseObject(obj, DataPurpose.OTHERS, ctx);
 			if (value == null) {
 				return false;
 			}
@@ -448,7 +432,7 @@ public class ObjectConverter {
 	 * @return true if all ok. false in case of any error in data. error message
 	 *         in this case is added to errors list
 	 */
-	private static boolean addXmlRecordArray(Object jsonArray, Field field, Element xml,
+	private static boolean addXmlRecordArray(Object jsonArray, RecordArray field, Element xml,
 			ServiceContext ctx) {
 		String fieldName = field.getName();
 		if (jsonArray instanceof JSONArray == false) {
@@ -503,39 +487,30 @@ public class ObjectConverter {
 				continue;
 			}
 
-			FieldType ft = field.getFieldType();
 			startTag(fieldName, writer);
 			boolean fieldAdded = false;
 
 			Record childRecord = null;
-			switch (ft) {
-			case RECORD:
+			if (field.isPrimitive()) {
+				writer.write(xmlEscape(obj.toString()));
+			} else if (field instanceof ChildRecord) {
 				if (obj instanceof JSONObject == false) {
 					return invalidData();
 				}
 
 				childRecord = app.getRecord(field.getReferredRecord());
 				fieldAdded = jsonToXmlStream((JSONObject) obj, childRecord, writer);
-				break;
-
-			case RECORD_ARRAY:
+			} else if (field instanceof RecordArray) {
 				if (obj instanceof JSONArray == false) {
 					return invalidData();
 				}
 				childRecord = app.getRecord(field.getReferredRecord());
 				fieldAdded = jsonArrayToXmlStream((JSONArray) obj, childRecord, fieldName, writer);
-				break;
-
-			case VALUE_ARRAY:
+			} else {
 				if (obj instanceof JSONArray == false) {
 					return invalidData();
 				}
 				fieldAdded = jsonArrayToXmlStream((JSONArray) obj, fieldName, writer);
-				break;
-
-			default:
-				writer.write(xmlEscape(obj.toString()));
-				break;
 			}
 			startTag(fieldName, writer);
 			allOk = allOk && fieldAdded;

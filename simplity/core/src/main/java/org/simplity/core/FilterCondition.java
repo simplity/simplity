@@ -24,7 +24,11 @@ package org.simplity.core;
 
 import org.simplity.core.app.AppConventions;
 
-/** @author rg bhandi */
+/**
+ *
+ * @author simplity.org
+ *
+ */
 public enum FilterCondition {
 	/** equal */
 	Equal(AppConventions.Comparator.EQUAL),

@@ -73,7 +73,7 @@ public class JsonUtil {
 		}
 		Object obj = arr.opt(0);
 		if (obj instanceof JSONObject) {
-			return getSheet(arr, null, null, true, null, null, ctx);
+			return getSheet(arr, null, null, null, null, ctx);
 		}
 		if (obj instanceof JSONArray) {
 			return getSheetFromTable(arr);
@@ -118,9 +118,6 @@ public class JsonUtil {
 	 *            Fields to be input. null if we are to take whatever is offered
 	 * @param errors
 	 *            to which any validation errors are added
-	 * @param allFieldsAreOptional
-	 *            true of we are to consider all fields as optional, even if the
-	 *            field specifies it as mandatory
 	 * @param parentFieldName
 	 *            if this is a child sheet, specify the column name in this
 	 *            sheet that should be populated with the parent key value
@@ -133,7 +130,7 @@ public class JsonUtil {
 	 *         formated. was null. case the array is not well-formed
 	 */
 	public static IDataSheet getSheet(JSONArray arr, Field[] inputFields, List<FormattedMessage> errors,
-			boolean allFieldsAreOptional, String parentFieldName, Value parentValue, ServiceContext ctx) {
+			String parentFieldName, Value parentValue, ServiceContext ctx) {
 		if (arr == null || arr.length() == 0) {
 			return null;
 		}
@@ -197,7 +194,7 @@ public class JsonUtil {
 				if (j == parentIdx) {
 					row[j] = parentValue;
 				} else {
-					row[j] = field.parseObject(val, allFieldsAreOptional, ctx);
+					row[j] = field.parseObject(val, null, ctx);
 				}
 				j++;
 			}
@@ -216,13 +213,11 @@ public class JsonUtil {
 	 * @param fields
 	 *            expected fields. Input data is validated as per these field
 	 *            specifications.
-	 * @param allFieldsAreOptional
 	 * @param ctx
 	 * @return data sheet. Null if no data found. Throws ApplicationError on
 	 *         case the array is not well-formed
 	 */
-	public static IDataSheet getChildSheet(JSONArray arr, String attName, Field[] fields, boolean allFieldsAreOptional,
-			ServiceContext ctx) {
+	public static IDataSheet getChildSheet(JSONArray arr, String attName, Field[] fields, ServiceContext ctx) {
 		/*
 		 * arr corresponds to following json. We are to accumulate child rows
 		 * across all main rows
@@ -268,7 +263,7 @@ public class JsonUtil {
 				Value[] row = new Value[fields.length];
 				for (Field field : inputFields) {
 					Object val = obj.opt(field.getName());
-					row[j] = field.parseObject(val, allFieldsAreOptional, ctx);
+					row[j] = field.parseObject(val, null, ctx);
 					j++;
 				}
 				ds.addRow(row);

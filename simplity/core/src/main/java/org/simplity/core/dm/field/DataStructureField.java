@@ -22,11 +22,25 @@
 package org.simplity.core.dm.field;
 
 /**
- * modified by user
+ * non-primitive field
  */
-public class ModifiedByUser extends DbField {
+public abstract class DataStructureField extends Field {
+
+	/**
+	 * this is used only when we have to use this as parameter for Stored
+	 * procedure
+	 */
+	String sqlTypeName;
+
 	@Override
-	public boolean toBeInput() {
+	public boolean isPrimitive() {
 		return false;
+	}
+
+	/**
+	 * @return sqlType as defined in the rdbms
+	 */
+	public String getSqlTypeName() {
+		return this.sqlTypeName;
 	}
 }

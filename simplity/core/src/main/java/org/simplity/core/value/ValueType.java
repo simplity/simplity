@@ -34,6 +34,14 @@ import java.sql.Types;
 import java.util.Date;
 
 import org.simplity.core.ApplicationError;
+import org.simplity.core.dt.BlobDataType;
+import org.simplity.core.dt.BooleanDataType;
+import org.simplity.core.dt.ClobDataType;
+import org.simplity.core.dt.DataType;
+import org.simplity.core.dt.DateDataType;
+import org.simplity.core.dt.NumericDataType;
+import org.simplity.core.dt.TextDataType;
+import org.simplity.core.dt.TimestampDataType;
 import org.simplity.core.file.FileManager;
 import org.simplity.core.util.DateUtil;
 import org.simplity.core.util.JsonUtil;
@@ -47,7 +55,12 @@ import org.slf4j.LoggerFactory;
  */
 public enum ValueType {
 	/** textual */
-	TEXT(Types.VARCHAR, "VARCHAR", "_text") {
+	TEXT(Types.VARCHAR, "VARCHAR") {
+
+		@Override
+		protected DataType getDataType() {
+			return TextDataType.getDefaultInstance();
+		}
 
 		@Override
 		public void toJson(String value, StringBuilder json) {
@@ -84,7 +97,12 @@ public enum ValueType {
 		}
 	},
 	/** whole numbers with no fraction */
-	INTEGER(Types.BIGINT, "BIGINT", "_number") {
+	INTEGER(Types.BIGINT, "BIGINT") {
+		@Override
+		protected DataType getDataType() {
+			return NumericDataType.getDefaultInstance();
+		}
+
 		@Override
 		public Value extractFromRs(ResultSet resultSet, int idx) throws SQLException {
 			long val = resultSet.getLong(idx);
@@ -134,7 +152,12 @@ public enum ValueType {
 		}
 	},
 	/** number with possible fraction */
-	DECIMAL(Types.DECIMAL, "DECIMAL", "_decimal") {
+	DECIMAL(Types.DECIMAL, "DECIMAL") {
+		@Override
+		protected DataType getDataType() {
+			return NumericDataType.getDefaultDecimalInstance();
+		}
+
 		@Override
 		public Value extractFromRs(ResultSet resultSet, int idx) throws SQLException {
 			double val = resultSet.getDouble(idx);
@@ -188,7 +211,12 @@ public enum ValueType {
 	 * true-false we would have loved to call it binary, but unfortunately that
 	 * has different connotation :-)
 	 */
-	BOOLEAN(Types.BOOLEAN, "BOOLEAN", "_boolean") {
+	BOOLEAN(Types.BOOLEAN, "BOOLEAN") {
+		@Override
+		protected DataType getDataType() {
+			return BooleanDataType.getDefaultInstance();
+		}
+
 		@Override
 		public Value extractFromRs(ResultSet resultSet, int idx) throws SQLException {
 			Object obj = resultSet.getObject(idx);
@@ -263,7 +291,12 @@ public enum ValueType {
 		}
 	},
 	/** date, possibly with specific time of day */
-	DATE(Types.DATE, "DATE", "_dateTime") {
+	DATE(Types.DATE, "DATE") {
+		@Override
+		protected DataType getDataType() {
+			return DateDataType.getDefaultInstanceWithTime();
+		}
+
 		@Override
 		public Value extractFromRs(ResultSet resultSet, int idx) throws SQLException {
 			Timestamp val = resultSet.getTimestamp(idx);
@@ -317,7 +350,11 @@ public enum ValueType {
 	 * clob : a wrapper on text specifically for RDBMS clob field. Behaviour
 	 * mimics text except for RDBMS I/O
 	 */
-	CLOB(Types.CLOB, "CLOB", "_clob") {
+	CLOB(Types.CLOB, "CLOB") {
+		@Override
+		protected DataType getDataType() {
+			return ClobDataType.getDefaultInstance();
+		}
 
 		@Override
 		public void toJson(String value, StringBuilder json) {
@@ -369,7 +406,11 @@ public enum ValueType {
 	 * Blob : this is a sub-class of text that behaves differently ONLY when
 	 * dealing with RDBMS i/o
 	 */
-	BLOB(Types.BLOB, "BLOB", "_blob") {
+	BLOB(Types.BLOB, "BLOB") {
+		@Override
+		protected DataType getDataType() {
+			return BlobDataType.getDefaultInstance();
+		}
 
 		@Override
 		public void toJson(String value, StringBuilder json) {
@@ -418,7 +459,12 @@ public enum ValueType {
 		}
 	},
 	/** time-stamp that is specifically used for RDBMS related operations */
-	TIMESTAMP(Types.TIMESTAMP, "TIMESTAMP", "_timestamp") {
+	TIMESTAMP(Types.TIMESTAMP, "TIMESTAMP") {
+		@Override
+		protected DataType getDataType() {
+			return TimestampDataType.getDefaultInstance();
+		}
+
 		@Override
 		public Value extractFromRs(ResultSet resultSet, int idx) throws SQLException {
 			Timestamp ts = resultSet.getTimestamp(idx);
@@ -472,13 +518,15 @@ public enum ValueType {
 
 	protected final int sqlType;
 	protected final String sqlText;
-	protected final String defaultDataType;
+	protected final DataType defaultDataType;
 
-	ValueType(int sqlType, String sqlText, String dt) {
+	ValueType(int sqlType, String sqlText) {
 		this.sqlType = sqlType;
 		this.sqlText = sqlText;
-		this.defaultDataType = dt;
+		this.defaultDataType = this.getDataType();
 	}
+
+	protected abstract DataType getDataType();
 
 	/**
 	 * @return sql type that can be used to register a parameter of this type
@@ -584,7 +632,7 @@ public enum ValueType {
 	}
 
 	/** @return a default data type for this value type */
-	public String getDefaultDataType() {
+	public DataType getDefaultDataType() {
 		return this.defaultDataType;
 	}
 

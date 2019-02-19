@@ -22,14 +22,16 @@
 package org.simplity.core.dm.field;
 
 /**
- * similar to CreatedByUser except for type Hence it extends it rather than
- * Field
+ * created time stamp field
  */
-public class CreatedTimestamp extends CreatedByUser {
-	/**
-	 *
-	 */
-	public CreatedTimestamp() {
-		this.fieldType = FieldType.CREATED_TIME_STAMP;
+public class CreatedTimestamp extends DbField {
+	@Override
+	public boolean toBeInput() {
+		return false;
+	}
+
+	@Override
+	public boolean canUpdate() {
+		return false;
 	}
 }

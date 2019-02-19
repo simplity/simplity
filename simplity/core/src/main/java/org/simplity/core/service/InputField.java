@@ -95,13 +95,6 @@ public class InputField {
 	private Value defaultObject;
 
 	/**
-	 * default constructor
-	 */
-	public InputField() {
-		//
-	}
-
-	/**
 	 * convenient constructor to create a simple field
 	 *
 	 * @param name
@@ -110,15 +103,19 @@ public class InputField {
 	 * @param defaultValue
 	 * @param inputName
 	 * @param commonCodeType
+	 * @return instance
 	 */
-	public InputField(String name, String dataType, boolean isRequired,
+	public static InputField createInputField(String name, DataType dataType, boolean isRequired,
 			String defaultValue, String inputName, String commonCodeType) {
-		this.name = name;
-		this.dataType = dataType;
-		this.isRequired = isRequired;
-		this.defaultValue = defaultValue;
-		this.inputName = inputName;
-		this.commonCodeType = commonCodeType;
+		InputField field = new InputField();
+		field.name = name;
+		field.dataType = dataType.getQualifiedName();
+		field.dataTypeObject = dataType;
+		field.isRequired = isRequired;
+		field.defaultValue = defaultValue;
+		field.inputName = inputName;
+		field.commonCodeType = commonCodeType;
+		return field;
 	}
 
 	/**

@@ -22,32 +22,8 @@
 package org.simplity.core.dm.field;
 
 /**
- * Primary key field
+ * array of primitive values
  */
-public class ValueArray extends Field {
-
-	/**
-	 * this is used only when we have to use this as parameter for Stored
-	 * procedure
-	 */
-	String sqlTypeName;
-
-	/**
-	 *
-	 */
-	public ValueArray() {
-		this.fieldType = FieldType.VALUE_ARRAY;
-	}
-
-	@Override
-	public boolean isPrimitive() {
-		return false;
-	}
-
-	/**
-	 * @return sqlType as defined in the rdbms
-	 */
-	public String getSqlTypeName() {
-		return this.sqlTypeName;
-	}
+public class ValueArray extends DataStructureField {
+	// we have to get some methods from field to here..
 }

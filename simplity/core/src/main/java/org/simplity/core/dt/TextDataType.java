@@ -35,6 +35,21 @@ import org.simplity.core.value.ValueType;
  * @author simplity.org
  */
 public class TextDataType extends DataType {
+	private static TextDataType defaultInstance = createDefault();
+
+	private static TextDataType createDefault() {
+		TextDataType dt = new TextDataType();
+		dt.name = BuiltInDataTypes.TEXT;
+		return dt;
+	}
+
+	/**
+	 *
+	 * @return default TextDataType
+	 */
+	public static TextDataType getDefaultInstance() {
+		return defaultInstance;
+	}
 
 	/** min number of characters expected. */
 	int minLength;

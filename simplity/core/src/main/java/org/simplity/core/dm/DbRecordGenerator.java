@@ -198,7 +198,7 @@ public class DbRecordGenerator {
 					desc += "." + nbrDecimals;
 				}
 				boolean nullable = ((BooleanValue) row[8]).getBoolean();
-				fields[i] = new DbField(name, extern, desc, vt.getDefaultDataType(), nullable);
+				fields[i] = DbField.createDbField(name, extern, desc, vt.getDefaultDataType(), nullable);
 			}
 			record.fields = fields;
 			this.result = record;

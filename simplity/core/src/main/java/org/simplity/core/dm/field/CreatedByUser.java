@@ -26,11 +26,13 @@ package org.simplity.core.dm.field;
  * methods are over-ridden
  */
 public class CreatedByUser extends DbField {
-	/**
-	 *
-	 */
-	public CreatedByUser() {
-		this.fieldType = FieldType.CREATED_BY_USER;
-		this.insertable = true;
+	@Override
+	public boolean toBeInput() {
+		return false;
+	}
+
+	@Override
+	public boolean canUpdate() {
+		return false;
 	}
 }

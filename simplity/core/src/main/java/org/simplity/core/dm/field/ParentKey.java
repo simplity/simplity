@@ -25,12 +25,19 @@ package org.simplity.core.dm.field;
  * Primary key field
  */
 public class ParentKey extends DbField {
-	/**
-	 *
-	 */
-	public ParentKey() {
-		this.fieldType = FieldType.PARENT_KEY;
-		this.toBeInput = true;
-		this.insertable = true;
+
+	@Override
+	public boolean canUpdate() {
+		return false;
+	}
+
+	@Override
+	public boolean requiresReference() {
+		return true;
+	}
+
+	@Override
+	public boolean isParentKey() {
+		return true;
 	}
 }

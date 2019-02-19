@@ -607,7 +607,7 @@ public class Record implements IComponent {
 		Set<String> externs = new HashSet<String>();
 		Set<String> referredFields = new HashSet<String>();
 		for (Field field : this.fields) {
-			field.validate(vtx, this, referredFields);
+			field.validate(vtx, this, this.defaultRefRecord, referredFields);
 
 			/*
 			 * look for duplicate field name

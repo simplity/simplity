@@ -36,6 +36,38 @@ import org.slf4j.LoggerFactory;
 
 /** @author simplity.org */
 public class DateDataType extends DataType {
+	private static DateDataType defaultInstance = createDefault();
+	private static DateDataType defaultInstanceWithTime = createDefaultWithTime();
+
+	private static DateDataType createDefault() {
+		DateDataType dt = new DateDataType();
+		dt.name = BuiltInDataTypes.DATE;
+		return dt;
+	}
+
+	private static DateDataType createDefaultWithTime() {
+		DateDataType dt = new DateDataType();
+		dt.name = BuiltInDataTypes.DATE_TIME;
+		dt.hasTime = true;
+		return dt;
+	}
+
+	/**
+	 *
+	 * @return default DateDataType
+	 */
+	public static DateDataType getDefaultInstance() {
+		return defaultInstance;
+	}
+
+	/**
+	 *
+	 * @return default DateDataType
+	 */
+	public static DateDataType getDefaultInstanceWithTime() {
+		return defaultInstanceWithTime;
+	}
+
 	private static final Logger logger = LoggerFactory.getLogger(DateDataType.class);
 
 	/** do we keep time as well? */

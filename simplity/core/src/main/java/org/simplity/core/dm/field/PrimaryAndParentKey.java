@@ -22,14 +22,31 @@
 package org.simplity.core.dm.field;
 
 /**
- * Primary key field
+ * Primary key as well as parent key. case where the designer has used parent
+ * key plus one or more columns as primary key
  */
-public class PrimaryAndParentKey extends PrimaryKey {
-	/**
-	 *
-	 */
-	public PrimaryAndParentKey() {
-		this.fieldType = FieldType.PRIMARY_AND_PARENT_KEY;
-		this.toBeInput = true;
+public class PrimaryAndParentKey extends DbField {
+
+	@Override
+	public boolean canUpdate() {
+		return false;
 	}
+
+	@Override
+	public boolean requiresReference() {
+		return true;
+	}
+
+	@Override
+	public boolean isParentKey() {
+		return true;
+	}
+
+	@Override
+	public boolean isPrimaryKey() {
+		return true;
+	}
+	/*
+	 * it is not generated. hence is insertable
+	 */
 }
