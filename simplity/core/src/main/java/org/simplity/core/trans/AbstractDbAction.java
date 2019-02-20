@@ -77,8 +77,8 @@ public abstract class AbstractDbAction extends AbstractAction {
 		if (dbHandle == null) {
 			return false;
 		}
-
-		if (!this.getDbUsage().updatesDb()) {
+		DbUsage usage = this.getDbUsage();
+		if (usage == null || usage.updatesDb() == false) {
 			return true;
 		}
 

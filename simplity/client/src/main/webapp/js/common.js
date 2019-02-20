@@ -4,8 +4,8 @@
 var SERVICES = {
 	findOwners : 'pet.owner.filter',
 	findOwners1 : 'pet.filterOwners',
-	findOwners2 : 'pet.filterOwnersJava',
-	findOwners3 : 'pet.filterOwnersPlainJava',
+	findOwners2 : 'pet.filterWithJavaAction',
+	findOwners3 : 'pet.filterWithJavaService',
 	getOwner : 'pet.owner.get',
 	saveOwner : 'pet.owner.save',
 	getVets : 'pet.vet.filter',

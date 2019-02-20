@@ -1,7 +1,7 @@
 /*
  * elements we use
  */
-var FIELDS = [ 'ownerTab', 'found', 'find', 'lastName', 'message' ];
+var FIELDS = [ 'ownerTab', 'found', 'find', 'lastName', 'message', 'serviceName' ];
 
 /**
  * called once page got laded. getReady
@@ -28,7 +28,13 @@ var find = function() {
 		};
 		txt = JSON.stringify(txt);
 	}
-	Simplity.getResponse(SERVICES.findOwners, txt, gotOwners);
+	var serviceName = "findOwners";
+	var ele = document.getElementById('serviceName');
+	var idx = ele.selectedIndex;
+	if(idx != -1){
+		serviceName = ele.options[idx].value;
+	}
+	Simplity.getResponse(SERVICES[serviceName], txt, gotOwners);
 };
 
 /**

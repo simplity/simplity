@@ -83,7 +83,7 @@ public class ContextDataSource implements IDataSource {
 		/*
 		 * try app specific object
 		 */
-		IDataAdapterExtension extension = ServiceContext.getDataAdapterExtension();
+		IDataAdapterExtension extension = this.ctx.getApp().getPlugins().getDataAdapterExtension();
 		if (extension != null) {
 			return extension.getStruct(obj, fieldName, this.ctx);
 		}

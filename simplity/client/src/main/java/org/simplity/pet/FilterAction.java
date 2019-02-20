@@ -31,26 +31,30 @@ import org.simplity.core.service.ServiceContext;
 import org.simplity.core.trans.ILogicWithDbAccess;
 
 /**
+ * example java code to be called as an action/task inside a simplity service.
+ * Refer to pet.filterWithJavaAction
+ *
  * @author simplity.org
  *
  */
-public class FilterOwners implements ILogicWithDbAccess {
-	private static final String OWNERS = "owners";
-	private static final String PETS = "petDetails";
+public class FilterAction implements ILogicWithDbAccess {
+	private static final String OWNER = "pet.owner";
+	private static final String PET = "pet.petDetail";
 
 	@Override
 	public boolean execute(ServiceContext ctx, IDbHandle dbHandle) {
-		DbTable owners = (DbTable) Application.getActiveInstance().getRecord(OWNERS);
-		IDataSheet ds = owners.filter(owners, ctx, (IReadOnlyHandle) dbHandle, ctx.getUserId());
-		ctx.putDataSheet(OWNERS, ds);
+		Application app = ctx.getApp();
+		DbTable owner = (DbTable) app.getRecord(OWNER);
+		IDataSheet ds = owner.filter(owner, ctx, (IReadOnlyHandle) dbHandle, ctx.getUserId());
+		ctx.putDataSheet(owner.getDefaultSheetName(), ds);
 
 		/*
 		 * read rows from pets for the filtered owners
 		 */
 		int nbrRows = ds.length();
 		if (nbrRows > 0) {
-			DbTable pets = (DbTable) Application.getActiveInstance().getRecord(PETS);
-			pets.filterForParents(ds, (IReadOnlyHandle) dbHandle, PETS, false, ctx);
+			DbTable pet = (DbTable) app.getRecord(PET);
+			pet.filterForParents(ds, (IReadOnlyHandle) dbHandle, pet.getDefaultSheetName(), false, ctx);
 		}
 		return nbrRows > 0;
 	}

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<service
+  xmlns="http://www.simplity.org/schema"
+  name="filterWithJavaAction"
+  moduleName="pet"
+  description="Demonstrates use of java code to implement a service with the help of Simplity components"
+  referredServiceForInput="pet.filterOwners"
+  referredServiceForOutput="pet.filterOwners"
+>
+  <!-- we use a java class as action inside a service. -->
+  <processor>
+    <transactionProcessor dbUsage="readOnly">
+      <actions>
+        <logicWithDbAccess
+          className="org.simplity.pet.FilterAction" dbUsage="readOnly" />
+      </actions>
+    </transactionProcessor>
+  </processor>
+</service>

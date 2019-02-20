@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<service
+  xmlns="http://www.simplity.org/schema"
+  name="filterWithJavaService"
+  moduleName="pet"
+  referredServiceForInput="pet.filterOwners"
+  referredServiceForOutput="pet.filterOwners"
+>
+<!--  we do not use the Service pre-defined by simplity. we write our own java to act as service processor -->
+  <processor>
+    <javaProcessor
+      className="org.simplity.pet.FilterService" />
+  </processor>
+</service>

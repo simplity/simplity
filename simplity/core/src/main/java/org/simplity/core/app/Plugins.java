@@ -45,8 +45,13 @@ import org.slf4j.LoggerFactory;
  * @author simplity.org
  *
  */
-class Plugins {
+public class Plugins {
 	protected static final Logger logger = LoggerFactory.getLogger(Plugins.class);
+
+	Plugins() {
+		// access to Application, not public
+	}
+
 	/**
 	 * Utility class that gets an instance of a Bean. Like the context in
 	 * Spring. Useful when you want to work within a Spring container. Must
@@ -72,6 +77,11 @@ class Plugins {
 		}
 	};
 
+	/**
+	 *
+	 * @return non-null bean finder plugin. If app has not defined this, a
+	 *         default one is returned
+	 */
 	IBeanFinder getBeanFinder() {
 		return this.beanFinderInstance;
 	}
@@ -85,7 +95,12 @@ class Plugins {
 	String serviceCacher;
 	private IServiceCacher serviceCacherInstance;
 
-	IServiceCacher getServiceCacher() {
+	/**
+	 *
+	 * @return caching infrastructure to cache the response for a service. null
+	 *         if this feature is not set-up
+	 */
+	public IServiceCacher getServiceCacher() {
 		return this.serviceCacherInstance;
 	}
 
@@ -97,7 +112,12 @@ class Plugins {
 	String appDataCacher;
 	private IAppDataCacher appDataCacherInstance;
 
-	IAppDataCacher getAppDataCacher() {
+	/**
+	 *
+	 * @return caching infrastructure for any data. null if this feature is not
+	 *         set-up
+	 */
+	public IAppDataCacher getAppDataCacher() {
 		return this.appDataCacherInstance;
 	}
 
@@ -183,7 +203,11 @@ class Plugins {
 	String dataAdapterExtension;
 	private IDataAdapterExtension dataAdapterExtensionInstance;
 
-	IDataAdapterExtension getDataAdapterExtension() {
+	/**
+	 *
+	 * @return null if no extension is set up for this app
+	 */
+	public IDataAdapterExtension getDataAdapterExtension() {
 		return this.dataAdapterExtensionInstance;
 	}
 
@@ -195,7 +219,11 @@ class Plugins {
 	String commonCodeValidator;
 	private ICommonCodeValidator commonCodeValidatorInstance;
 
-	ICommonCodeValidator getCommonCodeValidator() {
+	/**
+	 *
+	 * @return null if this is not set-up for this app
+	 */
+	public ICommonCodeValidator getCommonCodeValidator() {
 		return this.commonCodeValidatorInstance;
 	}
 

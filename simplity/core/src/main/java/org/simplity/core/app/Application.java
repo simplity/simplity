@@ -467,7 +467,7 @@ public class Application implements IApp {
 			logger.info("Service requested with no user. Dummy user is assumed.");
 			user = new AppUser(this.dummyUser);
 		}
-		ServiceContext ctx = new ServiceContext(serviceName, user);
+		ServiceContext ctx = new ServiceContext(this, serviceName, user, this.dummyUser);
 		appStartedServing(this);
 		try {
 			this.callService(ctx, request, response, service);
@@ -880,6 +880,14 @@ public class Application implements IApp {
 	 */
 	public <T> T getBean(String className, Class<T> cls) {
 		return this.plugins.getInstance(className, cls);
+	}
+
+	/**
+	 *
+	 * @return plugins set up for this app
+	 */
+	public Plugins getPlugins() {
+		return this.plugins;
 	}
 
 	/**

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<xs:schema
+  targetNamespace="http://www.simplity.org/schema"
+  elementFormDefault="qualified"
+  xmlns="http://www.simplity.org/schema"
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+>
+
+  <!-- we start with simplity supplied base -->
+  <xs:include schemaLocation="core.xsd" />
+
+  <!-- declared data types. to be used if simplity plugin is not used. -->
+  <xs:redefine schemaLocation="core.xsd">
+    <xs:simpleType name="declaredDataTypes">
+      <xs:restriction base="declaredDataTypes">
+        <!-- enumerate all the data types you have defined. -->
+        <xs:enumeration value="pet.id" />
+        <xs:enumeration value="pet.name" />
+        <xs:enumeration value="pet.description" />
+        <xs:enumeration value="pet.phone" />
+        <xs:enumeration value="pet.city" />
+        <xs:enumeration value="pet.text" />
+        <xs:enumeration value="pet.address" />
+        <xs:enumeration value="pet.date" />
+        <xs:enumeration value="pet.text80" />
+
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:redefine>
+
+  <!-- adding app-specific action/step to service -->
+  <xs:element
+    name="appAction"
+    substitutionGroup="abstractAction"
+  >
+    <xs:complexType>
+      <xs:complexContent>
+        <xs:extension base="abstractAction">
+          <xs:attribute
+            name="requiredApp1Attribute"
+            type="xs:string"
+            use="required"
+          >
+            <xs:annotation>
+              <xs:documentation>Sheet to which a column needs to be
+                added
+              </xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

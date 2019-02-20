@@ -22,6 +22,8 @@
 
 package org.simplity.core.trans;
 
+import org.simplity.core.ApplicationError;
+import org.simplity.core.app.Application;
 import org.simplity.core.comp.FieldMetaData;
 import org.simplity.core.comp.IValidationContext;
 import org.simplity.core.idb.IDbHandle;
@@ -61,5 +63,14 @@ public class LogicWithDbAccess extends AbstractDbAction {
 	@Override
 	public DbUsage getDbUsage() {
 		return this.dbUsage;
+	}
+
+	@Override
+	public void getReady(int idx, TransactionProcessor processor) {
+		super.getReady(idx, processor);
+		this.logic = Application.getActiveInstance().getBean(this.className, ILogicWithDbAccess.class);
+		if (this.logic == null) {
+			throw new ApplicationError(this.className + " is not a valid java class.");
+		}
 	}
 }

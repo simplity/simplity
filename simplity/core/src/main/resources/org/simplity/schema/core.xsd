@@ -425,7 +425,8 @@
     >
       <xs:annotation>
         <xs:documentation>If the column name used in the db is different
-          from name.</xs:documentation>
+          from name.
+        </xs:documentation>
       </xs:annotation>
     </xs:attribute>
   </xs:attributeGroup>
@@ -1478,28 +1479,6 @@
       </xs:annotation>
     </xs:attribute>
     <xs:attribute
-      name="saveInputObjectAs"
-      type="xs:string"
-    >
-      <xs:annotation>
-        <xs:documentation>Name of the field to which the pay-load is
-          assigned to, as it is by the client agent. This is to
-          facilitate
-          custom contract between client and service to
-          interpret the payload
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-    <xs:attribute
-      name="setInputToFieldName"
-      type="xs:string"
-    >
-      <xs:annotation>
-        <xs:documentation>payload should be just assigned to this field.
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-    <xs:attribute
       name="attachmentFields"
       type="xs:string"
       use="optional"
@@ -1664,6 +1643,16 @@
       </xs:annotation>
     </xs:attribute>
     <xs:attribute
+      name="outputIsAnArray"
+      type="booleanType"
+    >
+      <xs:annotation>
+        <xs:documentation>Special case where the payload is an json-array,
+          and not json-object
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute
       name="arrayNames"
       type="xs:string"
       use="optional"
@@ -1679,34 +1668,6 @@
           element of
           that
           value.
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-    <xs:attribute
-      name="responseTextFieldName"
-      type="xs:string"
-    >
-      <xs:annotation>
-        <xs:documentation>
-          Use this feature is the service has already
-          prepared a pay-load.
-          Content of this field is used as pay-load.
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-    <xs:attribute
-      name="justOutputEveryThing"
-      type="booleanType"
-    >
-      <xs:annotation>
-        <xs:documentation>
-          Do not use this for any business service. To
-          be
-          used for testing
-          purposes, and by utility services. all
-          values,
-          arrays and data
-          sheet are written out as paylaod
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
@@ -2083,26 +2044,24 @@
             </xs:annotation>
           </xs:attribute>
           <xs:attribute
-            name="outputAs"
-            type="outputDataType"
+            name="readAs"
+            type="extractionType"
             use="optional"
           >
             <xs:annotation>
-              <xs:documentation>how is the data expected by the client?
+              <xs:documentation>In what form do we expect input data for
+                this record?
               </xs:documentation>
             </xs:annotation>
           </xs:attribute>
           <xs:attribute
-            name="sourceIsAnObject"
-            type="booleanType"
+            name="writeAs"
+            type="outputDataType"
             use="optional"
           >
             <xs:annotation>
-              <xs:documentation>data source for this record could be
-                object
-                or
-                data sheet. This is relevant only if name is
-                specified.
+              <xs:documentation>How should the data defined in this record
+                be written out
               </xs:documentation>
             </xs:annotation>
           </xs:attribute>
@@ -2112,18 +2071,11 @@
             use="optional"
           >
             <xs:annotation>
-              <xs:documentation>If the record is specified, then output
-                data
-                is
-                verified against it with a possible small
-                overhead. But you
-                may
-                want the record for
-                documentation/testing. Use this option
-                to
-                output data
-                directly from source event when the record is
-                specified.
+              <xs:documentation>If the record is specified, then output data
+                is verified against it with a possible small overhead. But
+                you may want the record for documentation/testing. Use this
+                option to output data directly from source event when the
+                record is specified.
               </xs:documentation>
             </xs:annotation>
           </xs:attribute>
@@ -3101,6 +3053,10 @@
           <xs:attribute
             name="className"
             type="xs:string"
+            use="required" />
+          <xs:attribute
+            name="dbUsage"
+            type="dbUsage"
             use="required" />
         </xs:extension>
       </xs:complexContent>

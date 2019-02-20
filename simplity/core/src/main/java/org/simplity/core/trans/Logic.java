@@ -22,6 +22,8 @@
 
 package org.simplity.core.trans;
 
+import org.simplity.core.ApplicationError;
+import org.simplity.core.app.Application;
 import org.simplity.core.comp.FieldMetaData;
 import org.simplity.core.service.ServiceContext;
 
@@ -43,5 +45,14 @@ public class Logic extends AbstractNonDbAction {
 	@Override
 	protected boolean act(ServiceContext ctx) {
 		return this.logic.execute(ctx);
+	}
+
+	@Override
+	public void getReady(int idx, TransactionProcessor processor) {
+		super.getReady(idx, processor);
+		this.logic = Application.getActiveInstance().getBean(this.className, ILogic.class);
+		if (this.logic == null) {
+			throw new ApplicationError(this.className + " is not a valid java class.");
+		}
 	}
 }

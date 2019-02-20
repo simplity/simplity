@@ -4,14 +4,18 @@
   name="filterOwners"
   moduleName="pet"
 >
-
+  <!-- this service is defined exactly the way simplity would create it on-the-fly 
+    when we use serviceName as pet.owner.filter -->
   <inputData>
     <inputRecords>
       <inputRecord
+        readAs="fields"
+        writeAs="fields"
         recordName="pet.owner"
         purpose="filter" />
     </inputRecords>
   </inputData>
+
   <processor>
     <transactionProcessor dbUsage="readOnly">
       <actions>
@@ -28,9 +32,13 @@
       </actions>
     </transactionProcessor>
   </processor>
+
   <outputData>
     <outputRecords>
-      <outputRecord name="owners" />
+      <outputRecord
+        name="owners"
+        readAs="sheet"
+        writeAs="array" />
       <outputRecord
         name="petDetails"
         parentSheetName="owners"

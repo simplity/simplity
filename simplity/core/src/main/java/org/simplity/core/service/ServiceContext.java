@@ -45,6 +45,7 @@ import org.simplity.core.adapter.source.FieldsDataSource;
 import org.simplity.core.adapter.source.JsonDataSource;
 import org.simplity.core.adapter.source.JsonListSource;
 import org.simplity.core.app.AppUser;
+import org.simplity.core.app.Application;
 import org.simplity.core.app.IRequestReader;
 import org.simplity.core.app.IResponseWriter;
 import org.simplity.core.data.CommonData;
@@ -81,28 +82,9 @@ import org.slf4j.LoggerFactory;
 public class ServiceContext extends CommonData {
 	private static final Logger logger = LoggerFactory.getLogger(ServiceContext.class);
 
-	protected static IDataAdapterExtension adapterExtension;
-
-	/**
-	 * set app-specific data adapter extension
-	 *
-	 * @param extension
-	 */
-	public static void setDataAdapterExtension(IDataAdapterExtension extension) {
-		adapterExtension = extension;
-	}
-
-	/**
-	 *
-	 * @return app-specific data adapter extension. null if no such extension is
-	 *         set
-	 */
-	public static IDataAdapterExtension getDataAdapterExtension() {
-		return adapterExtension;
-	}
-
 	protected final String serviceName;
 	protected final Value userId;
+	protected final Application app;
 	protected final AppUser appUser;
 	protected List<FormattedMessage> messages = new ArrayList<FormattedMessage>();
 	protected int nbrErrors = 0;
@@ -164,25 +146,40 @@ public class ServiceContext extends CommonData {
 	 * orgId as the column in every table to stored data for all customers in
 	 * the same db.
 	 */
-	protected Value tenantId;
+	protected final Value tenantId;
 
 	/**
+	 * @param app
+	 *            non-null application that hosts this service execution
+	 *            environment
 	 * @param serviceName
+	 *            non-null for which this context is created
 	 * @param appUser
+	 *            non-null user who requested this service
+	 * @param tenantId
+	 *            can be null. relevant if this app is designed as a
+	 *            multi-tenant app
 	 */
-	public ServiceContext(String serviceName, AppUser appUser) {
+	public ServiceContext(Application app, String serviceName, AppUser appUser, Value tenantId) {
+		this.app = app;
 		this.userId = appUser.getUserId();
 		this.serviceName = serviceName;
 		this.appUser = appUser;
+		this.tenantId = tenantId;
 	}
 
 	/**
-	 * to be used by the main service, and SHOULD NOT be used by other actions
-	 *
-	 * @param dbHandle
-	 *            the dbDriver to set
+	 * @return non-null app that created this context
 	 */
-	public void setDbDriver(IDbHandle dbHandle) {
+	public Application getApp() {
+		return this.app;
+	}
+
+	/**
+	 * @param dbHandle
+	 *            the db handle to be used by this service execution components
+	 */
+	public void seDbHandle(IDbHandle dbHandle) {
 		this.serviceDbHandle = dbHandle;
 	}
 
@@ -199,14 +196,6 @@ public class ServiceContext extends CommonData {
 	 */
 	public boolean isTransactionDelegeated() {
 		return this.transactionIsDelegeated;
-	}
-
-	/**
-	 * @param tenantId
-	 *            the tenantId to set
-	 */
-	public void setTenantId(Value tenantId) {
-		this.tenantId = tenantId;
 	}
 
 	/**
@@ -457,7 +446,9 @@ public class ServiceContext extends CommonData {
 		this.reqReader = reqReader;
 	}
 
-	/** @return writer, never null */
+	/**
+	 * @return writer, null if no writer is associated with this context
+	 */
 	public IRequestReader getReader() {
 		if (this.reqReader == null) {
 			logger.error(
@@ -598,7 +589,7 @@ public class ServiceContext extends CommonData {
 		/*
 		 * try app specific object
 		 */
-		IDataAdapterExtension extension = getDataAdapterExtension();
+		IDataAdapterExtension extension = this.app.getPlugins().getDataAdapterExtension();
 		if (extension != null) {
 			source = extension.getDataSource(obj, sourceName, this);
 			if (source != null) {
@@ -632,7 +623,7 @@ public class ServiceContext extends CommonData {
 		/*
 		 * try app specific object
 		 */
-		IDataAdapterExtension extension = ServiceContext.getDataAdapterExtension();
+		IDataAdapterExtension extension = this.app.getPlugins().getDataAdapterExtension();
 		if (extension != null) {
 			return extension.getListSource(obj, sourceName, this);
 		}
@@ -666,7 +657,7 @@ public class ServiceContext extends CommonData {
 		/*
 		 * let the app-specific feature get the priority
 		 */
-		IDataAdapterExtension extension = ServiceContext.getDataAdapterExtension();
+		IDataAdapterExtension extension = this.app.getPlugins().getDataAdapterExtension();
 		Object obj = this.getObject(targetName);
 		if (extension != null) {
 			target = extension.getDataTarget(obj, childClassName, targetName, this);
@@ -722,7 +713,7 @@ public class ServiceContext extends CommonData {
 		/*
 		 * do we have this already to be managed by app-specific target?
 		 */
-		IDataAdapterExtension extension = ServiceContext.getDataAdapterExtension();
+		IDataAdapterExtension extension = this.app.getPlugins().getDataAdapterExtension();
 		Object obj = this.getObject(targetName);
 		if (extension != null) {
 			target = extension.getListTarget(obj, childClassName, targetName, this);

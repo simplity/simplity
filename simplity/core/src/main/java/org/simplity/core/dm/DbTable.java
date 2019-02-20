@@ -1172,13 +1172,13 @@ public class DbTable extends Record {
 	 * @param sheetName
 	 * @param cascadeFilter
 	 * @param ctx
+	 * @return number of rows filtered from this child for the parent.
 	 */
-	public void filterForParents(IDataSheet parentData, IReadOnlyHandle handle, String sheetName, boolean cascadeFilter,
+	public int filterForParents(IDataSheet parentData, IReadOnlyHandle handle, String sheetName, boolean cascadeFilter,
 			ServiceContext ctx) {
 		IDataSheet result = this.createSheet(false, false);
-		int n = parentData.length();
-		if (n == 0) {
-			return;
+		if (parentData.length() == 0) {
+			return 0;
 		}
 		if (this.allParentKeys.length > 1) {
 			this.filterForMultiParentKeys(parentData, handle, result);
@@ -1194,6 +1194,7 @@ public class DbTable extends Record {
 		if (result.length() > 0 && cascadeFilter) {
 			this.filterChildRecords(result, handle, ctx);
 		}
+		return result.length();
 	}
 
 	/**
