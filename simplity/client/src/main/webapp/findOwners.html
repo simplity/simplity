@@ -76,10 +76,11 @@
 							</div>
 							<div class="col-sm-offset-2 col-sm-10">Service To Use
 								<select id="serviceName" >
-								<option selected="selected" value="findOwners">Auto-service</option>
-								<option value="findOwners1">Defined Service</option>
-								<option value="findOwners2">Java Action</option>
-								<option value="findOwners3">Java Service</option>
+								<option value="findOwners0" selected="selected">Auto-service - server has not defined this service, but creates it on the fly</option>
+								<option value="findOwners1">Defined Service - service is defined with no java code</option>
+								<option value="findOwners2">Java Action - service is defined with one step in it as a java code</option>
+								<option value="findOwners3">Java Service - entire service is written as java code</option>
+								<option value="findOwners4">Proxy Service - controller maps this service name to another one</option>
 								</select>
 							</div>
 						</div>

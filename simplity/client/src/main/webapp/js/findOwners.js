@@ -17,16 +17,14 @@ var pageLoaded = function() {
  */
 var find = function() {
 	var txt = fields.lastName.ele.value;
+	payload = {};
 	if (txt) {
 		/*
 		 * we want owners whose last name starts with this value. we are
 		 * re-using txt variable
 		 */
-		txt = {
-			lastName : txt,
-			lastNameComparator : '~'
-		};
-		txt = JSON.stringify(txt);
+		payload.lastName = txt;
+		payload.lastNameComparator = '~';
 	}
 	var serviceName = "findOwners";
 	var ele = document.getElementById('serviceName');
@@ -34,7 +32,7 @@ var find = function() {
 	if(idx != -1){
 		serviceName = ele.options[idx].value;
 	}
-	Simplity.getResponse(SERVICES[serviceName], txt, gotOwners);
+	server.getResponse(SERVICES[serviceName], payload, gotOwners);
 };
 
 /**

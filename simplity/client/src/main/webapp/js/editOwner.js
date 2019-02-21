@@ -23,8 +23,7 @@ var pageLoaded = function() {
 	 */
 	var ownerId = pageParams.param || pageParams.ownerId;
 	if (ownerId) {
-		Simplity
-				.getResponse(SERVICES.getOwner, '{"ownerId":"' + ownerId + '"}');
+		server.getResponse(SERVICES.getOwner, {ownerId:ownerId});
 	}
 };
 
@@ -40,8 +39,7 @@ var submitted = function() {
 			data[a] = val;
 		}
 	}
-	Simplity.getResponse(SERVICES.saveOwner, JSON.stringify(data), saved,
-			saveFailed);
+	server.getResponse(SERVICES.saveOwner, data, saved,	saveFailed);
 };
 
 /**
@@ -52,5 +50,5 @@ var saved = function(json) {
 	if (!key) {
 		key = fields.ownerId.ele.value;
 	}
-	window.location.href = PAGES.showOwner + '?' + encodeURI(key);
+	window.location.href = PAGES.showOwner + '?' + encodeURIComponent(key);
 };

@@ -20,7 +20,7 @@ var serviceChanged = function(ele) {
 		var json = {
 			serviceName : serviceName
 		};
-		Simplity.getResponse('test.getService', JSON.stringify(json));
+		Simplity.getResponse('test.getService', json);
 	}
 };
 var TEST_JSON = [ {
@@ -150,22 +150,22 @@ var test = function() {
 	var serviceName = document.getElementById('service').value;
 	var data = document.getElementById('json').value;
 	if (!serviceName) {
-		Simplity.showMessage('Please enter the service name to test');
+		alert.showMessage('Please enter the service name to test');
 		return;
 	}
 	var txt = null;
+	var json = null;
 	try {
-		txt = JSON.stringify(JSON.parse(data), null, 2);
+		json = JSON.parse(data);
+		txt = JSON.stringify(json, null, 2);
 	} catch (e) {
-		if (!confirm("Your json has sytax error. want to still proceed? \n\n "
-				+ e)) {
-			return;
-		}
+		alert("Your json has sytax error. \n\n "+ e);
+		return;
 	}
 	if (txt) {
 		document.getElementById('json').value = txt;
 	}
-	Simplity.getResponse(serviceName, data, showResponse);
+	Simplity.getResponse(serviceName, json, showResponse);
 };
 var showResponse = function(data) {
 	document.getElementById('response').innerHTML = JSON.stringify(data, null,

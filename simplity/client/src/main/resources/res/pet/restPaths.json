@@ -1,16 +1,41 @@
 {
-	"basePath": "v1/",
-	"serviceNamePrefix": "a.b.",
+	"serviceNamePrefix": "pet.",
 	"paths": {
-		"corp/{corpId}/{customerId}": {
-			"put": "customer.create",
-			"get": "getCustomer"
+		"owner/0": {
+			"get": "owner.filter"
 		},
-		"{c}": {
-			"": "fieldC"
+		"owner/1": {
+			"get": "filterOwners"
 		},
-		"c/d/e": {
-			"": "c.d.e"
+		"owner/2": {
+			"get": "filterWithJavaAction"
+		},
+		"owner/3": {
+			"get": "filterWithJavaService"
+		},
+		"owner/4": {
+			"get": "owner.filter"
+		},
+		"owner/id/{ownerId}": {
+			"get": "owner.get"
+		},
+		"owner": {
+			"post": "owner.save"
+		},
+		"vet": {
+			"": "vet.filter"
+		},
+		"visit": {
+			"post": "visit.save"
+		},
+		"pet/id/{petId}": {
+			"get": "petDetail.get"
+		},
+		"pet": {
+			"post": "pet.save"
+		},
+		"petType": {
+			"get": "petType.list"
 		}
 	}
 }

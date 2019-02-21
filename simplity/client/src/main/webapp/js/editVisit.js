@@ -14,7 +14,7 @@ var pageLoaded = function() {
 		return;
 	}
 	fields.petId.ele.value = petId;
-	Simplity.getResponse(SERVICES.getPet, '{"petId" : "' + petId + '"}');
+	server.getResponse(SERVICES.getPet, {petId : petId });
 };
 
 /**
@@ -22,15 +22,14 @@ var pageLoaded = function() {
  */
 var submitted = function() {
 	document.getElementById('submit').setAttribute('disabled', 'disabled');
-	var data = {};
+	var payload = {};
 	for (a in fields) {
 		var val = fields[a].ele.value;
 		if (val) {
-			data[a] = val;
+			payload[a] = val;
 		}
 	}
-	Simplity.getResponse(SERVICES.saveVisit, JSON.stringify(data), saved,
-			saveFailed);
+	server.getResponse(SERVICES.saveVisit, payload, saved, saveFailed);
 };
 
 var pageError = function() {

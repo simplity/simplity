@@ -8,7 +8,7 @@ var pageLoaded = function() {
 	/*
 	 * invoke service with no input data, and default call-back action
 	 */
-	Simplity.getResponse(SERVICES.getVets);
+	server.getResponse(SERVICES.getVets);
 };
 
 var showJson = function() {

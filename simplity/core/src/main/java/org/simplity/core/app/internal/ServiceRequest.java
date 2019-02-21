@@ -23,9 +23,7 @@
 package org.simplity.core.app.internal;
 
 import java.io.InputStream;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.simplity.core.MessageBox;
 import org.simplity.core.app.AppUser;
@@ -78,15 +76,30 @@ public class ServiceRequest implements IServiceRequest {
 	private Object clientContext;
 
 	/**
+	 * get an instance when there is no payload
+	 *
+	 * @param serviceName
+	 *            non-null string
+	 * @param fields
+	 *            can be null
+	 */
+	public ServiceRequest(String serviceName, Map<String, Object> fields) {
+		this.serviceName = serviceName;
+		this.fields = fields;
+	}
+
+	/**
 	 * request object for an xml payload
 	 *
 	 * @param serviceName
 	 *            non-null string
+	 * @param fields
+	 *            can be null;
 	 * @param xmlPayload
 	 *            non-null document that is the payload
 	 */
-	public ServiceRequest(String serviceName, Document xmlPayload) {
-		this.serviceName = serviceName;
+	public ServiceRequest(String serviceName, Map<String, Object> fields, Document xmlPayload) {
+		this(serviceName, fields);
 		this.xmlPayload = xmlPayload;
 	}
 
@@ -95,11 +108,13 @@ public class ServiceRequest implements IServiceRequest {
 	 *
 	 * @param serviceName
 	 *            non-null string
+	 * @param fields
+	 *            can be null
 	 * @param jsonPayload
 	 *            non-null JSON that is the payload
 	 */
-	public ServiceRequest(String serviceName, JSONObject jsonPayload) {
-		this.serviceName = serviceName;
+	public ServiceRequest(String serviceName, Map<String, Object> fields, JSONObject jsonPayload) {
+		this(serviceName, fields);
 		this.jsonPayload = jsonPayload;
 	}
 
@@ -108,16 +123,8 @@ public class ServiceRequest implements IServiceRequest {
 	 *
 	 * @param serviceName
 	 *            non-null string
-	 */
-	public ServiceRequest(String serviceName) {
-		this.serviceName = serviceName;
-	}
-
-	/**
-	 * get an instance when there is no payload
-	 *
-	 * @param serviceName
-	 *            non-null string
+	 * @param fields
+	 *            can be null
 	 * @param inStream
 	 *            non-null stream from which to read payload
 	 * @param isXml
@@ -125,8 +132,9 @@ public class ServiceRequest implements IServiceRequest {
 	 * @throws Exception
 	 *             in case the input is not a valid xml/json
 	 */
-	public ServiceRequest(String serviceName, InputStream inStream, boolean isXml) throws Exception {
-		this.serviceName = serviceName;
+	public ServiceRequest(String serviceName, Map<String, Object> fields, InputStream inStream, boolean isXml)
+			throws Exception {
+		this(serviceName, fields);
 		if (isXml) {
 			Document doc = XmlUtil.fromStream(inStream);
 			this.xmlPayload = doc;
@@ -186,11 +194,8 @@ public class ServiceRequest implements IServiceRequest {
 	 * @return set containing all the fields. empty set if there are no fields
 	 */
 	@Override
-	public Set<String> getFieldNames() {
-		if (this.fields == null) {
-			return new HashSet<>();
-		}
-		return this.fields.keySet();
+	public Map<String, Object> getFieldValues() {
+		return this.fields;
 	}
 
 	/**
@@ -212,37 +217,13 @@ public class ServiceRequest implements IServiceRequest {
 	@Override
 	public IRequestReader getPayloadReader() {
 		if (this.jsonPayload != null) {
-			return new JsonReqReader(this.jsonPayload);
+			return new JsonReqReader(this.jsonPayload, this.fields);
 		}
 		if (this.xmlPayload != null) {
 			return new XmlReqReader(this.xmlPayload);
 		}
 		logger.error("null reader returned as there is no payload");
 		return null;
-	}
-
-	/**
-	 * @param fields
-	 *            the fields to set
-	 */
-	public void setFields(Map<String, Object> fields) {
-		this.fields = fields;
-	}
-
-	/**
-	 * set/remove value for a field
-	 *
-	 * @param fieldName
-	 *            name of the field
-	 * @param fieldValue
-	 *            value of the field to set. if null, current value, removed.
-	 * @return current value of this field
-	 */
-	public Object setFieldValue(String fieldName, Object fieldValue) {
-		if (fieldValue == null) {
-			return this.fields.remove(fieldName);
-		}
-		return this.fields.put(fieldName, fieldValue);
 	}
 
 	/**

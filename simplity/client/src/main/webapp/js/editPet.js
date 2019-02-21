@@ -10,14 +10,16 @@ var pageLoaded = function() {
 	/*
 	 * are we to edit or create new?
 	 */
-	Simplity.getResponse(SERVICES.getPetTypes);
+	server.getResponse(SERVICES.getPetTypes);
 	var petId = pageParams.param || pageParams.petId;
+	var payload = {};
 	if (petId) {
-		Simplity.getResponse(SERVICES.getPet, '{"petId" : "' + petId + '"}');
+		payload.petId = petId;
+		server.getResponse(SERVICES.getPet, payload);
 	} else if (pageParams.ownerId) {
 		document.getElementById('hdr').textContent = 'Add Pet';
-		Simplity.getResponse(SERVICES.getOwner, '{"ownerId" : "'
-				+ pageParams.ownerId + '"}');
+		payload.ownerId = pageParams.ownerId;
+		server.getResponse(SERVICES.getOwner, payload);
 	} else {
 		pageError();
 		return;
@@ -29,15 +31,14 @@ var pageLoaded = function() {
  */
 var submitted = function() {
 	document.getElementById('submit').setAttribute('disabled', 'disabled');
-	var data = {};
+	var payload = {};
 	for (a in fields) {
 		var val = fields[a].ele.value;
 		if (val) {
-			data[a] = val;
+			payload[a] = val;
 		}
 	}
-	Simplity.getResponse(SERVICES.savePet, JSON.stringify(data), saved,
-			saveFailed);
+	server.getResponse(SERVICES.savePet, payload, saved, saveFailed);
 };
 
 var pageError = function() {
@@ -49,5 +50,5 @@ var pageError = function() {
  */
 var saved = function(json) {
 	var key = fields.ownerId.ele.value;
-	window.location.href = PAGES.showOwner + '?' + encodeURI(key);
+	window.location.href = PAGES.showOwner + '?' + encodeURIComponent(key);
 };

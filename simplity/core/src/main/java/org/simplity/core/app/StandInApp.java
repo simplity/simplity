@@ -24,7 +24,6 @@ package org.simplity.core.app;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.simplity.core.app.internal.ServiceRequest;
 import org.simplity.core.msg.FormattedMessage;
@@ -86,19 +85,21 @@ public class StandInApp implements IApp {
 		IResponseWriter writer = response.getPayloadWriter(false);
 		writer.setField("serviceName", serviceName);
 		writer.setField("userName", userName);
-		Set<String> fields = request.getFieldNames();
+		Map<String, Object> fields = request.getFieldValues();
 		writer.beginObject("fields");
 		if (fields == null || fields.isEmpty()) {
 			logger.info("Input has no fields");
 		} else {
 			logger.info("Input has {} fields", fields.size());
-			for (String fn : fields) {
-				Object val = request.getFieldValue(fn);
-				if (val instanceof String == false) {
-					logger.info("field {} is of type {} ", fn, val.getClass().getName());
+			for (Map.Entry<String, Object> entry : fields.entrySet()) {
+				String fn = entry.getKey();
+				Object val = entry.getValue();
+				if (val instanceof String) {
+					logger.info("{}={}", fn, val.getClass().getName());
+				} else {
+					logger.info("{}={}", fn, val);
+					writer.setField(fn, val);
 				}
-				logger.info("{}={}", fn, val);
-				writer.setField(fn, val);
 			}
 		}
 		writer.endObject();

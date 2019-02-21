@@ -22,7 +22,7 @@
 
 package org.simplity.core.app;
 
-import java.util.Set;
+import java.util.Map;
 
 import org.simplity.core.MessageBox;
 
@@ -84,5 +84,5 @@ public interface IServiceRequest {
 	 *
 	 * @return set containing all the fields. empty set if there are no fields
 	 */
-	public Set<String> getFieldNames();
+	public Map<String, Object> getFieldValues();
 }

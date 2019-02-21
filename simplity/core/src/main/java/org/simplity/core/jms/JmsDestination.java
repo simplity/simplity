@@ -557,7 +557,7 @@ public class JmsDestination {
 			} else {
 				json = new JSONObject(text);
 			}
-			JsonReqReader reader = new JsonReqReader(json);
+			JsonReqReader reader = new JsonReqReader(json, null);
 			this.inputData.read(reader, ctx);
 			return;
 		}

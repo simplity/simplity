@@ -35,22 +35,26 @@ var POCOL = {
 	/**
 	 * name of service to be executed
 	 */
-	,SERVICE_NAME : "_serviceName"
+	,
+	SERVICE_NAME : "_serviceName"
 
 	/**
 	 * used for login-process.
 	 */
-	,USER_TOKEN : "_userToken"
+	,
+	USER_TOKEN : "_userToken"
 
 	/**
 	 * file-upload call, header field for optional name of file
 	 */
-	,FILE_NAME : "_fileName"
+	,
+	FILE_NAME : "_fileName"
 
 	/**
 	 * mime type of the file being uploaded.
 	 */
-	,MIME_TYPE : "_mimeType"
+	,
+	MIME_TYPE : "_mimeType"
 
 	/*
 	 * server response back to client
@@ -59,12 +63,14 @@ var POCOL = {
 	 * what happened to the request? REQUEST_OK means all OK, and response is
 	 * data. Any other value means that the response is an array of messages
 	 */
-	,REQUEST_STATUS : "_requestStatus"
+	,
+	REQUEST_STATUS : "_requestStatus"
 
 	/**
 	 * messages returned along with data. like {..., "_mesages":[{}..]...}
 	 */
-	,MESSAGES : "_messages"
+	,
+	MESSAGES : "_messages"
 	/*
 	 * possible values for status field in response
 	 */
@@ -72,32 +78,39 @@ var POCOL = {
 	 * valid response is delivered as all is well. There may be messages, but
 	 * they are not error messages.
 	 */
-	,STATUS_OK : 'ok'
+	,
+	STATUS_OK : 'ok'
 	/**
 	 * Error. Either service related issues, like validation error, or server
 	 * error like internal error. Usually, response will only have messages.
 	 */
-	,STATUS_ERROR : 'error'
+	,
+	STATUS_ERROR : 'error'
 	/**
 	 * time taken by this engine to execute this service in milliseconds
 	 */
-	,SERVICE_EXECUTION_TIME : "_serviceExecutionTime"
+	,
+	SERVICE_EXECUTION_TIME : "_serviceExecutionTime"
 	/**
 	 * message type : some specific operation/action succeeded.
 	 */
-	,MESSAGE_SUCCESS : "success"
+	,
+	MESSAGE_SUCCESS : "success"
 	/**
 	 * message type : general information.
 	 */
-	,MESSGAE_INFO : "info"
+	,
+	MESSGAE_INFO : "info"
 	/**
 	 * message type : warning/alert
 	 */
-	,MESSAGE_WARNING : "warning"
+	,
+	MESSAGE_WARNING : "warning"
 	/**
 	 * message type : ERROR
 	 */
-	,MESSAGE_ERROR : "error"
+	,
+	MESSAGE_ERROR : "error"
 
 	/*
 	 * Some conventions used by server special features
@@ -105,133 +118,158 @@ var POCOL = {
 	/**
 	 * field name that directs a specific save action for the table
 	 */
-	,TABLE_ACTION_FIELD_NAME : "_saveAction"
+	,
+	TABLE_ACTION_FIELD_NAME : "_saveAction"
 	/**
 	 * tableSaveTask can get the action at run time
 	 */
-	,TABLE_ACTION_ADD : "add"
+	,
+	TABLE_ACTION_ADD : "add"
 	/**
 	 * tableSaveTask can get the action at run time
 	 */
-	,TABLE_ACTION_MODIFY : "modify"
+	,
+	TABLE_ACTION_MODIFY : "modify"
 	/**
 	 * tableSaveTask can get the action at run time
 	 */
-	,TABLE_ACTION_DELETE : "delete"
+	,
+	TABLE_ACTION_DELETE : "delete"
 	/**
 	 * tableSaveTask can get the action at run time
 	 */
-	,TABLE_ACTION_SAVE : "save"
+	,
+	TABLE_ACTION_SAVE : "save"
 
 	/*
 	 * filter-field is a special field that has associated comparator for
 	 * communicating filtering criterion with the server. -------------- filter
 	 * field comparators ----------------
 	 */
-	,EQUAL : "="
-	,NOT_EQUAL : "!="
-	,LESS : "<"
-	,LESS_OR_EQUAL : "<="
-	,GREATER : ">"
-	,GREATER_OR_EQUAL : ">="
-	,LIKE : "~"
-	,STARTS_WITH : "^"
-	,BETWEEN : "><"
-	,IN_LIST : "@"
+	,
+	EQUAL : "=",
+	NOT_EQUAL : "!=",
+	LESS : "<",
+	LESS_OR_EQUAL : "<=",
+	GREATER : ">",
+	GREATER_OR_EQUAL : ">=",
+	LIKE : "~",
+	STARTS_WITH : "^",
+	BETWEEN : "><",
+	IN_LIST : "@"
 
 	/**
 	 * suffix for the to-Field If field is "age" then to-field would be "ageTo"
 	 */
-	,TO_FIELD_SUFFIX : "To"
+	,
+	TO_FIELD_SUFFIX : "To"
 
 	/**
 	 * like ageComparator
 	 */
-	,COMPARATOR_SUFFIX : "Comparator"
+	,
+	COMPARATOR_SUFFIX : "Comparator"
 	/**
 	 * comma separated names of columns that are to be used for sorting rows
 	 */
-	,SORT_COLUMN_NAME : "_sortColumns"
+	,
+	SORT_COLUMN_NAME : "_sortColumns"
 
 	/**
 	 * sort order asc or desc. asc is the default
 	 */
-	,SORT_ORDER : "_sortOrder"
+	,
+	SORT_ORDER : "_sortOrder"
 	/**
 	 * ascending
 	 */
-	,SORT_ORDER_ASC : "asc"
+	,
+	SORT_ORDER_ASC : "asc"
 	/**
 	 * descending
 	 */
-	,SORT_ORDER_DESC : "desc"
+	,
+	SORT_ORDER_DESC : "desc"
 
 	/**
 	 * list service typically sends a key value
 	 */
-	,LIST_SERVICE_KEY : "_key"
+	,
+	LIST_SERVICE_KEY : "_key"
 
 	/**
 	 * should suggestion service suggest matching strings that start with the
 	 * starting key?
 	 */
-	,SUGGEST_STARTING : "_matchStarting"
+	,
+	SUGGEST_STARTING : "_matchStarting"
 	/**
 	 * use this special name to indicate all fields whenever a list of fields is
 	 * expected
 	 */
-	,ALL_FIELDS : '_allFields'
+	,
+	ALL_FIELDS : '_allFields'
 
 	/**
 	 * mark column names in tables like __colName__
 	 */
-	,COL_MARKER : '__'
+	,
+	COL_MARKER : '__'
 	/**
 	 * mark a space to put the index suffix. like row__i__ to suffix row with _i
 	 * where is the row number
 	 */
-	,IDX_MARKER : 'i'
+	,
+	IDX_MARKER : 'i'
 	/**
 	 * attribute name to mark an element as target for a data table
 	 */
-	,DATA_TABLE : 'data-table'
+	,
+	DATA_TABLE : 'data-table'
 	/**
 	 * attribute to mark an element as row for a table. this element is repeated
 	 * for each row of a table
 	 */
-	,DATA_ROW : 'data-row'
+	,
+	DATA_ROW : 'data-row'
 	/**
 	 * attribute to indicate that this table is hierarchical
 	 */
-	,HAS_CHILDREN : 'data-has-children'
+	,
+	HAS_CHILDREN : 'data-has-children'
 	/**
 	 * attribute set to true to hide this element if the associated table has no
 	 * data. Otherwise, only the row element is hidden, and the table element is
 	 * shown. For example, if this is not set, you may see the table header row,
 	 * but no data
 	 */
-	,HIDE_IF_NO_DATA : 'data-hide-if-no-data'
+	,
+	HIDE_IF_NO_DATA : 'data-hide-if-no-data'
 	/**
 	 * window level var that has the value of the last json object response.
 	 * This gets replaced with the next response
 	 */
-	,LAST_JSON : '_lastJson'
+	,
+	LAST_JSON : '_lastJson'
 
 	/**
 	 * name with which a json is saved in local storage (sessionStorage?) for
 	 * db.
 	 */
-	,LOCAL_STORAGE_NAME : '_localData'
+	,
+	LOCAL_STORAGE_NAME : '_localData'
 	/**
 	 * name of the object in page-specific script that has functions for service
 	 * indexed by serviceName
 	 */
-	,LOCAL_SERVICES : '_localServices'
+	,
+	LOCAL_SERVICES : '_localServices'
 	/**
 	 * name of the object in page-specific script that has ready response object
 	 * for service indexed by serviceName
 	 */
-	,LOCAL_RESPONSES : '_localResponses'
+	,
+	LOCAL_RESPONSES : '_localResponses'
 };
 /**
  * Simple way to get response from your service
@@ -1038,7 +1076,7 @@ var Simplity = (function() {
 	 * @param {string}
 	 *            serviceName qualified service name to be invoked
 	 * @param {string}
-	 *            optional json string to be sent to server as input for this
+	 *            optional data object to be sent to server as input for this
 	 *            service
 	 * @param {Function}
 	 *            successFn function is called with jsonObject (not json string)
@@ -1049,15 +1087,26 @@ var Simplity = (function() {
 	 *            error. it is called with an array of message objects.
 	 *            Simplity.showMessages() is used as default.
 	 */
-	var getResponse = function(serviceName, data, successFn, failureFn) {
+	var getResponse = function(serviceName, data, successFn, failureFn, method,
+			url) {
+		if (data && !data.substring) {
+			data = JSON.stringify(data);
+		}
 		successFn = successFn || pushDataToPage;
 		failureFn = failureFn || showMessages;
+		method = method || METHOD;
+		url = url || URL;
 		if (!serviceName) {
-			log('No service');
-			failureFn(createMessageArray('No serviceName specified'));
-			return;
+			log('No service, probably using REST');
+		} else {
+			log('Service ' + serviceName + ' invoked');
 		}
-		log('Service ' + serviceName + ' invoked');
+		if (data) {
+			if (method == 'get') {
+				alert("Client design error: Data can not be sent as paylaod with get method");
+				return;
+			}
+		}
 		var xhr = new XMLHttpRequest();
 		xhr.onreadystatechange = function() {
 			if (this.readyState != '4') {
@@ -1110,11 +1159,18 @@ var Simplity = (function() {
 			failureFn(createMessageArray('Sorry, there seem to be some red-tapism on the server. giving-up'));
 		};
 		try {
-			xhr.open(METHOD, URL, true);
+			xhr.open(method, url, true);
 			xhr.timeout = TIMEOUT;
-			xhr.setRequestHeader("Content-Type", "application/json; charset=utf-8");
-			xhr.setRequestHeader(POCOL.SERVICE_NAME, serviceName);
-			xhr.send(data);
+			xhr.setRequestHeader("Content-Type",
+					"application/json; charset=utf-8");
+			if (serviceName) {
+				xhr.setRequestHeader(POCOL.SERVICE_NAME, serviceName);
+			}
+			if (data) {
+				xhr.send(data);
+			} else {
+				xhr.send();
+			}
 		} catch (e) {
 			log("error during xhr : " + e.message);
 			failureFn(createMessageArray('Unable to connect to server. Error : '
@@ -1731,7 +1787,7 @@ var Simplity = (function() {
 		/*
 		 * we are operating in local mode with no server
 		 */
-		if(!window.sessionStorage){
+		if (!window.sessionStorage) {
 			alert("Sorry, your browser setting does not allow certain features when html is opened from file-system. Use a different browser, or see if you can enable sessionStorage feature using any setting options.")
 			return;
 		}

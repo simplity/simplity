@@ -272,7 +272,7 @@ public abstract class HttpAgent extends HttpServlet {
 			 */
 			try {
 
-				ServiceRequest request = new ServiceRequest(serviceName, ins, isXml);
+				ServiceRequest request = new ServiceRequest(serviceName, fields, ins, isXml);
 				ServiceResponse response = new ServiceResponse(writer, isXml);
 				/*
 				 * app specific code to copy anything from client-layer to

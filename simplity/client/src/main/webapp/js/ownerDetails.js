@@ -65,7 +65,7 @@ var pageLoaded = function() {
 				.error('ownerId is not passed by the caller. This page cannot function.');
 		window.location.href = PAGES.welcome;
 	}
-	Simplity.getResponse(SERVICES.getOwner, '{"ownerId":"' + ownerId + '"}');
+	server.getResponse(SERVICES.getOwner, {ownerId : ownerId});
 };
 var addPet = function() {
 	window.location.href = PAGES.editPet + '?ownerId='

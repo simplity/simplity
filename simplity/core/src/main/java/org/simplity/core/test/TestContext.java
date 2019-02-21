@@ -121,7 +121,7 @@ public class TestContext {
 		if (this.app == null) {
 			throw new ApplicationError("TestContext has to be started before running");
 		}
-		ServiceRequest request = new ServiceRequest(serviceName, new JSONObject(input));
+		ServiceRequest request = new ServiceRequest(serviceName, null, new JSONObject(input));
 		request.setUser(this.appUser);
 		ServiceResponse response = new ServiceResponse(false);
 		this.app.serve(request, response);

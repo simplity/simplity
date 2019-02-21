@@ -179,21 +179,21 @@ public class Job {
 		if (val == null) {
 			val = uid;
 		}
-
-		ServiceRequest req = null;
-		if (this.inputJson != null) {
-			req = new ServiceRequest(this.serviceName, new JSONObject(this.inputJson));
-		} else {
-			req = new ServiceRequest(this.serviceName);
-		}
-
+		Map<String, Object> fields = null;
 		if (this.inputFields != null) {
-			Map<String, Object> fields = new HashMap<>();
+			fields = new HashMap<>();
 			for (InputField field : this.inputFields) {
 				field.addToMap(fields);
 			}
-			req.setFields(fields);
 		}
+
+		ServiceRequest req = null;
+		if (this.inputJson != null) {
+			req = new ServiceRequest(this.serviceName, fields, new JSONObject(this.inputJson));
+		} else {
+			req = new ServiceRequest(this.serviceName, fields);
+		}
+
 		return new RunningJob(req);
 	}
 

@@ -93,7 +93,7 @@ public class CLI {
 		System.out.println("request:" + json.toString());
 
 		AppUser appUser = new AppUser(Value.newTextValue(user));
-		ServiceRequest req = new ServiceRequest(serviceName, json);
+		ServiceRequest req = new ServiceRequest(serviceName, null, json);
 		req.setUser(appUser);
 		ServiceResponse resp = new ServiceResponse(false);
 		app.serve(req, resp);

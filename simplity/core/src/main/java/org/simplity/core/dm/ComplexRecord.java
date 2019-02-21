@@ -111,9 +111,7 @@ public class ComplexRecord extends Record {
 			Field field = this.fields[i];
 			Object obj = json.opt(field.getName());
 			if (obj == null) {
-
 				logger.info("No value for attribute " + field.getName());
-
 				continue;
 			}
 			/*

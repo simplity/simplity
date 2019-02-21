@@ -490,7 +490,7 @@ public class HttpGateway extends ServiceGateway {
 					if (json == null || json.isEmpty()) {
 						json = "{}";
 					}
-					reqReader = new JsonReqReader(new JSONObject(json));
+					reqReader = new JsonReqReader(new JSONObject(json), null);
 				}
 				dataToBeReceived.read(reqReader, ctx);
 			}

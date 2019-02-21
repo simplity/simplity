@@ -1,18 +1,72 @@
+var SERVER_IS_REST = true;
+var REST_ROOT = "rest/"
 /*
- * All services used by this app. We define them in one place to get a ready list of what the client is expecting from the server
+ * All services used by this app. We define them in one place to get a ready
+ * list of what the client is expecting from the server
  */
 var SERVICES = {
-	findOwners : 'pet.owner.filter',
-	findOwners1 : 'pet.filterOwners',
-	findOwners2 : 'pet.filterWithJavaAction',
-	findOwners3 : 'pet.filterWithJavaService',
-	getOwner : 'pet.owner.get',
-	saveOwner : 'pet.owner.save',
-	getVets : 'pet.vet.filter',
-	saveVisit : 'pet.visit.save',
-	getPet : 'pet.petDetail.get',
-	savePet : 'pet.pet.save',
-	getPetTypes : 'pet.petType.list'
+	findOwners0 : {
+		name : 'pet.owner.filter',
+		url : 'owner/0',
+		method : 'get'
+	},
+	findOwners1 : {
+		name : 'pet.filterOwners',
+		url : 'owner/1',
+		method : 'get'
+	},
+	findOwners2 : {
+		name : 'pet.filterWithJavaAction',
+		url : 'owner/2',
+		method : 'get'
+	},
+	findOwners3 : {
+		name : 'pet.filterWithJavaService',
+		url : 'owner/3',
+		method : 'get'
+	},
+	findOwners4 : {
+		name : 'clientSpecificServiceName',
+		url : 'owner/4',
+		method : 'get'
+	},
+	getOwner : {
+		name : 'pet.owner.get',
+		url : 'owner/id/',
+		method : 'get',
+		id : 'ownerId'
+	},
+	saveOwner : {
+		name : 'pet.owner.save',
+		url : 'owner',
+		method : 'post'
+	},
+	getVets : {
+		name : 'pet.vet.filter',
+		url : 'vet',
+		method : 'get'
+	},
+	saveVisit : {
+		name : 'pet.visit.save',
+		url : 'visit',
+		method : 'post'
+	},
+	getPet : {
+		name : 'pet.petDetail.get',
+		url : 'pet/id/',
+		method : 'get',
+		id : 'petId'
+	},
+	savePet : {
+		name : 'pet.pet.save',
+		url : 'pet',
+		method : 'post'
+	},
+	getPetTypes : {
+		name : 'pet.petType.list',
+		url : 'petType',
+		method : 'get'
+	}
 };
 /*
  * all page URLs used for navigation
@@ -159,3 +213,50 @@ var setMessagesToFields = function(msgs) {
 		field.icon.className = styles.icon;
 	}
 };
+
+/**
+ * client script uses this as the server to get whatever they want from it. for
+ * example get a response for a service request
+ */
+var server = (function() {
+	var getResponse = function(service, payload, callBack) {
+		if (SERVER_IS_REST) {
+			var url = REST_ROOT + service.url;
+			var id = service.id;
+			if(id){
+				if(!payload || !payload[id]){
+					alert("Client design error: value for field " + id + " is missing from payload");
+					return;
+				}
+				url += encodeURIComponent(payload[id]);
+				delete payload[id];
+			}
+			if(service.method == 'get'){
+				var qry = [];
+				var ch = '?'
+				for(var a in  payload){
+					if(!payload[id]){
+						console.log(a + '=' + payload[a] + ' not sent to server');
+						continue;
+					}
+					qry.push(ch);
+					qry.push(a);
+					qry.push('=');
+					qry.push(encodeURIComponent(payload[a]));
+					ch = '&';
+				}
+				if(qry.length){
+					url += qry.join('');
+				}
+				payload = null;
+			}
+			console.log('url=' + url + '   method=' + service.method);
+			Simplity.getResponse(null, payload, callBack, null, service.method, url );
+		} else {
+			Simplity.getResponse(service.name, payload, callBack, null);
+		}
+	};
+	return {
+		getResponse : getResponse
+	};
+})();

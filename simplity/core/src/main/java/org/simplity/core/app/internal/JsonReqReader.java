@@ -22,6 +22,7 @@
 
 package org.simplity.core.app.internal;
 
+import java.util.Map;
 import java.util.Stack;
 
 import org.simplity.core.app.IRequestReader;
@@ -60,12 +61,18 @@ public class JsonReqReader implements IRequestReader {
 	 */
 	private JSONArray currentArray;
 
+	private final Map<String, Object> fields;
+
 	/**
 	 * instantiate input reader for a json object
 	 *
 	 * @param json
+	 *            non-null source
+	 * @param fields
+	 *            can be null
 	 */
-	public JsonReqReader(JSONObject json) {
+	public JsonReqReader(JSONObject json, Map<String, Object> fields) {
+		this.fields = fields;
 		this.currentObject = json;
 		this.inputJson = json;
 		this.openObjects.push(json);
@@ -75,8 +82,12 @@ public class JsonReqReader implements IRequestReader {
 	 * instantiate input reader for a json array
 	 *
 	 * @param array
+	 *            non-null source
+	 * @param fields
+	 *            canbe null
 	 */
-	public JsonReqReader(JSONArray array) {
+	public JsonReqReader(JSONArray array, Map<String, Object> fields) {
+		this.fields = fields;
 		this.currentArray = array;
 		this.inputJson = array;
 		this.openObjects.push(array);
@@ -87,7 +98,7 @@ public class JsonReqReader implements IRequestReader {
 		if (this.currentObject == null) {
 			return InputValueType.NULL;
 		}
-		return getType(this.currentObject.opt(fieldName));
+		return getType(this.getValue(fieldName));
 	}
 
 	private static InputValueType getType(Object val) {
@@ -117,7 +128,12 @@ public class JsonReqReader implements IRequestReader {
 			logger.error("Current object is null but a value is expected for field {}", fieldName);
 			return null;
 		}
-		return this.currentObject.opt(fieldName);
+		Object obj = this.currentObject.opt(fieldName);
+		if (obj != null || this.fields == null) {
+			return obj;
+		}
+		return this.fields.get(fieldName);
+
 	}
 
 	@Override

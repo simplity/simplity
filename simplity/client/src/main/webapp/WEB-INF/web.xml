@@ -17,4 +17,13 @@
     <servlet-name>controller</servlet-name>
     <url-pattern>*._s</url-pattern>
   </servlet-mapping>
+  <!--  for REST -->
+  <servlet-mapping>
+    <servlet-name>controller</servlet-name>
+    <url-pattern>/rest/*</url-pattern>
+  </servlet-mapping>
+  <context-param>
+    <param-name>org.simplity.restRoot</param-name>
+    <param-value>/rest/</param-value>
+  </context-param>
 </web-app>

@@ -65,11 +65,6 @@ public class ExampleController extends HttpAgent {
 	protected boolean prepareRequestAndResponse(String serviceName, HttpServletRequest req, HttpServletResponse resp,
 			ServiceRequest request, ServiceResponse response, Map<String, Object> fields) {
 		boolean allOk = true;
-		/*
-		 * we may want to process fields collection, and change names??. fields
-		 * are to be passed on to request
-		 */
-		request.setFields(fields);
 
 		/*
 		 * app user. We add a dummy user
