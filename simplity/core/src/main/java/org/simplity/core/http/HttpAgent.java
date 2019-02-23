@@ -245,6 +245,7 @@ public abstract class HttpAgent extends HttpServlet {
 			 * map
 			 */
 			Map<String, Object> fields = new HashMap<>();
+			this.mineFields(req, fields);
 			/*
 			 * path-data is extracted during path-parsing for serviceName
 			 */
@@ -262,10 +263,6 @@ public abstract class HttpAgent extends HttpServlet {
 					return;
 				}
 			}
-			/*
-			 * get all non-payload data
-			 */
-			this.mineFields(req, fields);
 
 			/*
 			 * try-catch to isolate service related exceptions
