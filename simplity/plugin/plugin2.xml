@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+	<extension
+		point="org.eclipse.core.resources.natures"
+		id="simplitynature"
+		name="Simplity Nature"
+		>
+		<runtime>
+			<run class="org.simplity.eclipse.plugin.SimplityNature" />
+		</runtime>
+	</extension>
+
+	<extension point="org.eclipse.ui.commands">
+		<category
+			name="Simplity" 
+            id="org.simplity.eclipse.plugin.category">
+		</category>
+		<command
+			name="Make this a Simplity Project"
+            defaultHandler="org.simplity.eclipse.plugin.command.AddNature"
+            categoryId="org.simplity.eclipse.plugin.category"
+            id="org.simplity.eclipse.plugin.command.addnature">
+		</command>
+		<command
+			name="Mark as Non-Simplity Project"
+            defaultHandler="org.simplity.eclipse.plugin.command.RemoveNature"
+            categoryId="org.simplity.eclipse.plugin.category"
+            id="org.simplity.eclipse.plugin.command.removenature">
+		</command>
+	</extension>
+	<extension
+    	point="org.eclipse.ui.menus">
+    	<menuContribution
+    		locationURI="popup:org.eclipse.ui.projectConfigure?after=additions">
+    		<command 
+    			commandId="org.simplity.eclipse.plugin.validator.addRemoveSampleNature"
+    			label="Disable Simplity builder"
+    			style="push">
+    			<visibleWhen checkEnabled="false">
+	    			<with variable="selection">
+	    				<count value="1">
+	    				</count>
+	    				<iterate>
+	    					<adapt type="org.eclipse.core.resources.IProject">
+	    						<test value="org.simplity.eclipse.plugin.validator.sampleNature"
+	    							property="org.eclipse.core.resources.projectNature">
+	    						</test>
+	    					</adapt>
+	    				</iterate>
+	    			</with>
+	    		</visibleWhen>
+	    	</command>
+	    	
+	    	<command
+	    		commandId="org.simplity.eclipse.plugin.validator.addRemoveSampleNature"
+	    		label="Enable Simplity Nature"
+	    		style="push">
+	    		<visibleWhen checkEnabled="false">
+	    			<with variable="selection">
+		    			<count value="1">
+		    			</count>
+		    			<iterate>
+		    				<adapt type="org.eclipse.core.resources.IProject">
+		    					<not>
+		    						<test value="org.simplity.eclipse.plugin.validator.sampleNature"
+		    							property="org.eclipse.core.resources.projectNature">
+		    						</test>
+		    					</not>
+		    				</adapt>
+		    			</iterate>
+		    		</with>
+		    	</visibleWhen>
+		    </command>
+		</menuContribution>
+	</extension>
+	<extension
+		id="xmlProblem"
+		name="XML Problem"
+		point="org.eclipse.core.resources.markers">
+		<super type="org.eclipse.core.resources.problemmarker">
+		</super>
+		<persistent value="true">
+		</persistent>
+	</extension>
+
+	<extension point = "org.eclipse.wst.xml.core.catalogContributions">
+		<catalogContribution id="default">
+			<public publicId="http://www.simplity.org/schema"
+				uri="xsd/kernel.xsd"
+				webURL="http://www.simplity.org/schema" />
+		</catalogContribution>
+	</extension> 
+
+	<extension
+    	point="org.eclipse.ui.newWizards">
+    	<category
+            id="simplity"
+            name="Simplity"/>
+		<wizard
+			category="simplity"
+            class="org.simplity.eclipse.plugin.validator.wizard.NewApplicationXmlWizard"
+            descriptionImage="icons/wizards/newfile_wiz.gif"
+            icon="icons/objects/x.gif"
+            id="org.simplity.eclipse.plugin.validator.xmlfile.NewApplicationWizard"
+            name="Application"/>
+        <wizard
+			category="simplity"
+            class="org.simplity.eclipse.plugin.validator.wizard.NewServiceXmlWizard"
+            descriptionImage="icons/wizards/newfile_wiz.gif"
+            icon="icons/objects/x.gif"
+            id="org.simplity.eclipse.plugin.validator.xmlfile.NewServiceWizard"
+            name="Service"/>
+        <wizard
+			category="simplity"
+            class="org.simplity.eclipse.plugin.validator.wizard.NewRecordXmlWizard"
+            descriptionImage="icons/wizards/newfile_wiz.gif"
+            icon="icons/objects/x.gif"
+            id="org.simplity.eclipse.plugin.validator.xmlfile.NewRecordWizard"
+            name="Record"/>
+	</extension>
+	
+	<extension
+		point="org.eclipse.ui.workbench.texteditor.hyperlinkDetectors">
+		<hyperlinkDetector
+			id="org.simplity.eclipse.plugin.validator.hyperlink.DetectHyperlinks"
+			targetId="org.eclipse.jdt.ui.javaCode"
+			class="org.simplity.eclipse.plugin.validator.hyperlink.DetectHyperlinks"
+			name="%detectRecord">
+		</hyperlinkDetector>
+	</extension>
+	<extension
+		point="org.eclipse.ui.workbench.texteditor.hyperlinkDetectorTargets">
+		<target
+			id="org.eclipse.jdt.ui.javaCode"
+			name="Java Editor">
+			<context type="org.eclipse.ui.texteditor.ITextEditor"/>
+		</target>
+	</extension>
+	
+	<extension point="org.eclipse.ui.views">
+		<category
+			name="Hello Category"
+			id="org.simplity.eclipse.plugin.validator.view.SimplityProblemView">
+		</category>
+		<view
+			name="Simplity Problems"
+			icon="icons/sample.gif"
+			category="org.simplity.eclipse.plugin.validator.view"
+			class="org.simplity.eclipse.plugin.validator.view.SimplityProblemView"
+			id="org.simplity.eclipse.plugin.validator.view.SimplityProblemView">
+		</view>
+	</extension>
+	
+	<extension point="org.eclipse.core.resources.markers"
+		id="org.simplity.eclipse.plugin.validator.marker"
+		name="Simplity Marker">
+		<super type="org.eclipse.core.resources.textmarker"/>
+		<super type="org.eclipse.core.resources.marker"/>
+		<persistent value="true"/>
+	</extension>
+	
+	<extension point="org.eclipse.ui.popupMenus"> 
+		<viewerContribution 
+		  	id="org.eclipse.ui.articles.action.contribution.popup.navigator"
+			targetID="#CompilationUnitEditorContext"> 
+			<action
+			    class="org.simplity.eclipse.plugin.validator.marker.SimplityMarkerAction"
+			    id="org.simplity.eclipse.plugin.validator.marker.simplitymarkeraction"
+			    label="Create Simplity Marker"
+			    menubarPath="additions">
+			</action>
+			<action
+			    class="org.simplity.eclipse.plugin.validator.marker.SimplityFileMarkerCount"
+			    id="org.simplity.eclipse.plugin.validator.marker.simplityfilemarkercount"
+			    label="Count Markers"
+			    menubarPath="additions">
+			</action>
+		</viewerContribution>
+	</extension>
+	
+	<extension point="org.eclipse.ui.popupMenus">
+		<objectContribution id="Clarity.objectContribution2"
+			objectClass="org.eclipse.jdt.core.IOpenable">
+			<action
+			   label="Count Simplity Markers"
+			   class="org.simplity.eclipse.plugin.validator.marker.simplityfilesmarkercount"
+			   menubarPath="additions"
+			   id="org.simplity.eclipse.plugin.validator.marker.simplityfilesmarkercount">
+			</action>
+		</objectContribution>
+	</extension>
+	
+	<extension point="org.eclipse.ui.editors.markerAnnotationSpecification"
+		id="simplity annotation"
+		name="SimplityAnnotation">
+		<specification
+			annotationType="org.simplity.eclipse.plugin.validator.marker.simplityannotation"
+			label="SimplityAnnotation"
+			icon="icons/sample.gif"
+			overviewRulerPreferenceKey="clruler"
+			overviewRulerPreferenceValue="true"
+			colorPreferenceKey="clcolor"
+			colorPreferenceValue="255,255,0"
+			textPreferenceKey="cltext"
+			textPreferenceValue="true"
+			verticalRulerPreferenceKey="clvertical"
+			verticalRulerPreferenceValue="true"
+			textStylePreferenceKey="clstyle"
+			textStylePreferenceValue="BOX">
+		</specification>
+	</extension>
+	
+	<extension point="org.eclipse.ui.editors.annotationTypes">
+		<type
+			markerSeverity="0"
+			super="org.eclipse.ui.workbench.texteditor.info"
+			name="org.simplity.eclipse.plugin.validator.marker.simplityannotation"
+			markerType="org.simplity.eclipse.plugin.validator.simplitymarkers.simplitymarker"/>
+	</extension>
+	
+	<extension point="org.eclipse.ui.editors.markerUpdaters">
+		<updater
+			id="org.simplity.eclipse.plugin.validator.marker.SimplityMarkerUpdater"
+			class="org.simplity.eclipse.plugin.validator.marker.SimplityMarkerUpdater"
+			markerType="org.simplity.eclipse.plugin.validator.simplitymarkers.simplitymarker">
+		</updater>
+	</extension>
+
+	<extension
+		point="org.eclipse.core.contenttype.contentTypes">
+	    <content-type
+	    	base-type="org.eclipse.core.runtime.xml"
+	        file-extensions="xml"
+	        id="simplity.xml"
+	        name="Simplity Validation"
+	        priority="normal">
+		</content-type>
+	</extension>
+	
+	<extension
+		id="SimplityValidation"
+	    name="Simplity Validation"
+	    point="org.eclipse.wst.validation.validatorV2">
+	    <validator
+	    	version="3"
+	    	build="true"
+	    	manual="true"
+	        class="org.simplity.eclipse.plugin.validation.Validator"
+	        sourceid="org.eclipse.wst.xml.ui.internal.validation.DelegatingSourceValidatorForXML"
+	        markerId="org.eclipse.wst.xml.core.validationMarker">
+	        <include>
+	        	<rules>
+	            	<contentType
+	                	exactMatch="true"
+	                    id="simplity.xml">
+					</contentType>
+				</rules>
+			</include>
+		</validator>
+	</extension>
+	
+	<extension id="simplityValidator" name="%_UI_XML_SCHEMA_VALIDATOR" point="org.eclipse.wst.validation.validator">
+		<validator>
+			<filter	objectClass="org.eclipse.core.resources.IFile" caseSensitive="false" nameFilter="*.xml">
+			</filter>
+			<helper class="org.eclipse.wst.xml.core.internal.validation.core.Helper">
+			</helper>
+			<run class="org.eclipse.wst.xsd.ui.internal.validation.Validator">
+			</run>
+		</validator>
+	</extension>
+ <extension
+       id="org.simplity.eclipse.command.project"
+       name="Project"
+       point="org.eclipse.ui.commands">
+ </extension>
+
+</plugin>

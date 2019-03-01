@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            id="org.simplity"
+            name="Simplity Commands">
+      </category>
+      <command
+            categoryId="org.simplity"
+            defaultHandler="org.simplity.eclipse.ToggleHandler"
+            id="org.simplity.toggle"
+            name="Enable/Disable Simplity">
+      </command>
+   </extension>
+
+	<extension
+ 		point="org.eclipse.ui.menus">
+    	<menuContribution
+    		locationURI="popup:org.eclipse.ui.projectConfigure?after=additions">
+        	<command
+               label="Disable Simplity"
+               commandId="org.simplity.toggle"
+               style="push">
+            	<visibleWhen
+                  checkEnabled="false">
+               		<with
+                     variable="selection">
+                  		<count  value="1" />
+                     <iterate>
+                     	<adapt
+                           type="org.eclipse.core.resources.IProject">
+                        	<test
+                              property="org.eclipse.core.resources.projectNature"
+                              value="org.simplity.nature">
+                        	</test>
+                     	</adapt>
+                  	</iterate>
+               	</with>
+            	</visibleWhen>
+         </command>
+         <command
+               label="Enable Simplity"
+               commandId="org.simplity.toggle"
+               style="push">
+            <visibleWhen
+                  checkEnabled="false">
+               <with
+                     variable="selection">
+                  <count
+                        value="1">
+                  </count>
+                  <iterate>
+                     <adapt
+                           type="org.eclipse.core.resources.IProject">
+                        <not>
+                           <test
+                                 property="org.eclipse.core.resources.projectNature"
+                                 value="org.simplity.nature">
+                           </test>
+                        </not>
+                     </adapt>
+                  </iterate>
+               </with>
+            </visibleWhen>
+         </command>
+      </menuContribution>
+   </extension>
+    
+	<extension point="org.eclipse.ui.propertyPages">
+	    <page id="org.simplity.projectPropertyPage"
+	          name="Simplity"
+	          class="org.simplity.eclipse.ProjectPropertyPage">
+			<enabledWhen>
+			    <adapt type="org.eclipse.core.resources.IProject">
+			        <test property="org.eclipse.core.resources.projectNature" 
+			              value="org.simplity.nature"/>
+			    </adapt>         
+			</enabledWhen>	  
+		</page>
+  	</extension>
+	 <extension
+	    point="org.eclipse.wst.xml.core.catalogContributions">
+	    <catalogContribution id="schema">
+	        <uri
+	             name="http://www.simplity.org/schemaKernel"
+	             uri="platform:/plugin/org.simplity/schema/core.xsd" />
+	   </catalogContribution>
+	</extension>
+
+	<extension
+		 point="org.eclipse.core.resources.natures"
+		 id="nature"
+		 name="Simplity Nature">
+		<runtime>
+		     <run
+		           class="org.simplity.eclipse.Nature">
+		     </run>
+	      </runtime>
+	</extension>
+ 
+  <extension
+        id="validator"
+        name="Simplity"
+        point="org.eclipse.wst.validation.validatorV2" >
+        
+     <validator
+           class="org.simplity.eclipse.Validator"
+           manual="true"
+           build="true"
+           markerId="org.simplity.marker">
+                 <include>
+            <rules>
+               <fileext ext="xml"/>
+            </rules>
+         </include>
+           
+     </validator>
+  </extension>
+  
+	<extension 
+			point="org.eclipse.core.resources.markers" 
+			id="marker"
+	  		name="Simplity">
+
+	    <super 
+	    	type="org.eclipse.core.resources.problemmarker"/>
+		<super
+            type="org.eclipse.core.resources.textmarker" />
+ 	    <persistent 
+	    	value="true"/>
+	</extension>
+	
+	<!-- 
+		propose valid comp names for attribute that refers to another component. 
+		for e.g. dataType="", we propose all defined data types as proposals
+	-->
+	
+ <extension
+       point="org.eclipse.wst.sse.ui.completionProposal">
+    <proposalCategory
+          id="proposalCategory"
+          name="Simplity" />
+    <proposalComputer
+          activate="true"
+          categoryId="org.simplity.proposalCategory"
+          class="org.simplity.eclipse.ProposalComputer"
+          id="proposalComputer">
+       <contentType
+             id="org.eclipse.core.runtime.xml">
+       </contentType>
+    </proposalComputer>
+ </extension>
+ 
+ <!--  
+ 	if a referred component value is focussed, 
+ 	we should create hyperlink to the resource in which it is defined
+ -->
+ 
+ 	<extension
+        id="hyperlinkTrget"
+        point="org.eclipse.ui.workbench.texteditor.hyperlinkDetectorTargets">
+		<target
+			id="org.simplity.xref"
+			name="Component Target">
+		</target>
+	</extension>
+	<extension
+		point="org.eclipse.ui.workbench.texteditor.hyperlinkDetectors">
+		<hyperlinkDetector
+			class="org.simplity.eclipse.HyperlinkDetector"
+			id="xrefDetector"
+			name="Component Detector"
+			targetId="org.eclipse.ui.DefaultTextEditor"
+			active="true"/>
+   </extension>
+ <extension
+       point="org.eclipse.wst.sse.core.modelHandler">
+ </extension>
+ <extension
+       point="org.eclipse.wst.sse.ui.sourcevalidation">
+ </extension>
+ <extension
+       point="org.eclipse.wst.xml.core.errorCustomizer">
+    <errorCustomizer
+          class="plugin.errorCustomizer1"
+          namespace="plugin.errorCustomizer1">
+    </errorCustomizer>
+ </extension>
+
+<!--
+<extension point="org.eclipse.core.contenttype.contentTypes">
+<content-type base-type="org.eclipse.core.runtime.xml"
+             file-extensions="xml"
+             id="ca.ecliptical.examples.contenttype.apples"
+             name="Apples File"
+             priority="normal">
+  <describer class="org.eclipse.core.runtime.content
+                    .XMLRootElementContentDescriber">
+     <parameter name="element"
+                value="apples">
+     </parameter>
+  </describer>
+</content-type>
+
+-->
+ 
+</plugin>
