@@ -782,6 +782,17 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
+    <xs:attribute
+      name="nbrGenericFields"
+      type="xs:int"
+    >
+      <xs:annotation>
+        <xs:documentation>used by multi-tenant apps to accomodate
+          tenant-specific attributes of an entity. Generic fields are saved
+          in db as text, but are treated exactly like a pre-defined db field
+          based on meta-data</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:attributeGroup>
 
   <xs:element name="record">

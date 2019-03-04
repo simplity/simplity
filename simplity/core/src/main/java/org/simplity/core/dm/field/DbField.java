@@ -23,12 +23,30 @@
 package org.simplity.core.dm.field;
 
 import org.simplity.core.dt.DataType;
+import org.simplity.core.value.ValueType;
 
 /**
  * @author simplity.org
  *
  */
 public class DbField extends Field {
+	/**
+	 * get a default field
+	 *
+	 * @param fieldName
+	 * @param valueType
+	 * @return a default for the supplied parameters
+	 */
+	public static DbField getDefaultField(String fieldName, ValueType valueType) {
+		DbField field = new DbField();
+		field.columnName = field.name = fieldName;
+		DataType dt = valueType.getDefaultDataType();
+		field.dataTypeObject = dt;
+		field.dataType = dt.getQualifiedName();
+		field.isNullable = true;
+		return field;
+	}
+
 	/**
 	 * can this field be null in the db
 	 */

@@ -84,6 +84,7 @@ public class DbTable extends Record {
 	private static final char KEY_JOINER = 0;
 
 	private static final String KEY_PREFIX = "rec.";
+	private static final String GENERIC_FIELD_NAME = "field";
 	/**
 	 * name of the rdbms table, if this is either a storage table, or a view
 	 * that is to be defined in the rdbms
@@ -172,6 +173,21 @@ public class DbTable extends Record {
 	 * is this record only for reading?
 	 */
 	boolean readOnly;
+	/*
+	 * design note:
+	 *
+	 * data base will have varchar fields named field0, field1.... all nullable.
+	 * All dbTable based operations treat them as text fields. A tenant-level
+	 * metadata describes these fields (name data-type) input/output is managed
+	 * as if the fields are pre-defined like that
+	 */
+	/**
+	 * in multi-tenancy design, we may need different sets of fields for an
+	 * entity. Our approach is to design them as text fields in the db and mp
+	 * them to the desired name and dataType at run time, based on a
+	 * configuration meta data for that tenant
+	 */
+	int nbrGenericFields;
 	/*
 	 * standard fields are cached
 	 */
@@ -1633,6 +1649,9 @@ public class DbTable extends Record {
 
 	@Override
 	public void getReadyExtension(Record refRecord) {
+		if (this.tableName == null) {
+			this.tableName = this.name;
+		}
 		int nbrPrimaries = 0;
 		int nbrParents = 0;
 		/*
@@ -1678,8 +1697,11 @@ public class DbTable extends Record {
 			try {
 				this.fieldsToInput = Arrays.copyOf(inpFields, inpIdx + 1);
 			} catch (Exception e) {
-				e.printStackTrace();
+				throw new ApplicationError(e, "Error while copying DbTable fields");
 			}
+		}
+		if (this.nbrGenericFields != 0) {
+			this.addGenericFields();
 		}
 		/*
 		 * because of possible composite keys, we save keys in arrays
@@ -1715,6 +1737,21 @@ public class DbTable extends Record {
 		 */
 		if (this.readOnly == false && this.allPrimaryKeys != null) {
 			this.createWriteSqls();
+		}
+	}
+
+	/**
+	 * append generic fields to this.fields array
+	 */
+	private void addGenericFields() {
+		int idx = this.fields.length;
+		try {
+			this.fields = Arrays.copyOf(this.fields, idx + this.nbrGenericFields);
+		} catch (Exception e) {
+			throw new ApplicationError(e, "Error while copying DbTable fields to accomodate generic fields");
+		}
+		for (int i = 0; i < this.nbrGenericFields; i++) {
+			this.fields[idx++] = DbField.getDefaultField(GENERIC_FIELD_NAME + i, ValueType.TEXT);
 		}
 	}
 
