@@ -21,6 +21,8 @@
  */
 package org.simplity.core.dm.field;
 
+import org.simplity.core.value.ValueType;
+
 /**
  * modified time stamp. We may read it from client if this is meant for update
  */
@@ -28,5 +30,10 @@ public class ModifiedTimestamp extends DbField {
 	@Override
 	public boolean canInsert() {
 		return false;
+	}
+
+	@Override
+	protected ValueType getDefaultValueType() {
+		return ValueType.TIMESTAMP;
 	}
 }

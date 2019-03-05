@@ -21,6 +21,8 @@
  */
 package org.simplity.core.dm.field;
 
+import org.simplity.core.value.ValueType;
+
 /**
  * created time stamp field
  */
@@ -33,5 +35,10 @@ public class CreatedTimestamp extends DbField {
 	@Override
 	public boolean canUpdate() {
 		return false;
+	}
+
+	@Override
+	protected ValueType getDefaultValueType() {
+		return ValueType.TIMESTAMP;
 	}
 }

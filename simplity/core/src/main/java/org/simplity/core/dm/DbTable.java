@@ -194,6 +194,7 @@ public class DbTable extends Record {
 	private DbField modifiedStampField;
 	private DbField modifiedUserField;
 	private DbField createdUserField;
+	private DbField createdStampField;
 
 	/** sql for reading a row for given primary key value */
 	private String readSql;
@@ -461,110 +462,9 @@ public class DbTable extends Record {
 	 * @return data sheet, possible with retrieved rows
 	 */
 	public IDataSheet filter(DbTable inputRecord, IFieldsCollection inData, IReadOnlyHandle handle, Value userId) {
-		/*
-		 * we have to create where clause with ? and corresponding values[]
-		 */
-		logger.info("Starting with filter sql = {}", this.filterSql);
-		StringBuilder sql = new StringBuilder(this.filterSql);
-		List<Value> filterValues = new ArrayList<Value>();
-		boolean firstTime = true;
-		for (Field f : inputRecord.getFields()) {
-			DbField field = (DbField) f;
-			String fieldName = field.getName();
-			Value value = inData.getValue(fieldName);
-			if (Value.isNull(value) || value.toString().isEmpty()) {
-				logger.info("No condition on filter field {}", field.getName());
-				continue;
-			}
-			if (firstTime) {
-				firstTime = false;
-			} else {
-				sql.append(" AND ");
-			}
-
-			FilterCondition condition = FilterCondition.Equal;
-			Value otherValue = inData.getValue(fieldName + AppConventions.Name.COMPARATOR_SUFFIX);
-			if (Value.isNull(otherValue) == false) {
-				String text = otherValue.toString();
-				/*
-				 * it could be raw text like "~" or parsed value like
-				 * "GreaterThan"
-				 */
-				condition = FilterCondition.valueOf(text);
-				if (condition == null) {
-					condition = FilterCondition.parse(text);
-				}
-				if (condition == null) {
-					throw new ApplicationError(
-							"Context hs an invalid filter condition of " + text + " for field " + fieldName);
-				}
-			}
-
-			/** handle the special case of in-list */
-			if (condition == FilterCondition.In) {
-				Value[] values = Value.parse(value.toString().split(","), field.getValueType());
-				/*
-				 * we are supposed to have validated this at the input gate...
-				 * but playing it safe
-				 */
-				if (values == null) {
-					throw new ApplicationError(
-							value + " is not a valid comma separated list for field " + field.getName());
-				}
-				sql.append(field.getColumnName()).append(" in (?");
-				filterValues.add(values[0]);
-				for (int i = 1; i < values.length; i++) {
-					sql.append(",?");
-					filterValues.add(values[i]);
-				}
-				sql.append(") ");
-				continue;
-			}
-
-			if (condition == FilterCondition.Like) {
-				value = Value
-						.newTextValue(DbTable.PERCENT + handle.escapeForLike(value.toString()) + DbTable.PERCENT);
-			} else if (condition == FilterCondition.StartsWith) {
-				value = Value.newTextValue(handle.escapeForLike(value.toString()) + DbTable.PERCENT);
-			}
-
-			sql.append(field.getColumnName()).append(condition.getSql()).append("?");
-			filterValues.add(value);
-
-			if (condition == FilterCondition.Between) {
-				otherValue = inData.getValue(fieldName + AppConventions.Name.TO_FIELD_SUFFIX);
-				if (otherValue == null || otherValue.isUnknown()) {
-					throw new ApplicationError("To value not supplied for field " + this.name + " for filtering");
-				}
-				sql.append(" AND ?");
-				filterValues.add(otherValue);
-			}
-		}
-		Value[] values;
-		if (firstTime) {
-			/*
-			 * no conditions..
-			 */
-			if (this.okToSelectAll == false) {
-				throw new ApplicationError("Record " + this.name
-						+ " is likely to contain large number of records, and hence we do not allow select-all operation");
-			}
-			sql.append(" 1 = 1 ");
-			values = new Value[0];
-		} else {
-			values = filterValues.toArray(new Value[0]);
-		}
-		/*
-		 * is there sort order?
-		 */
-		Value sorts = inData.getValue(AppConventions.Name.SORT_COLUMN);
-		if (sorts != null) {
-			sql.append(" ORDER BY ").append(sorts.toString());
-		}
-
-		logger.info("final filter sql is {} ", sql);
+		SqlAndValues temp = this.getSqlAndValues(handle, inData, inputRecord);
 		IDataSheet result = this.createSheet(false, false);
-		handle.read(sql.toString(), values, result);
+		handle.read(temp.sql, temp.values, result);
 		if (this.encryptedFields != null) {
 			this.crypt(result, true);
 		}
@@ -1678,15 +1578,18 @@ public class DbTable extends Record {
 			if (field.isParentKey()) {
 				nbrParents++;
 			}
-			if (field instanceof ModifiedTimestamp) {
-				this.checkDuplicateError(this.modifiedStampField, ModifiedTimestamp.class);
-				this.modifiedStampField = field;
-			} else if (field instanceof CreatedByUser) {
+			if (field instanceof CreatedByUser) {
 				this.checkDuplicateError(this.createdUserField, CreatedByUser.class);
 				this.createdUserField = field;
+			} else if (field instanceof CreatedTimestamp) {
+				this.checkDuplicateError(this.createdStampField, CreatedTimestamp.class);
+				this.createdStampField = field;
 			} else if (field instanceof ModifiedByUser) {
 				this.checkDuplicateError(this.modifiedUserField, ModifiedByUser.class);
 				this.modifiedUserField = field;
+			} else if (field instanceof ModifiedTimestamp) {
+				this.checkDuplicateError(this.modifiedStampField, ModifiedTimestamp.class);
+				this.modifiedStampField = field;
 			}
 		}
 		inpFields[inpIdx] = TABLE_ACTION_FIELD;
@@ -1841,8 +1744,8 @@ public class DbTable extends Record {
 			/*
 			 * some fields are not updatable
 			 */
-			boolean isModSTamp = field instanceof ModifiedTimestamp;
-			if (field.canUpdate() || isModSTamp) {
+			boolean isModStamp = field instanceof ModifiedTimestamp;
+			if (field.canUpdate() || isModStamp) {
 				if (firstUpdatableField) {
 					firstUpdatableField = false;
 				} else {
@@ -1873,7 +1776,7 @@ public class DbTable extends Record {
 			/*
 			 * value is hard coded for time stamps
 			 */
-			if (isModSTamp || field instanceof CreatedTimestamp) {
+			if (isModStamp || field instanceof CreatedTimestamp) {
 				vals.append(timeStamp);
 			} else {
 				vals.append(DbTable.PARAM);
@@ -1887,15 +1790,15 @@ public class DbTable extends Record {
 		this.insertSql = insert.toString();
 
 		this.nbrUpdateFields += this.allPrimaryKeys.length;
+		this.deleteSql = "DELETE FROM " + this.tableName + this.primaryWhereClause;
 		if (this.useTimestampForConcurrency) {
 			String clause = " AND " + this.modifiedStampField.getColumnName() + "=?";
 			this.updateSql = update.append(this.primaryWhereClause).append(clause).toString();
-			this.deleteSql = "DELETE FROM " + this.tableName + this.primaryWhereClause + clause;
+			this.deleteSql += clause;
 			this.nbrUpdateFields++;
 
 		} else {
 			this.updateSql = update.append(this.primaryWhereClause).toString();
-			this.deleteSql = "DELETE FROM " + this.tableName + this.primaryWhereClause;
 		}
 	}
 
@@ -2079,8 +1982,20 @@ public class DbTable extends Record {
 
 			FilterCondition condition = FilterCondition.Equal;
 			Value otherValue = inData.getValue(fieldName + AppConventions.Name.COMPARATOR_SUFFIX);
-			if (otherValue != null && otherValue.isUnknown() == false) {
-				condition = FilterCondition.parse(otherValue.toText());
+			if (Value.isNull(otherValue) == false) {
+				String text = otherValue.toString();
+				/*
+				 * it could be raw text like "~" or parsed value like
+				 * "GreaterThan"
+				 */
+				condition = FilterCondition.valueOf(text);
+				if (condition == null) {
+					condition = FilterCondition.parse(text);
+				}
+				if (condition == null) {
+					throw new ApplicationError(
+							"Context has an invalid filter condition of " + text + " for field " + fieldName);
+				}
 			}
 
 			/** handle the special case of in-list */

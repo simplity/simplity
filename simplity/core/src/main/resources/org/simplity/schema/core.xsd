@@ -60,10 +60,6 @@
           </xs:complexType>
         </xs:element>
       </xs:sequence>
-      <xs:attribute
-        name="name"
-        type="xs:NCName"
-        use="required" />
     </xs:complexType>
   </xs:element>
 
@@ -246,10 +242,6 @@
           </xs:complexType>
         </xs:element>
       </xs:sequence>
-      <xs:attribute
-        name="name"
-        type="xs:NCName"
-        use="required" />
     </xs:complexType>
   </xs:element>
 
@@ -4135,18 +4127,6 @@
             a JTA transaction. For example
             java:comp/UserTransaction in
             JBOSS
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-      <xs:attribute
-        name="modules"
-        use="required"
-        type="xs:string"
-      >
-        <xs:annotation>
-          <xs:documentation>comma separated list of modules that make
-            this
-            app. App should have atleas one module
           </xs:documentation>
         </xs:annotation>
       </xs:attribute>

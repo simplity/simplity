@@ -38,7 +38,6 @@ import org.simplity.core.data.IFieldsCollection;
 import org.simplity.core.dm.Record;
 import org.simplity.core.dm.RecordUsageType;
 import org.simplity.core.dt.DataType;
-import org.simplity.core.dt.TextDataType;
 import org.simplity.core.expr.BinaryOperator;
 import org.simplity.core.expr.InvalidOperationException;
 import org.simplity.core.msg.FormattedMessage;
@@ -522,7 +521,7 @@ public class Field {
 		this.assertCompatibility(parentRecord.getRecordUsageType(), parentRecord.getQualifiedName());
 		this.resolverReference(parentRecord, defaultReferredRecord);
 		if (this.dataType == null) {
-			this.dataTypeObject = TextDataType.getDefaultInstance();
+			this.dataTypeObject = this.getDefaultValueType().getDefaultDataType();
 			this.dataType = this.dataTypeObject.getQualifiedName();
 			logger.info("Field {} is assigned defeault data type {}", this.name, this.dataType);
 		} else {
@@ -717,6 +716,15 @@ public class Field {
 	 */
 	public boolean isDbField() {
 		return false;
+	}
+
+	/**
+	 * to be over-ridden by special DbField sub-classes
+	 *
+	 * @return
+	 */
+	protected ValueType getDefaultValueType() {
+		return ValueType.TEXT;
 	}
 
 }

@@ -312,14 +312,6 @@ public class Application implements IApp {
 	String applicationId;
 
 	/**
-	 * list of modules in this application. We have made it mandatory to have a
-	 * module, even if there is only one module. This is to enforce some
-	 * discipline that retains flexibility for the app to be put into a context
-	 * along with other apps.
-	 */
-	@FieldMetaData(isRequired = true)
-	String[] modules;
-	/**
 	 * user id is a mandatory concept. Every service is meant to be executed for
 	 * a specified (logged-in) user id. Apps can choose it to be either string
 	 * or number
@@ -1281,22 +1273,13 @@ public class Application implements IApp {
 			try {
 				String pkg = this.compClass.getPackage().getName() + '.';
 				/*
-				 * load system-defined on
+				 * load one for system-defined and one for app defined
 				 */
 				this.loadOne(AppConventions.Name.BUILT_IN_COMP_PREFIX + this.folderPrefix
 						+ AppConventions.Name.BUILT_IN_COMP_FILE_NAME, pkg);
 
-				/*
-				 * load one for each module
-				 */
-				String prefix = Application.this.resourceRoot + this.folderPrefix;
-				if (Application.this.modules == null) {
-					this.loadOne("dt.xml", pkg);
-				} else {
-					for (String module : Application.this.modules) {
-						this.loadOne(prefix + module + EXTN, pkg);
-					}
-				}
+				this.loadOne(Application.this.resourceRoot + this.folderPrefix
+						+ AppConventions.Name.APP_COMP_FILE_NAME, pkg);
 				/*
 				 * we have to initialize the components
 				 */

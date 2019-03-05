@@ -89,6 +89,12 @@ public class AppConventions {
 		public static final String BUILT_IN_COMP_FILE_NAME = "simplity.xml";
 
 		/**
+		 * file name under which app-specific components are saved. (only for dt
+		 * and message)
+		 */
+		public static final String APP_COMP_FILE_NAME = "app.xml";
+
+		/**
 		 * folder names under which comps are saved. Array is in the same order
 		 * as COMP_TYPES
 		 */
