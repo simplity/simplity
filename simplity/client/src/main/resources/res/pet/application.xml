@@ -2,7 +2,6 @@
 <application
 	xmlns="http://www.simplity.org/schema"
 	applicationId="org.simplity.sample.http"
-  modules="pet"
 >
 <rdbSetup 
 	dbVendor="mysql"

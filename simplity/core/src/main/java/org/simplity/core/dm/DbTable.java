@@ -58,6 +58,8 @@ import org.simplity.core.service.InputRecord;
 import org.simplity.core.service.OutputRecord;
 import org.simplity.core.service.ServiceContext;
 import org.simplity.core.trans.RelatedRecord;
+import org.simplity.core.trans.Service;
+import org.simplity.core.trans.ServiceOperation;
 import org.simplity.core.util.RdbUtil;
 import org.simplity.core.value.Value;
 import org.simplity.core.value.ValueType;
@@ -188,6 +190,8 @@ public class DbTable extends Record {
 	 * configuration meta data for that tenant
 	 */
 	int nbrGenericFields;
+
+	ServiceOperation[] autoServiceOperations;
 	/*
 	 * standard fields are cached
 	 */
@@ -2192,6 +2196,30 @@ public class DbTable extends Record {
 		return this.keyIsGenerated;
 	}
 
+	/**
+	 * generate a service on the fly, if possible
+	 *
+	 * @param operation
+	 *            operation on resource
+	 * @param serviceName
+	 *            full name of service
+	 * @return service, or null if this table is not designed for this operation
+	 */
+	public Service generateService(String operation, String serviceName) {
+		if (this.autoServiceOperations == null) {
+			logger.info("Db Table {} is not designed for any auo-service generation", this.getQualifiedName());
+			return null;
+		}
+		String op = operation.toUpperCase();
+		for (ServiceOperation oper : this.autoServiceOperations) {
+			if (op.equals(oper.name())) {
+				return oper.generateService(serviceName, this);
+			}
+		}
+		logger.info("db tble {} is NOT designed to generate service for operation={}. Service {} not generated",
+				this.getQualifiedName(), op, serviceName);
+		return null;
+	}
 }
 
 class SqlAndValues {

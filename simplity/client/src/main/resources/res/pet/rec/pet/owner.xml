@@ -8,6 +8,7 @@
   childrenToBeRead="pet.petDetail"
   defaultSheetName="owners"
   tableName="owners"
+  autoServiceOperations="filter,get,save"
 >
   <fields>
     <primaryKey

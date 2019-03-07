@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<dbTable
+  xmlns="http://www.simplity.org/schema"
+  name="_customField"
+  description="specification for aa custom field in a table for a tenant. "
+>
+  <fields>
+    <tenantKey
+      name="tenantId"
+      dataType="_number"
+      description="cusomised at the tenant level" />
+    <dbField
+      name="tableName"
+      dataType="_text"
+      description="table name being customized. must match the db table Name" />
+    <dbField
+      name="seqNo"
+      dataType="_number"
+      description="0 is the first field. should not skip fields, except at the end" />
+    <dbField
+      name="label"
+      dataType="_text"
+      description="label to be used on the client" />
+    <dbField
+      name="valueType"
+      dataType="_valueType"
+      description="text, integer, decimal, date or boolean" />
+    <dbField
+      name="maxLength"
+      dataType="_number"
+      description="maximum character allowed for this field" />
+    <dbField
+      name="enumeration"
+      dataType="_entityList"
+      description="comma separated list of valid values"
+  
+  </fields>
+</dbTable>

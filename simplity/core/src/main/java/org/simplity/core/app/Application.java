@@ -41,6 +41,7 @@ import org.simplity.core.comp.FieldMetaData;
 import org.simplity.core.comp.IComponent;
 import org.simplity.core.comp.IValidationContext;
 import org.simplity.core.comp.ValidationUtil;
+import org.simplity.core.dm.DbTable;
 import org.simplity.core.dm.Record;
 import org.simplity.core.dt.DataType;
 import org.simplity.core.expr.Expression;
@@ -62,7 +63,6 @@ import org.simplity.core.sql.Sql;
 import org.simplity.core.sql.StoredProcedure;
 import org.simplity.core.test.TestRun;
 import org.simplity.core.trans.Service;
-import org.simplity.core.trans.ServiceUtil;
 import org.simplity.core.util.IoUtil;
 import org.simplity.core.util.JsonUtil;
 import org.simplity.core.util.TextUtil;
@@ -1351,10 +1351,23 @@ public class Application implements IApp {
 			if (comp != null) {
 				return comp;
 			}
-			logger.info("{} is not defined as a service. We will try and generate it on-the-fly", serviceName);
-			comp = ServiceUtil.generateService(serviceName);
+			logger.info("{} is not defined as a service.", serviceName);
+			int idx = serviceName.lastIndexOf('.');
+			if (idx == -1) {
+				return null;
+			}
+			String recordName = serviceName.substring(0, idx);
+			Record record = Application.this.getRecord(recordName);
+			if (record == null || record instanceof DbTable == false) {
+				return null;
+			}
+
+			String oper = serviceName.substring(idx + 1);
+			logger.info("Trying to generate service using record {} and operation {} ", recordName,
+					oper);
+			comp = ((DbTable) record).generateService(oper, serviceName);
 			if (comp == null) {
-				logger.error("Service {} is not defined, nor is it meant to be generated.", serviceName);
+				logger.error("Service {} could not be generated.", serviceName);
 				return null;
 			}
 			logger.info("Service {}  is generated on-the-fly and is used as a regular service", serviceName);
