@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<messages name="kernel"
+<messages 
     xmlns="http://www.simplity.org/schema">
     <!-- 
     	messages used by core. These are defined as constants in Messages class.

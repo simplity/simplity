@@ -41,7 +41,6 @@ import org.simplity.core.comp.FieldMetaData;
 import org.simplity.core.comp.IComponent;
 import org.simplity.core.comp.IValidationContext;
 import org.simplity.core.comp.ValidationUtil;
-import org.simplity.core.dm.DbTable;
 import org.simplity.core.dm.Record;
 import org.simplity.core.dt.DataType;
 import org.simplity.core.expr.Expression;
@@ -1110,21 +1109,11 @@ public class Application implements IApp {
 	private void loadComps() {
 		int nbr = AppConventions.COMP_TYPES.length;
 		this.allComps = new Comp[nbr];
-		/*
-		 * service has a special comp
-		 */
-		int serviceIdx = ComponentType.SERVICE.getIdx();
 		for (int i = 0; i < nbr; i++) {
 			ComponentType ct = AppConventions.COMP_TYPES[i];
-			if (i == serviceIdx) {
-				logger.info("ServiceComp created for idx {}", i);
-				this.allComps[i] = new ServiceComp(ct, AppConventions.Name.COMP_FOLDER_NAMES[i]);
-			} else {
-				Comp comp = new Comp(ct, AppConventions.Name.COMP_FOLDER_NAMES[i]);
-				comp.loadAll();
-				this.allComps[i] = comp;
-
-			}
+			Comp comp = new Comp(ct, AppConventions.Name.COMP_FOLDER_NAMES[i]);
+			comp.loadAll();
+			this.allComps[i] = comp;
 		}
 
 		for (IFunction fn : BUILT_IN_FUNCTIONS) {
@@ -1311,18 +1300,6 @@ public class Application implements IApp {
 			}
 		}
 
-		/**
-		 * remove the component from cache.
-		 *
-		 * @param compName
-		 *            fully qualified name
-		 */
-		public void removeComp(String compName) {
-			if (this.cachedOnes != null) {
-				this.cachedOnes.remove(compName);
-			}
-		}
-
 		private void loadOne(String resName, String pkg) {
 			logger.info("Going to load components from {}", resName);
 			try {
@@ -1331,52 +1308,5 @@ public class Application implements IApp {
 				logger.error("Resource " + resName + " failed to load.", e);
 			}
 		}
-	}
-
-	/**
-	 * we have a special case with Service..
-	 *
-	 * @author simplity.org
-	 *
-	 */
-	class ServiceComp extends Comp {
-
-		ServiceComp(ComponentType compType, String folder) {
-			super(compType, folder);
-		}
-
-		@Override
-		IComponent getComp(String serviceName) {
-			IComponent comp = super.getComp(serviceName);
-			if (comp != null) {
-				return comp;
-			}
-			logger.info("{} is not defined as a service.", serviceName);
-			int idx = serviceName.lastIndexOf('.');
-			if (idx == -1) {
-				return null;
-			}
-			String recordName = serviceName.substring(0, idx);
-			Record record = Application.this.getRecord(recordName);
-			if (record == null || record instanceof DbTable == false) {
-				return null;
-			}
-
-			String oper = serviceName.substring(idx + 1);
-			logger.info("Trying to generate service using record {} and operation {} ", recordName,
-					oper);
-			comp = ((DbTable) record).generateService(oper, serviceName);
-			if (comp == null) {
-				logger.error("Service {} could not be generated.", serviceName);
-				return null;
-			}
-			logger.info("Service {}  is generated on-the-fly and is used as a regular service", serviceName);
-			comp.getReady();
-			if (this.cachedOnes != null) {
-				this.cachedOnes.put(serviceName, comp);
-			}
-			return comp;
-		}
-
 	}
 }

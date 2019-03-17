@@ -786,16 +786,6 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute
-      name="autoServiceOperations"
-      type="xs:string"
-    >
-      <xs:annotation>
-        <xs:documentation>comma separated list if operations. valid
-          operations are get,filter,save,list and suggest.
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
   </xs:attributeGroup>
 
 
@@ -1284,9 +1274,40 @@
           </xs:documentation>
         </xs:annotation>
       </xs:attribute>
+      <xs:attribute
+        name="dbTableNameToGenerateFrom"
+        type="xs:string"
+      >
+        <xs:annotation>
+          <xs:documentation>to be used if this is an auto-service. That is,
+            a service whose inputData, outputData and processors are
+            generated automatically based on dbTable.If this is used,
+            servieOperation MUST be specified
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+      <xs:attribute
+        name="serviceOperation"
+        type="xs:string"
+      >
+        <xs:annotation>
+          <xs:documentation>to be used only if dbTableNameToGenerateFrom is
+            used. This is the operation for which the service is to be
+            generated</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
     </xs:complexType>
   </xs:element>
+  <xs:simpleType name="serviceOperaiton">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="get" />
+      <xs:enumeration value="filter" />
+      <xs:enumeration value="save" />
+      <xs:enumeration value="list" />
+      <xs:enumeration value="suggest" />
 
+    </xs:restriction>
+  </xs:simpleType>
 
   <xs:element
     name="abstractProcessor"

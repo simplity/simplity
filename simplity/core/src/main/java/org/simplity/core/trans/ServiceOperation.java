@@ -49,10 +49,8 @@ public enum ServiceOperation {
 	 */
 	GET {
 		@Override
-		public Service generateService(String serviceName, DbTable record) {
+		public Service generateService(DbTable record) {
 			String recordName = record.getQualifiedName();
-			Service service = new Service();
-			service.setName(serviceName);
 
 			/*
 			 * what is to be input
@@ -61,7 +59,6 @@ public enum ServiceOperation {
 					InputRecord.getInputRecord(recordName, record.getDefaultSheetName(), DataPurpose.READ, false) };
 			InputData inData = new InputData();
 			inData.setRecords(inRecs);
-			service.inputData = inData;
 
 			/*
 			 * We have just one action : read action
@@ -74,15 +71,17 @@ public enum ServiceOperation {
 			task.actions = actions;
 			task.dbUsage = DbUsage.READ_ONLY;
 			task.schemaName = record.getSchemaName();
-			service.processor = task;
 
 			/*
 			 * output fields from record.
 			 */
 			OutputData outData = new OutputData();
 			outData.setOutputRecords(record.getOutputRecords(false));
-			service.outputData = outData;
 
+			Service service = new Service();
+			service.inputData = inData;
+			service.processor = task;
+			service.outputData = outData;
 			return service;
 		}
 	},
@@ -91,10 +90,8 @@ public enum ServiceOperation {
 	 */
 	SAVE {
 		@Override
-		public Service generateService(String serviceName, DbTable record) {
+		public Service generateService(DbTable record) {
 			String recordName = record.getQualifiedName();
-			Service service = new Service();
-			service.setName(serviceName);
 
 			/*
 			 * data for this record is expected in fields, while rows for
@@ -102,7 +99,6 @@ public enum ServiceOperation {
 			 */
 			InputData inData = new InputData();
 			inData.setRecords(record.getInputRecords());
-			service.inputData = inData;
 
 			/*
 			 * what should we output? We are not sure.
@@ -116,7 +112,6 @@ public enum ServiceOperation {
 			OutputData outData = new OutputData();
 			OutputRecord[] outRecs = { outRec };
 			outData.setOutputRecords(outRecs);
-			service.outputData = outData;
 
 			/*
 			 * processing
@@ -129,7 +124,11 @@ public enum ServiceOperation {
 			task.actions = actions;
 			task.dbUsage = DbUsage.READ_WRITE;
 			task.schemaName = record.getSchemaName();
+
+			Service service = new Service();
+			service.inputData = inData;
 			service.processor = task;
+			service.outputData = outData;
 			return service;
 		}
 	},
@@ -138,9 +137,8 @@ public enum ServiceOperation {
 	 */
 	FILTER {
 		@Override
-		public Service generateService(String serviceName, DbTable record) {
+		public Service generateService(DbTable record) {
 			String recordName = record.getQualifiedName();
-			Service service = new Service();
 
 			/*
 			 * input as fields for filter
@@ -149,28 +147,25 @@ public enum ServiceOperation {
 					DataPurpose.FILTER, false) };
 			InputData inData = new InputData();
 			inData.setRecords(inRecs);
-			service.inputData = inData;
 
 			/*
 			 * output to named array
 			 */
 			OutputData outData = new OutputData();
 			outData.setOutputRecords(record.getOutputRecords(true));
-			service.outputData = outData;
 
 			AbstractAction action = new Filter(record);
 			action.failureMessageName = Messages.NO_ROWS;
 			AbstractAction[] actions = { action };
 			TransactionProcessor task = new TransactionProcessor();
 			task.dbUsage = DbUsage.READ_ONLY;
-			service.setName(serviceName);
 			task.schemaName = record.getSchemaName();
 			task.actions = actions;
-			service.processor = task;
 
-			/*
-			 * getReady() is called by component manager any ways..
-			 */
+			Service service = new Service();
+			service.inputData = inData;
+			service.processor = task;
+			service.outputData = outData;
 			return service;
 		}
 	},
@@ -179,9 +174,8 @@ public enum ServiceOperation {
 	 */
 	LIST {
 		@Override
-		public Service generateService(String serviceName, DbTable record) {
+		public Service generateService(DbTable record) {
 			Service service = new Service();
-			service.setName(serviceName);
 
 			/*
 			 * do we need any input? we are flexible
@@ -240,12 +234,11 @@ public enum ServiceOperation {
 	 */
 	SUGGEST {
 		@Override
-		public Service generateService(String serviceName, DbTable record) {
+		public Service generateService(DbTable record) {
 			Service service = new Service();
 			TransactionProcessor task = new TransactionProcessor();
 			service.processor = task;
 			task.dbUsage = DbUsage.READ_ONLY;
-			service.setName(serviceName);
 			task.schemaName = record.getSchemaName();
 
 			/*
@@ -295,10 +288,9 @@ public enum ServiceOperation {
 	/**
 	 * generate service for this dbTable
 	 *
-	 * @param ServiceName
 	 * @param record
 	 * @return service or null in case teh design does not allow such a
 	 *         generation, or there is some error in generation
 	 */
-	public abstract Service generateService(String ServiceName, DbTable record);
+	public abstract Service generateService(DbTable record);
 }

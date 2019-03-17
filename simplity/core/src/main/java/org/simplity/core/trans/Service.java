@@ -31,6 +31,7 @@ import org.simplity.core.comp.FieldMetaData;
 import org.simplity.core.comp.IComponent;
 import org.simplity.core.comp.IValidationContext;
 import org.simplity.core.comp.ValidationUtil;
+import org.simplity.core.dm.DbTable;
 import org.simplity.core.rdb.DbUsage;
 import org.simplity.core.service.InputData;
 import org.simplity.core.service.InputField;
@@ -56,6 +57,19 @@ public class Service implements IService, IComponent {
 	 * module name.simpleName would be fully qualified name.
 	 */
 	String moduleName;
+
+	/**
+	 * if this service is to be auto-generated based on a dbTable, then specify
+	 * the name. Also specify value for attribute serviceOperation
+	 */
+	@FieldMetaData(isReferenceToComp = true, referredCompType = ComponentType.REC)
+	String dbTableNameToGenerateFrom;
+	/**
+	 * if this is to be generated, then the operation for which the service is
+	 * to be generated
+	 */
+	@FieldMetaData(leaderField = "dbTableNameToGenerateFrom")
+	ServiceOperation serviceOperation;
 
 	/**
 	 * input fields/grids for this service. not valid if requestTextFieldName is
@@ -224,39 +238,45 @@ public class Service implements IService, IComponent {
 	@Override
 	public void getReady() {
 		if (this.gotReady) {
-
 			logger.info("Service " + this.getQualifiedName()
 					+ " is being harassed by repeatedly asking it to getReady(). Please look into this..");
-
 			return;
 		}
 		this.gotReady = true;
 		Application app = Application.getActiveInstance();
 
-		/*
-		 * input record may have to be copied form referred service
-		 */
-		if (this.referredServiceForInput != null) {
-			if (this.inputData != null) {
-				throw new ApplicationError("Service " + this.getQualifiedName() + " refers to service "
-						+ this.referredServiceForInput + " but also specifies its own input records.");
+		if (this.dbTableNameToGenerateFrom != null) {
+			DbTable tbl = (DbTable) app.getRecord(this.dbTableNameToGenerateFrom);
+			Service s = this.serviceOperation.generateService(tbl);
+			this.inputData = s.inputData;
+			this.outputData = s.outputData;
+			this.processor = s.processor;
+		} else {
+			/*
+			 * input record may have to be copied form referred service
+			 */
+			if (this.referredServiceForInput != null) {
+				if (this.inputData != null) {
+					throw new ApplicationError("Service " + this.getQualifiedName() + " refers to service "
+							+ this.referredServiceForInput + " but also specifies its own input records.");
+				}
+				IService service = app.getService(this.referredServiceForInput);
+				this.inputData = service.getInputSpecification();
 			}
-			IService service = app.getService(this.referredServiceForInput);
-			this.inputData = service.getInputSpecification();
+			/*
+			 * output record may have to be copied form referred service
+			 */
+			if (this.referredServiceForOutput != null) {
+				if (this.outputData != null) {
+					throw new ApplicationError("Service " + this.getQualifiedName() + " refers to service "
+							+ this.referredServiceForOutput + " but also specifies its own output records.");
+				}
+				IService service = app.getService(this.referredServiceForOutput);
+				this.outputData = service.getOutputSpecification();
+			}
 		}
 		if (this.inputData != null) {
 			this.inputData.getReady();
-		}
-		/*
-		 * output record may have to be copied form referred service
-		 */
-		if (this.referredServiceForOutput != null) {
-			if (this.outputData != null) {
-				throw new ApplicationError("Service " + this.getQualifiedName() + " refers to service "
-						+ this.referredServiceForOutput + " but also specifies its own output records.");
-			}
-			IService service = app.getService(this.referredServiceForOutput);
-			this.outputData = service.getOutputSpecification();
 		}
 		if (this.outputData != null) {
 			this.outputData.getReady();
