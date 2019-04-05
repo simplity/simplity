@@ -35,19 +35,39 @@ import org.simplity.core.value.ValueType;
  *
  * @author simplity.org
  */
-class Operand {
-	/*
-	 * operand can be of four types
+public class Operand {
+	/**
+	 * operand not yet built
 	 */
-	static final int NONE = 0;
-	static final int CONSTANT = 1;
-	static final int FIELD = 2;
-	static final int FUNCTION = 3;
-	static final int EXPRESSION = 4;
+	public static final int NONE = 0;
+	/**
+	 * operand is a constant
+	 */
+	public static final int CONSTANT = 1;
+	/**
+	 * operand is a field. value attribute has the name of the field.
+	 */
+	public static final int FIELD = 2;
+	/**
+	 * operand is a function. value attribute is the name of the function, and
+	 * expression attribute is the argument list
+	 */
+	public static final int FUNCTION = 3;
+	/**
+	 * operand is a sub-expression, represented by expression attribute
+	 */
+	public static final int EXPRESSION = 4;
+
 	int operandType = Operand.NONE;
 
-	/** unary operator is stored only if it is not a constant */
+	/**
+	 * unary operator is stored only if it is not a constant
+	 */
 	UnaryOperator uop;
+	/**
+	 * unary operator is stored only if it is not a constant
+	 */
+	BinaryOperator bop;
 	/**
 	 * value is the value of the constant. otherwise name of the field/function.
 	 */
@@ -165,5 +185,45 @@ class Operand {
 	@Override
 	public String toString() {
 		return "unaryOperator: " + this.uop + " value:" + this.value;
+	}
+
+	/**
+	 *
+	 * @return type of operand. use constants to check the type
+	 */
+	public int getOperandType() {
+		return this.operandType;
+	}
+
+	/**
+	 *
+	 * @return value attribute. may represent constant value, field name or
+	 *         function name depending on th eoperand type
+	 */
+	public Value getOperandValue() {
+		return this.value;
+	}
+
+	/**
+	 *
+	 * @return expression attribute. non-null for a sub-expression and function
+	 *         (in which case this is the argument list)
+	 */
+	public Expression getOperandExpression() {
+		return this.expression;
+	}
+
+	/**
+	 * @return unary operator associated with this opeand
+	 */
+	public UnaryOperator getUnaryOperator() {
+		return this.uop;
+	}
+
+	/**
+	 * @return binary operator associated with this opeand
+	 */
+	public BinaryOperator getBinaryOperator() {
+		return this.bop;
 	}
 }

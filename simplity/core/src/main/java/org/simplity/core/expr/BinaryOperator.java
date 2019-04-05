@@ -29,578 +29,587 @@ import org.simplity.core.value.Value;
 import org.simplity.core.value.ValueType;
 
 /**
- * models a binary operator that operates like operand1 Operator operand2. Example a + b
+ * models a binary operator that operates like operand1 Operator operand2.
+ * Example a + b
  *
  * @author simplity.org
  */
 public enum BinaryOperator {
-  /** multiply */
-  Multiply {
+	/** multiply */
+	Multiply {
 
-    @Override
-    protected Value doOperate(Value leftValue, Value rightValue) throws InvalidValueException {
-      ValueType lt = leftValue.getValueType();
-      ValueType rt = rightValue.getValueType();
-      int opType = this.getNumericType(lt, rt);
-      if (opType == BinaryOperator.INTEGER_OPERATION) {
-        return Value.newIntegerValue(leftValue.toInteger() * rightValue.toInteger());
-      }
-      if (opType == BinaryOperator.DECIMAL_OPERATION) {
-        return Value.newDecimalValue(leftValue.toDecimal() * rightValue.toDecimal());
-      }
-      throw new InvalidValueException("");
-    }
+		@Override
+		protected Value doOperate(Value leftValue, Value rightValue) throws InvalidValueException {
+			ValueType lt = leftValue.getValueType();
+			ValueType rt = rightValue.getValueType();
+			int opType = this.getNumericType(lt, rt);
+			if (opType == BinaryOperator.INTEGER_OPERATION) {
+				return Value.newIntegerValue(leftValue.toInteger() * rightValue.toInteger());
+			}
+			if (opType == BinaryOperator.DECIMAL_OPERATION) {
+				return Value.newDecimalValue(leftValue.toDecimal() * rightValue.toDecimal());
+			}
+			throw new InvalidValueException("");
+		}
 
-    @Override
-    int getPrecedence() {
-      return BinaryOperator.PREC_MULTPLY_DIVIDE;
-    }
+		@Override
+		int getPrecedence() {
+			return BinaryOperator.PREC_MULTPLY_DIVIDE;
+		}
 
-    @Override
-    public String toString() {
-      return "" + Chars.MULT;
-    }
-  },
-  /** divide */
-  Divide {
+		@Override
+		public String toString() {
+			return "" + Chars.MULT;
+		}
+	},
+	/** divide */
+	Divide {
 
-    @Override
-    protected Value doOperate(Value leftValue, Value rightValue) throws InvalidValueException {
-      ValueType lt = leftValue.getValueType();
-      ValueType rt = rightValue.getValueType();
-      int opType = this.getNumericType(lt, rt);
-      if (opType == BinaryOperator.INTEGER_OPERATION) {
-        return Value.newIntegerValue(leftValue.toInteger() / rightValue.toInteger());
-      }
-      if (opType == BinaryOperator.DECIMAL_OPERATION) {
-        return Value.newDecimalValue(leftValue.toDecimal() / rightValue.toDecimal());
-      }
-      throw new InvalidValueException("");
-    }
+		@Override
+		protected Value doOperate(Value leftValue, Value rightValue) throws InvalidValueException {
+			ValueType lt = leftValue.getValueType();
+			ValueType rt = rightValue.getValueType();
+			int opType = this.getNumericType(lt, rt);
+			if (opType == BinaryOperator.INTEGER_OPERATION) {
+				return Value.newIntegerValue(leftValue.toInteger() / rightValue.toInteger());
+			}
+			if (opType == BinaryOperator.DECIMAL_OPERATION) {
+				return Value.newDecimalValue(leftValue.toDecimal() / rightValue.toDecimal());
+			}
+			throw new InvalidValueException("");
+		}
 
-    @Override
-    int getPrecedence() {
-      return BinaryOperator.PREC_MULTPLY_DIVIDE;
-    }
+		@Override
+		int getPrecedence() {
+			return BinaryOperator.PREC_MULTPLY_DIVIDE;
+		}
 
-    @Override
-    public String toString() {
-      return "" + Chars.DIVIDE;
-    }
-  },
-  /** Modulo /Remainder */
-  Modulo {
+		@Override
+		public String toString() {
+			return "" + Chars.DIVIDE;
+		}
+	},
+	/** Modulo /Remainder */
+	Modulo {
 
-    @Override
-    protected Value doOperate(Value leftValue, Value rightValue) throws InvalidValueException {
-      ValueType lt = leftValue.getValueType();
-      ValueType rt = rightValue.getValueType();
-      int opType = this.getNumericType(lt, rt);
-      if (opType == BinaryOperator.INTEGER_OPERATION) {
-        return Value.newIntegerValue(leftValue.toInteger() % rightValue.toInteger());
-      }
-      throw new InvalidValueException("");
-    }
+		@Override
+		protected Value doOperate(Value leftValue, Value rightValue) throws InvalidValueException {
+			ValueType lt = leftValue.getValueType();
+			ValueType rt = rightValue.getValueType();
+			int opType = this.getNumericType(lt, rt);
+			if (opType == BinaryOperator.INTEGER_OPERATION) {
+				return Value.newIntegerValue(leftValue.toInteger() % rightValue.toInteger());
+			}
+			throw new InvalidValueException("");
+		}
 
-    @Override
-    int getPrecedence() {
-      return BinaryOperator.PREC_MULTPLY_DIVIDE;
-    }
+		@Override
+		int getPrecedence() {
+			return BinaryOperator.PREC_MULTPLY_DIVIDE;
+		}
 
-    @Override
-    public String toString() {
-      return "" + Chars.MODULO;
-    }
-  },
-  /** add */
-  Plus {
+		@Override
+		public String toString() {
+			return "" + Chars.MODULO;
+		}
+	},
+	/** add */
+	Plus {
 
-    @Override
-    protected Value doOperate(Value leftValue, Value rightValue) throws InvalidValueException {
-      ValueType lt = leftValue.getValueType();
-      ValueType rt = rightValue.getValueType();
-      int opType = this.getNumericType(lt, rt);
-      if (opType == INTEGER_OPERATION) {
-        return Value.newIntegerValue(leftValue.toInteger() + rightValue.toInteger());
-      }
-      if (opType == DECIMAL_OPERATION) {
-        return Value.newDecimalValue(leftValue.toDecimal() + rightValue.toDecimal());
-      }
-      if (opType == DATE_ADD_OPERATION) {
-        return Value.newDateValue(DateUtil.addDays(leftValue.toDate(), rightValue.toInteger()));
-      }
-      /*
-       * plus is concatenate for nun-number
-       */
-      return Value.newTextValue(leftValue.toText() + rightValue.toText());
-    }
+		@Override
+		protected Value doOperate(Value leftValue, Value rightValue) throws InvalidValueException {
+			ValueType lt = leftValue.getValueType();
+			ValueType rt = rightValue.getValueType();
+			int opType = this.getNumericType(lt, rt);
+			if (opType == INTEGER_OPERATION) {
+				return Value.newIntegerValue(leftValue.toInteger() + rightValue.toInteger());
+			}
+			if (opType == DECIMAL_OPERATION) {
+				return Value.newDecimalValue(leftValue.toDecimal() + rightValue.toDecimal());
+			}
+			if (opType == DATE_ADD_OPERATION) {
+				return Value.newDateValue(DateUtil.addDays(leftValue.toDate(), rightValue.toInteger()));
+			}
+			/*
+			 * plus is concatenate for nun-number
+			 */
+			return Value.newTextValue(leftValue.toText() + rightValue.toText());
+		}
 
-    @Override
-    int getPrecedence() {
-      return BinaryOperator.PREC_ADD_DELETE;
-    }
+		@Override
+		int getPrecedence() {
+			return BinaryOperator.PREC_ADD_DELETE;
+		}
 
-    @Override
-    public String toString() {
-      return "" + Chars.PLUS;
-    }
-  },
-  /** subtract */
-  Minus {
+		@Override
+		public String toString() {
+			return "" + Chars.PLUS;
+		}
+	},
+	/** subtract */
+	Minus {
 
-    @Override
-    protected Value doOperate(Value leftValue, Value rightValue) throws InvalidValueException {
-      ValueType lt = leftValue.getValueType();
-      ValueType rt = rightValue.getValueType();
-      int opType = this.getNumericType(lt, rt);
-      if (opType == BinaryOperator.INTEGER_OPERATION) {
-        return Value.newIntegerValue(leftValue.toInteger() - rightValue.toInteger());
-      }
-      if (opType == BinaryOperator.DECIMAL_OPERATION) {
-        return Value.newDecimalValue(leftValue.toDecimal() - rightValue.toDecimal());
-      }
-      if (opType == BinaryOperator.DATE_SUBTRACT_OPERATION) {
-        return Value.newIntegerValue(
-            DateUtil.daysBetweenDates(
-                ((DateValue) leftValue).getDate(), ((DateValue) rightValue).getDate()));
-      }
-      throw new InvalidValueException("");
-    }
+		@Override
+		protected Value doOperate(Value leftValue, Value rightValue) throws InvalidValueException {
+			ValueType lt = leftValue.getValueType();
+			ValueType rt = rightValue.getValueType();
+			int opType = this.getNumericType(lt, rt);
+			if (opType == BinaryOperator.INTEGER_OPERATION) {
+				return Value.newIntegerValue(leftValue.toInteger() - rightValue.toInteger());
+			}
+			if (opType == BinaryOperator.DECIMAL_OPERATION) {
+				return Value.newDecimalValue(leftValue.toDecimal() - rightValue.toDecimal());
+			}
+			if (opType == BinaryOperator.DATE_SUBTRACT_OPERATION) {
+				return Value.newIntegerValue(
+						DateUtil.daysBetweenDates(
+								((DateValue) leftValue).getDate(), ((DateValue) rightValue).getDate()));
+			}
+			throw new InvalidValueException("");
+		}
 
-    @Override
-    int getPrecedence() {
-      return BinaryOperator.PREC_ADD_DELETE;
-    }
+		@Override
+		int getPrecedence() {
+			return BinaryOperator.PREC_ADD_DELETE;
+		}
 
-    @Override
-    public String toString() {
-      return "" + Chars.MINUS;
-    }
-  },
-  /** less than */
-  Less {
+		@Override
+		public String toString() {
+			return "" + Chars.MINUS;
+		}
+	},
+	/** less than */
+	Less {
 
-    @Override
-    protected Value doOperate(Value leftValue, Value rightValue) throws InvalidValueException {
-      ValueType lt = leftValue.getValueType();
-      ValueType rt = rightValue.getValueType();
-      int opType = this.getNumericType(lt, rt);
-      if (opType == BinaryOperator.INTEGER_OPERATION) {
-        return Value.newBooleanValue(leftValue.toInteger() < rightValue.toInteger());
-      }
-      if (opType == BinaryOperator.DECIMAL_OPERATION) {
-        return Value.newBooleanValue(leftValue.toDecimal() < rightValue.toDecimal());
-      }
+		@Override
+		protected Value doOperate(Value leftValue, Value rightValue) throws InvalidValueException {
+			ValueType lt = leftValue.getValueType();
+			ValueType rt = rightValue.getValueType();
+			int opType = this.getNumericType(lt, rt);
+			if (opType == BinaryOperator.INTEGER_OPERATION) {
+				return Value.newBooleanValue(leftValue.toInteger() < rightValue.toInteger());
+			}
+			if (opType == BinaryOperator.DECIMAL_OPERATION) {
+				return Value.newBooleanValue(leftValue.toDecimal() < rightValue.toDecimal());
+			}
 
-      if (lt == ValueType.BOOLEAN || lt != rt) {
-        throw new InvalidValueException("");
-      }
-      if (lt == ValueType.DATE) {
-        return Value.newBooleanValue(leftValue.toDate().getTime() < rightValue.toDate().getTime());
-      }
-      return Value.newBooleanValue(leftValue.toText().compareToIgnoreCase(rightValue.toText()) < 0);
-    }
+			if (lt == ValueType.BOOLEAN || lt != rt) {
+				throw new InvalidValueException("");
+			}
+			if (lt == ValueType.DATE) {
+				return Value.newBooleanValue(leftValue.toDate().getTime() < rightValue.toDate().getTime());
+			}
+			return Value.newBooleanValue(leftValue.toText().compareToIgnoreCase(rightValue.toText()) < 0);
+		}
 
-    @Override
-    int getPrecedence() {
-      return BinaryOperator.PREC_COMPARE;
-    }
+		@Override
+		int getPrecedence() {
+			return BinaryOperator.PREC_COMPARE;
+		}
 
-    @Override
-    public String toString() {
-      return "" + Chars.LESS;
-    }
-  },
-  /** less than or equal */
-  LessOrEqual {
+		@Override
+		public String toString() {
+			return "" + Chars.LESS;
+		}
+	},
+	/** less than or equal */
+	LessOrEqual {
 
-    @Override
-    protected Value doOperate(Value leftValue, Value rightValue) throws InvalidValueException {
-      ValueType lt = leftValue.getValueType();
-      ValueType rt = rightValue.getValueType();
-      int opType = this.getNumericType(lt, rt);
-      if (opType == BinaryOperator.INTEGER_OPERATION) {
-        return Value.newBooleanValue(leftValue.toInteger() <= rightValue.toInteger());
-      }
-      if (opType == BinaryOperator.DECIMAL_OPERATION) {
-        return Value.newBooleanValue(leftValue.toDecimal() <= rightValue.toDecimal());
-      }
+		@Override
+		protected Value doOperate(Value leftValue, Value rightValue) throws InvalidValueException {
+			ValueType lt = leftValue.getValueType();
+			ValueType rt = rightValue.getValueType();
+			int opType = this.getNumericType(lt, rt);
+			if (opType == BinaryOperator.INTEGER_OPERATION) {
+				return Value.newBooleanValue(leftValue.toInteger() <= rightValue.toInteger());
+			}
+			if (opType == BinaryOperator.DECIMAL_OPERATION) {
+				return Value.newBooleanValue(leftValue.toDecimal() <= rightValue.toDecimal());
+			}
 
-      if (lt == ValueType.BOOLEAN || lt != rt) {
-        throw new InvalidValueException("");
-      }
-      if (lt == ValueType.DATE) {
-        return Value.newBooleanValue(leftValue.toDate().getTime() <= rightValue.toDate().getTime());
-      }
-      return Value.newBooleanValue(
-          leftValue.toText().compareToIgnoreCase(rightValue.toText()) <= 0);
-    }
+			if (lt == ValueType.BOOLEAN || lt != rt) {
+				throw new InvalidValueException("");
+			}
+			if (lt == ValueType.DATE) {
+				return Value.newBooleanValue(leftValue.toDate().getTime() <= rightValue.toDate().getTime());
+			}
+			return Value.newBooleanValue(
+					leftValue.toText().compareToIgnoreCase(rightValue.toText()) <= 0);
+		}
 
-    @Override
-    int getPrecedence() {
-      return BinaryOperator.PREC_COMPARE;
-    }
+		@Override
+		int getPrecedence() {
+			return BinaryOperator.PREC_COMPARE;
+		}
 
-    @Override
-    public String toString() {
-      return BinaryOperator.LESS_THAN_OR_EQUAL;
-    }
-  },
-  /** greater than */
-  Greater {
+		@Override
+		public String toString() {
+			return BinaryOperator.LESS_THAN_OR_EQUAL;
+		}
+	},
+	/** greater than */
+	Greater {
 
-    @Override
-    protected Value doOperate(Value leftValue, Value rightValue) throws InvalidValueException {
-      ValueType lt = leftValue.getValueType();
-      ValueType rt = rightValue.getValueType();
-      int opType = this.getNumericType(lt, rt);
-      if (opType == BinaryOperator.INTEGER_OPERATION) {
-        return Value.newBooleanValue(leftValue.toInteger() > rightValue.toInteger());
-      }
-      if (opType == BinaryOperator.DECIMAL_OPERATION) {
-        return Value.newBooleanValue(leftValue.toDecimal() > rightValue.toDecimal());
-      }
+		@Override
+		protected Value doOperate(Value leftValue, Value rightValue) throws InvalidValueException {
+			ValueType lt = leftValue.getValueType();
+			ValueType rt = rightValue.getValueType();
+			int opType = this.getNumericType(lt, rt);
+			if (opType == BinaryOperator.INTEGER_OPERATION) {
+				return Value.newBooleanValue(leftValue.toInteger() > rightValue.toInteger());
+			}
+			if (opType == BinaryOperator.DECIMAL_OPERATION) {
+				return Value.newBooleanValue(leftValue.toDecimal() > rightValue.toDecimal());
+			}
 
-      if (lt == ValueType.BOOLEAN || lt != rt) {
-        throw new InvalidValueException("");
-      }
-      if (lt == ValueType.DATE) {
-        return Value.newBooleanValue(leftValue.toDate().getTime() > rightValue.toDate().getTime());
-      }
-      return Value.newBooleanValue(leftValue.toText().compareToIgnoreCase(rightValue.toText()) > 0);
-    }
+			if (lt == ValueType.BOOLEAN || lt != rt) {
+				throw new InvalidValueException("");
+			}
+			if (lt == ValueType.DATE) {
+				return Value.newBooleanValue(leftValue.toDate().getTime() > rightValue.toDate().getTime());
+			}
+			return Value.newBooleanValue(leftValue.toText().compareToIgnoreCase(rightValue.toText()) > 0);
+		}
 
-    @Override
-    int getPrecedence() {
-      return BinaryOperator.PREC_COMPARE;
-    }
+		@Override
+		int getPrecedence() {
+			return BinaryOperator.PREC_COMPARE;
+		}
 
-    @Override
-    public String toString() {
-      return "" + Chars.GREATER;
-    }
-  },
-  /** greater than or equal */
-  GreaterOrEqual {
+		@Override
+		public String toString() {
+			return "" + Chars.GREATER;
+		}
+	},
+	/** greater than or equal */
+	GreaterOrEqual {
 
-    @Override
-    protected Value doOperate(Value leftValue, Value rightValue) throws InvalidValueException {
-      ValueType lt = leftValue.getValueType();
-      ValueType rt = rightValue.getValueType();
-      int opType = this.getNumericType(lt, rt);
-      if (opType == BinaryOperator.INTEGER_OPERATION) {
-        return Value.newBooleanValue(leftValue.toInteger() >= rightValue.toInteger());
-      }
-      if (opType == BinaryOperator.DECIMAL_OPERATION) {
-        return Value.newBooleanValue(leftValue.toDecimal() >= rightValue.toDecimal());
-      }
+		@Override
+		protected Value doOperate(Value leftValue, Value rightValue) throws InvalidValueException {
+			ValueType lt = leftValue.getValueType();
+			ValueType rt = rightValue.getValueType();
+			int opType = this.getNumericType(lt, rt);
+			if (opType == BinaryOperator.INTEGER_OPERATION) {
+				return Value.newBooleanValue(leftValue.toInteger() >= rightValue.toInteger());
+			}
+			if (opType == BinaryOperator.DECIMAL_OPERATION) {
+				return Value.newBooleanValue(leftValue.toDecimal() >= rightValue.toDecimal());
+			}
 
-      if (lt == ValueType.BOOLEAN || lt != rt) {
-        throw new InvalidValueException("");
-      }
-      if (lt == ValueType.DATE) {
-        return Value.newBooleanValue(leftValue.toDate().getTime() >= rightValue.toDate().getTime());
-      }
-      return Value.newBooleanValue(
-          leftValue.toText().compareToIgnoreCase(rightValue.toText()) >= 0);
-    }
+			if (lt == ValueType.BOOLEAN || lt != rt) {
+				throw new InvalidValueException("");
+			}
+			if (lt == ValueType.DATE) {
+				return Value.newBooleanValue(leftValue.toDate().getTime() >= rightValue.toDate().getTime());
+			}
+			return Value.newBooleanValue(
+					leftValue.toText().compareToIgnoreCase(rightValue.toText()) >= 0);
+		}
 
-    @Override
-    int getPrecedence() {
-      return BinaryOperator.PREC_COMPARE;
-    }
+		@Override
+		int getPrecedence() {
+			return BinaryOperator.PREC_COMPARE;
+		}
 
-    @Override
-    public String toString() {
-      return BinaryOperator.GREATER_THAN_OR_EQUAL;
-    }
-  },
-  /** equal */
-  Equal {
+		@Override
+		public String toString() {
+			return BinaryOperator.GREATER_THAN_OR_EQUAL;
+		}
+	},
+	/** equal */
+	Equal {
 
-    @Override
-    protected Value doOperate(Value leftValue, Value rightValue) throws InvalidValueException {
-      ValueType lt = leftValue.getValueType();
-      ValueType rt = rightValue.getValueType();
-      int opType = this.getNumericType(lt, rt);
-      if (opType == BinaryOperator.INTEGER_OPERATION) {
-        return Value.newBooleanValue(leftValue.toInteger() == rightValue.toInteger());
-      }
-      if (opType == BinaryOperator.DECIMAL_OPERATION) {
-        return Value.newBooleanValue(
-            leftValue.toDecimal() - rightValue.toDecimal() < BinaryOperator.DECIMAL_ZERO);
-      }
+		@Override
+		protected Value doOperate(Value leftValue, Value rightValue) throws InvalidValueException {
+			ValueType lt = leftValue.getValueType();
+			ValueType rt = rightValue.getValueType();
+			int opType = this.getNumericType(lt, rt);
+			if (opType == BinaryOperator.INTEGER_OPERATION) {
+				return Value.newBooleanValue(leftValue.toInteger() == rightValue.toInteger());
+			}
+			if (opType == BinaryOperator.DECIMAL_OPERATION) {
+				return Value.newBooleanValue(
+						leftValue.toDecimal() - rightValue.toDecimal() < BinaryOperator.DECIMAL_ZERO);
+			}
 
-      if (lt != rt) {
-        throw new InvalidValueException("");
-      }
-      if (lt == ValueType.DATE) {
-        return Value.newBooleanValue(leftValue.toDate().getTime() == rightValue.toDate().getTime());
-      }
-      if (lt == ValueType.BOOLEAN) {
-        return Value.newBooleanValue(leftValue.toBoolean() == rightValue.toBoolean());
-      }
-      return Value.newBooleanValue(
-          leftValue.toText().compareToIgnoreCase(rightValue.toText()) == 0);
-    }
+			if (lt != rt) {
+				throw new InvalidValueException("");
+			}
+			if (lt == ValueType.DATE) {
+				return Value.newBooleanValue(leftValue.toDate().getTime() == rightValue.toDate().getTime());
+			}
+			if (lt == ValueType.BOOLEAN) {
+				return Value.newBooleanValue(leftValue.toBoolean() == rightValue.toBoolean());
+			}
+			return Value.newBooleanValue(
+					leftValue.toText().compareToIgnoreCase(rightValue.toText()) == 0);
+		}
 
-    @Override
-    int getPrecedence() {
-      return BinaryOperator.PREC_COMPARE;
-    }
+		@Override
+		int getPrecedence() {
+			return BinaryOperator.PREC_COMPARE;
+		}
 
-    @Override
-    public String toString() {
-      return "" + Chars.EQUAL;
-    }
-  },
-  /** not equal */
-  NotEqual {
+		@Override
+		public String toString() {
+			return EQUAL;
+		}
+	},
+	/** not equal */
+	NotEqual {
 
-    @Override
-    protected Value doOperate(Value leftValue, Value rightValue) throws InvalidValueException {
-      ValueType lt = leftValue.getValueType();
-      ValueType rt = rightValue.getValueType();
-      int opType = this.getNumericType(lt, rt);
-      if (opType == BinaryOperator.INTEGER_OPERATION) {
-        return Value.newBooleanValue(leftValue.toInteger() != rightValue.toInteger());
-      }
-      if (opType == BinaryOperator.DECIMAL_OPERATION) {
-        return Value.newBooleanValue(
-            leftValue.toDecimal() - rightValue.toDecimal() > BinaryOperator.DECIMAL_ZERO);
-      }
+		@Override
+		protected Value doOperate(Value leftValue, Value rightValue) throws InvalidValueException {
+			ValueType lt = leftValue.getValueType();
+			ValueType rt = rightValue.getValueType();
+			int opType = this.getNumericType(lt, rt);
+			if (opType == BinaryOperator.INTEGER_OPERATION) {
+				return Value.newBooleanValue(leftValue.toInteger() != rightValue.toInteger());
+			}
+			if (opType == BinaryOperator.DECIMAL_OPERATION) {
+				return Value.newBooleanValue(
+						leftValue.toDecimal() - rightValue.toDecimal() > BinaryOperator.DECIMAL_ZERO);
+			}
 
-      if (lt != rt) {
-        throw new InvalidValueException("");
-      }
-      if (lt == ValueType.DATE) {
-        return Value.newBooleanValue(leftValue.toDate().getTime() != rightValue.toDate().getTime());
-      }
-      if (lt == ValueType.BOOLEAN) {
-        return Value.newBooleanValue(leftValue.toBoolean() != rightValue.toBoolean());
-      }
-      return Value.newBooleanValue(
-          leftValue.toText().compareToIgnoreCase(rightValue.toText()) != 0);
-    }
+			if (lt != rt) {
+				throw new InvalidValueException("");
+			}
+			if (lt == ValueType.DATE) {
+				return Value.newBooleanValue(leftValue.toDate().getTime() != rightValue.toDate().getTime());
+			}
+			if (lt == ValueType.BOOLEAN) {
+				return Value.newBooleanValue(leftValue.toBoolean() != rightValue.toBoolean());
+			}
+			return Value.newBooleanValue(
+					leftValue.toText().compareToIgnoreCase(rightValue.toText()) != 0);
+		}
 
-    @Override
-    int getPrecedence() {
-      return BinaryOperator.PREC_COMPARE;
-    }
+		@Override
+		int getPrecedence() {
+			return BinaryOperator.PREC_COMPARE;
+		}
 
-    @Override
-    public String toString() {
-      return BinaryOperator.NOT_EQUAL;
-    }
-  },
+		@Override
+		public String toString() {
+			return BinaryOperator.NOT_EQUAL;
+		}
+	},
 
-  /** logical AND */
-  And {
+	/** logical AND */
+	And {
 
-    @Override
-    protected Value doOperate(Value leftValue, Value rightValue) throws InvalidValueException {
-      return Value.newBooleanValue(leftValue.toBoolean() && rightValue.toBoolean());
-    }
+		@Override
+		protected Value doOperate(Value leftValue, Value rightValue) throws InvalidValueException {
+			return Value.newBooleanValue(leftValue.toBoolean() && rightValue.toBoolean());
+		}
 
-    @Override
-    int getPrecedence() {
-      return BinaryOperator.PREC_AND;
-    }
+		@Override
+		int getPrecedence() {
+			return BinaryOperator.PREC_AND;
+		}
 
-    @Override
-    public String toString() {
-      return "" + Chars.AND;
-    }
-  },
-  /** Logical Or */
-  Or {
+		@Override
+		public String toString() {
+			return AND;
+		}
+	},
+	/** Logical Or */
+	Or {
 
-    @Override
-    protected Value doOperate(Value leftValue, Value rightValue) throws InvalidValueException {
-      return Value.newBooleanValue(leftValue.toBoolean() && rightValue.toBoolean());
-    }
+		@Override
+		protected Value doOperate(Value leftValue, Value rightValue) throws InvalidValueException {
+			return Value.newBooleanValue(leftValue.toBoolean() && rightValue.toBoolean());
+		}
 
-    @Override
-    int getPrecedence() {
-      return BinaryOperator.PREC_OR;
-    }
+		@Override
+		int getPrecedence() {
+			return BinaryOperator.PREC_OR;
+		}
 
-    @Override
-    public String toString() {
-      return "" + Chars.OR;
-    }
-  },
-  /** list (comma) is a pseudo operator to handle list of arguments for a function */
-  List {
+		@Override
+		public String toString() {
+			return OR;
+		}
+	},
+	/**
+	 * list (comma) is a pseudo operator to handle list of arguments for a
+	 * function
+	 */
+	List {
 
-    @Override
-    protected Value doOperate(Value leftValue, Value rightValue) throws InvalidValueException {
-      throw new InvalidValueException("");
-    }
+		@Override
+		protected Value doOperate(Value leftValue, Value rightValue) throws InvalidValueException {
+			throw new InvalidValueException("");
+		}
 
-    @Override
-    int getPrecedence() {
-      return BinaryOperator.PREC_LIST;
-    }
+		@Override
+		int getPrecedence() {
+			return BinaryOperator.PREC_LIST;
+		}
 
-    @Override
-    public String toString() {
-      return "" + Chars.LIST;
-    }
-  };
-  /*
-   * type of operation based on operand types
-   */
-  private static final int NON_NUMERIC_OPERATION = 0;
-  private static final int DECIMAL_OPERATION = 1;
-  private static final int INTEGER_OPERATION = 2;
-  private static final int DATE_ADD_OPERATION = 3;
-  private static final int DATE_SUBTRACT_OPERATION = 4;
+		@Override
+		public String toString() {
+			return "" + Chars.LIST;
+		}
+	};
+	/*
+	 * type of operation based on operand types
+	 */
+	private static final int NON_NUMERIC_OPERATION = 0;
+	private static final int DECIMAL_OPERATION = 1;
+	private static final int INTEGER_OPERATION = 2;
+	private static final int DATE_ADD_OPERATION = 3;
+	private static final int DATE_SUBTRACT_OPERATION = 4;
 
-  /*
-   * precedence
-   */
-  private static final int PREC_MULTPLY_DIVIDE = 1;
-  private static final int PREC_ADD_DELETE = 2;
-  private static final int PREC_COMPARE = 3;
-  private static final int PREC_AND = 4;
-  private static final int PREC_OR = 5;
-  private static final int PREC_LIST = 6;
+	/*
+	 * precedence
+	 */
+	private static final int PREC_MULTPLY_DIVIDE = 1;
+	private static final int PREC_ADD_DELETE = 2;
+	private static final int PREC_COMPARE = 3;
+	private static final int PREC_AND = 4;
+	private static final int PREC_OR = 5;
+	private static final int PREC_LIST = 6;
 
-  /*
-   * string for operators that have more than one char
-   */
-  private static final String NOT_EQUAL = "!=";
-  private static final String LESS_THAN_OR_EQUAL = "<=";
-  private static final String GREATER_THAN_OR_EQUAL = ">=";
+	/*
+	 * string for operators that have more than one char
+	 */
+	private static final String NOT_EQUAL = "!=";
+	private static final String LESS_THAN_OR_EQUAL = "<=";
+	private static final String GREATER_THAN_OR_EQUAL = ">=";
+	private static final String EQUAL = "==";
+	private static final String AND = "&&";
+	private static final String OR = "||";
 
-  /** decimal comparison is dangerous. Use this as zero */
-  private static final double DECIMAL_ZERO = 0.0000001;
+	/** decimal comparison is dangerous. Use this as zero */
+	private static final double DECIMAL_ZERO = 0.0000001;
 
-  /**
-   * get an instance of the desired operator
-   *
-   * @param operator
-   * @return binary operator, or null if the input char has no operator associated with that
-   */
-  static BinaryOperator getOperator(char operator) {
-    switch (operator) {
-      case Chars.PLUS:
-        return BinaryOperator.Plus;
-      case Chars.MINUS:
-        return BinaryOperator.Minus;
-      case Chars.MULT:
-        return BinaryOperator.Multiply;
-      case Chars.DIVIDE:
-        return BinaryOperator.Divide;
-      case Chars.MODULO:
-        return BinaryOperator.Modulo;
-      case Chars.GREATER:
-        return BinaryOperator.Greater;
-      case Chars.GREATER_OR_EQUAL:
-        return BinaryOperator.GreaterOrEqual;
-      case Chars.LESS:
-        return BinaryOperator.Less;
-      case Chars.LESS_OR_EQUAL:
-        return BinaryOperator.LessOrEqual;
-      case Chars.EQUAL:
-        return BinaryOperator.Equal;
-      case Chars.NOT_EQUAL:
-        return BinaryOperator.NotEqual;
-      case Chars.AND:
-        return BinaryOperator.And;
-      case Chars.OR:
-        return BinaryOperator.Or;
-      case Chars.LIST:
-        return BinaryOperator.List;
-      default:
-        return null;
-    }
-  }
+	/**
+	 * get an instance of the desired operator
+	 *
+	 * @param operator
+	 * @return binary operator, or null if the input char has no operator
+	 *         associated with that
+	 */
+	static BinaryOperator getOperator(char operator) {
+		switch (operator) {
+		case Chars.PLUS:
+			return BinaryOperator.Plus;
+		case Chars.MINUS:
+			return BinaryOperator.Minus;
+		case Chars.MULT:
+			return BinaryOperator.Multiply;
+		case Chars.DIVIDE:
+			return BinaryOperator.Divide;
+		case Chars.MODULO:
+			return BinaryOperator.Modulo;
+		case Chars.GREATER:
+			return BinaryOperator.Greater;
+		case Chars.GREATER_OR_EQUAL:
+			return BinaryOperator.GreaterOrEqual;
+		case Chars.LESS:
+			return BinaryOperator.Less;
+		case Chars.LESS_OR_EQUAL:
+			return BinaryOperator.LessOrEqual;
+		case Chars.EQUAL:
+			return BinaryOperator.Equal;
+		case Chars.NOT_EQUAL:
+			return BinaryOperator.NotEqual;
+		case Chars.AND:
+			return BinaryOperator.And;
+		case Chars.OR:
+			return BinaryOperator.Or;
+		case Chars.LIST:
+			return BinaryOperator.List;
+		default:
+			return null;
+		}
+	}
 
-  /**
-   * carry out the operation on patients and return the result. (operation successful and patients
-   * dead :-) )
-   *
-   * @param leftValue
-   * @param rightValue
-   * @return resultant value. Type of value depends on the operation and operands
-   * @throws InvalidOperationException
-   */
-  public Value operate(Value leftValue, Value rightValue) throws InvalidOperationException {
-    if (leftValue == null
-        || rightValue == null
-        || leftValue.isUnknown()
-        || rightValue.isUnknown()) {
-      return Value.newUnknownValue(ValueType.TEXT);
-    }
-    try {
-      return this.doOperate(leftValue, rightValue);
-    } catch (InvalidValueException e) {
-      throw new InvalidOperationException(
-          "Binary operation "
-              + this
-              + " is not possible between "
-              + leftValue.getValueType()
-              + "("
-              + leftValue
-              + ") and "
-              + rightValue.getValueType()
-              + "("
-              + rightValue
-              + ")");
-    }
-  }
+	/**
+	 * carry out the operation on patients and return the result. (operation
+	 * successful and patients dead :-) )
+	 *
+	 * @param leftValue
+	 * @param rightValue
+	 * @return resultant value. Type of value depends on the operation and
+	 *         operands
+	 * @throws InvalidOperationException
+	 */
+	public Value operate(Value leftValue, Value rightValue) throws InvalidOperationException {
+		if (leftValue == null
+				|| rightValue == null
+				|| leftValue.isUnknown()
+				|| rightValue.isUnknown()) {
+			return Value.newUnknownValue(ValueType.TEXT);
+		}
+		try {
+			return this.doOperate(leftValue, rightValue);
+		} catch (InvalidValueException e) {
+			throw new InvalidOperationException(
+					"Binary operation "
+							+ this
+							+ " is not possible between "
+							+ leftValue.getValueType()
+							+ "("
+							+ leftValue
+							+ ") and "
+							+ rightValue.getValueType()
+							+ "("
+							+ rightValue
+							+ ")");
+		}
+	}
 
-  /**
-   * carry out this binary operation on the operands
-   *
-   * @param leftValue
-   * @param rightValue
-   * @return result of this binary operation
-   * @throws InvalidValueException
-   */
-  protected abstract Value doOperate(Value leftValue, Value rightValue)
-      throws InvalidValueException;
+	/**
+	 * carry out this binary operation on the operands
+	 *
+	 * @param leftValue
+	 * @param rightValue
+	 * @return result of this binary operation
+	 * @throws InvalidValueException
+	 */
+	protected abstract Value doOperate(Value leftValue, Value rightValue)
+			throws InvalidValueException;
 
-  protected int getNumericType(ValueType lt, ValueType rt) {
-    /*
-     * if left side is numeric, right side HAS to be numeric for a numeric
-     * operation
-     */
-    if (lt == ValueType.DECIMAL) {
-      if (rt == ValueType.DECIMAL || rt == ValueType.INTEGER) {
-        return BinaryOperator.DECIMAL_OPERATION;
-      }
-      return BinaryOperator.NON_NUMERIC_OPERATION;
-    }
-    if (lt == ValueType.INTEGER) {
-      if (rt == ValueType.DECIMAL) {
-        return BinaryOperator.DECIMAL_OPERATION;
-      }
-      if (rt == ValueType.INTEGER) {
-        return BinaryOperator.INTEGER_OPERATION;
-      }
-      return BinaryOperator.NON_NUMERIC_OPERATION;
-    }
-    /*
-     * if left side is date, we can have right side as either date or number
-     */
-    if (lt == ValueType.DATE) {
-      if (rt == ValueType.DECIMAL || rt == ValueType.INTEGER) {
-        return BinaryOperator.DATE_ADD_OPERATION;
-      }
-      if (rt == ValueType.DATE) {
-        return BinaryOperator.DATE_SUBTRACT_OPERATION;
-      }
-    }
-    return BinaryOperator.NON_NUMERIC_OPERATION;
-  }
+	protected int getNumericType(ValueType lt, ValueType rt) {
+		/*
+		 * if left side is numeric, right side HAS to be numeric for a numeric
+		 * operation
+		 */
+		if (lt == ValueType.DECIMAL) {
+			if (rt == ValueType.DECIMAL || rt == ValueType.INTEGER) {
+				return BinaryOperator.DECIMAL_OPERATION;
+			}
+			return BinaryOperator.NON_NUMERIC_OPERATION;
+		}
+		if (lt == ValueType.INTEGER) {
+			if (rt == ValueType.DECIMAL) {
+				return BinaryOperator.DECIMAL_OPERATION;
+			}
+			if (rt == ValueType.INTEGER) {
+				return BinaryOperator.INTEGER_OPERATION;
+			}
+			return BinaryOperator.NON_NUMERIC_OPERATION;
+		}
+		/*
+		 * if left side is date, we can have right side as either date or number
+		 */
+		if (lt == ValueType.DATE) {
+			if (rt == ValueType.DECIMAL || rt == ValueType.INTEGER) {
+				return BinaryOperator.DATE_ADD_OPERATION;
+			}
+			if (rt == ValueType.DATE) {
+				return BinaryOperator.DATE_SUBTRACT_OPERATION;
+			}
+		}
+		return BinaryOperator.NON_NUMERIC_OPERATION;
+	}
 
-  /**
-   * lower precedence implies higher priority
-   *
-   * @return precedence
-   */
-  abstract int getPrecedence();
+	/**
+	 * lower precedence implies higher priority
+	 *
+	 * @return precedence
+	 */
+	abstract int getPrecedence();
 }

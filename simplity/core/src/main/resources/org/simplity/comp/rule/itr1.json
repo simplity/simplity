@@ -1,0 +1,235 @@
+{
+	"name": "itr1",
+	"inputParameters": [
+		"age",
+		"employerCategory",
+		"PortugeseSectionApplicable",
+		"salary",
+		"allowanceNonExempt",
+		"perquisite",
+		"profitDeemedAsSalary",
+		"deduction16",
+		"housePropertyType",
+		"rentReceived",
+		"proprtyTaxPaid",
+		"annualRentalValue",
+		"interestOnHousingLoan",
+		"otherIncome",
+		"deduction80c",
+		"deduction80ccc",
+		"deduction80ccdEmployee",
+		"deduction80ccd1b",
+		"deduction80ccdEmployer",
+		"deductionHealthInsuranceType",
+		"deductionHealthInsurance",
+		"deductionMedicalExpenseType",
+		"deductionMeedicalExpense",
+		"deductionPreventiveExpenseType",
+		"deductionPreventiveExpense",
+		"deduction80ddType",
+		"deduction80dd",
+		"deduction80ddbType",
+		"deduction80ddb",
+		"deduction80e",
+		"deduction80ee",
+		"deduction80g",
+		"deduction80gg",
+		"deduction80gga",
+		"deduction80ggc",
+		"deduction80u",
+		"deduction80rrb",
+		"deduction80qqb",
+		"deduction80ccg",
+		"deduction80tta",
+		"rebate87a",
+		"section89",
+		"tdsPaid",
+		"tcsPaid",
+		"selfAssessmentPaid"
+	],
+	"outputParameters": [
+		"grossTotalIncome",
+		"houseValueAfterStandardDeduction",
+		"incomeFromHouseProperty",
+		"deducted80ccc",
+		"deducted80ccdEmployee",
+		"deducted80ccd1b",
+		"deducted80ccdEmployer",
+		"deductedHealthInsurance",
+		"deductedMeedicalExpense",
+		"deductedPreventiveExpense",
+		"deducted80ddType",
+		"deducted80dd",
+		"deducted80ddbType",
+		"deducted80ddb",
+		"deducted80e",
+		"deducted80ee",
+		"deducted80g",
+		"deducted80gg",
+		"deducted80gga",
+		"deducted80ggc",
+		"deducted80u",
+		"deducted80rrb",
+		"deducted80qqb",
+		"deducted80ccg",
+		"deducted80tta",
+		"totalDeducted",
+		"IncomeAfterDeduction",
+		"totalTaxPayable",
+		"taxPayableAfterRebate",
+		"educationalCess",
+		"taxPayableWithCess",
+		"netTaxLiability",
+		"lateFilingFee",
+		"interest234a",
+		"interest234b",
+		"interest234c",
+		"totalInterest",
+		"totalTaxPlusInterest",
+		"totalPaid",
+		"balancePayable",
+		"refundDue"
+	],
+	"fieldsToInitialize": [],
+	"constants": {
+	},
+	"fields": {
+		"maxHousingInterestForNonSenior" : 200000,
+		"maxHousingInterestForSenior" : 300000,
+		"max80c" : 150000,
+		"max80ccd1b" :50000,
+		"max80ccd2" : 140000,
+		"grossTotalIncome": "0",
+		"deducted80ccc": "",
+		"deducted80ccdEmployee": "",
+		"deducted80ccd1b": "",
+		"deducted80ccdEmployer": "",
+		"deductedHealthInsurance": "",
+		"deductedMeedicalExpense": "",
+		"deductedPreventiveExpense": "",
+		"deducted80ddType": "",
+		"deducted80dd": "",
+		"deducted80ddbType": "",
+		"deducted80ddb": "",
+		"deducted80e": "",
+		"deducted80ee": "",
+		"deducted80g": "",
+		"deducted80gg": "",
+		"deducted80gga": "",
+		"deducted80ggc": "",
+		"deducted80u": "",
+		"deducted80rrb": "",
+		"deducted80qqb": "",
+		"deducted80ccg": "",
+		"deducted80tta": "",
+		"totalDeducted": "",
+		"IncomeAfterDeduction": "",
+		"totalTaxPayable": "",
+		"taxPayableAfterRebate": "",
+		"educationalCess": "",
+		"taxPayableWithCess": "",
+		"netTaxLiability": "",
+		"lateFilingFee": "",
+		"interest234a": "",
+		"interest234b": "",
+		"interest234c": "",
+		"totalInterest": "",
+		"totalTaxPlusInterest": "",
+		"totalPaid": "",
+		"balancePayable": "",
+		"refundDue": "",
+		"assesseeCategory": {
+			"steps": [
+				{
+					"condition": "age > 79",
+					"expression": "3"
+				},
+				{
+					"condition": "age > 59",
+					"expression": "2"
+				},
+				{
+					"condition": "gender == 0",
+					"expression": "0"
+				},
+				{
+					"expression": "1"
+				}
+			]
+		},
+		"houseValueAfterStandardDeduction": {
+			"steps": [
+				{
+					"condition":"housePropertyType != 1",
+					"expression":"0"
+				},
+				{
+					"condition": "annualRentalValue <= proprtyTaxPaid",
+					"expression": "0"
+				},
+				{
+					"expression": "((annualRentalValue - proprtyTaxPaid) * 7)/10"
+				}
+			]
+		},
+		"incomeFromHouseProperty": {
+					"localRules": [
+				{
+					"name": "_maxInterest",
+					"steps": [
+						{
+							"condition":"assesseCategory == 2 || assesseCategory == 3",
+							"expression":"maxHousingInterestForSenior"
+						},
+						{
+							"expression":"maxHousingInterestForNonSenior"
+						}
+					]
+				},
+				{
+					"name": "_self",
+					"steps": [
+						{
+							"condition":"housePropertyType != 0",
+							"expression":"0"
+						},
+						{
+							"condition":"interestOnHousingLoan > _maxInterest",
+							"expression":"-_maxInterest"
+						},
+						{
+							"expression":"-interestOnHousingLoan"
+						}
+					]
+				},
+				{
+					"name": "_rented",
+					"steps":[
+						{
+							"condition":"housePropertyType != 1",
+							"expression":"0"
+						},
+						{
+							"condition": "annualRentalValue <= proprtyTaxPaid",
+							"expression": "0"
+						},
+						{
+							"expression": "houseValueAfterStandardDeduction - interestOnHousingLoan"
+						}
+						
+					]
+				}
+			],
+		
+			"steps": [
+				{
+					"condition":"housePropertyType != 0",
+					"expression": "_self"
+				},
+				{
+					"expression": "_rented"
+				}
+			]
+		}
+	}
+}
