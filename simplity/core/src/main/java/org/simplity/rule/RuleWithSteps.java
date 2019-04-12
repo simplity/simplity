@@ -52,7 +52,7 @@ public class RuleWithSteps extends AbstractRule {
 	protected void emit(StringBuilder src, Map<String, Integer> constIndexes, Map<String, Integer> inputIndexes,
 			Map<String, Integer> globalIndexes, String fieldName) {
 		src.append(L1);
-		int idx = 1;
+		int idx = 0;
 		int lastOne = this.steps.length - 1;
 		for (RuleStep step : this.steps) {
 			if (idx > 0) {
@@ -71,7 +71,10 @@ public class RuleWithSteps extends AbstractRule {
 				src.append("){");
 			}
 			src.append(L2).append(fieldName).append(" = ");
+			emitExpr(step.expression, src, constIndexes, inputIndexes, globalIndexes);
+			src.append(';');
 			src.append(L1_CLOSE);
+			idx++;
 		}
 	}
 

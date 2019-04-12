@@ -22,21 +22,31 @@
 
 package org.simplity.rule;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.simplity.core.util.IoUtil;
+import org.simplity.json.JSONObject;
+
 /**
  * @author simplity.org
  *
  */
-public class RuleException extends Exception {
-	/**
-	 *
-	 */
-	private static final long serialVersionUID = 1L;
+public class Test {
+	public static void main(String[] args) throws InvalidRuleException {
+		AbstractCalculator calc = new Itr1();
+		Map<String, Long> inputs = new HashMap<String, Long>();
+		inputs.put("age", 29L);
+		inputs.put("gender", 0L);
+		inputs.put("genderrr", 0L);
+		long result = calc.testCalculate("assesseeCategory", inputs);
+		System.out.println(result);
+	}
 
-	/**
-	 * @param ruleName
-	 * @param error
-	 */
-	public RuleException(String ruleName, String error) {
-		super("Error while using rule " + ruleName + ". " + error);
+	public static void foo() {
+		String fileName = "C:/repos/sity/simplity/core/src/main/resources/org/simplity/comp/rule/itr1Test.json";
+		String text = IoUtil.readResource(fileName);
+		JSONObject json = new JSONObject(text);
+
 	}
 }

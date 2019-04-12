@@ -22,6 +22,12 @@
 
 package org.simplity.rule;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
+import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -35,6 +41,7 @@ import java.util.TimeZone;
 
 import org.simplity.core.expr.Expression;
 import org.simplity.core.expr.Operand;
+import org.simplity.core.util.IoUtil;
 import org.simplity.core.util.TextUtil;
 import org.simplity.core.value.IntegerValue;
 import org.simplity.core.value.Value;
@@ -57,6 +64,9 @@ public class RuleSet {
 	private static final String L1 = "\n\t\t";
 	private static final String L1_CLOSE = "\n\t\t}";
 	private static final String L2 = "\n\t\t\t";
+	private static final String FINAL = "\n\tprivate static final ";
+	private static final String EXCP = InvalidRuleException.class.getSimpleName();
+	private static final String THROWS = " throws " + EXCP + "{";
 
 	/**
 	 * unique name of this rule-set
@@ -84,7 +94,7 @@ public class RuleSet {
 
 	/**
 	 * this rule set is designed to get these parameters (in that order) as
-	 * input. input names shoudl not clash with any other global fields.
+	 * input. input names should not clash with any other global fields.
 	 */
 	String[] inputParameters;
 
@@ -105,22 +115,11 @@ public class RuleSet {
 	 * @param src
 	 *            source code for this class. should have all code before class
 	 *            declaration, like package and copyright statements
-	 * @param tst
-	 *            optional. null if this is not required. junit source code to
-	 *            test this class. Should have all the code before class
-	 *            declarations, including includes for junit
-	 * @param testValues
-	 *            non-null if tst is non-null. Each row is one test case. In
-	 *            each first n columns are input values and the rest are
-	 *            expected output values. Input and output parameters must
-	 *            follow the pre-designed sequence
 	 * @param errors
 	 *            any error in the rules are added to this list. Source is
 	 *            generated even when there are errors
 	 */
-	public void generateSource(Class<AbstractCalculator> baseClass, StringBuilder src, StringBuilder tst,
-			long[][] testValues,
-			List<String> errors) {
+	public void generateSource(Class<AbstractCalculator> baseClass, StringBuilder src, List<String> errors) {
 		/*
 		 * validate will add all possible errors. Also, it ensures that all the
 		 * attributes are non-null (could be empty though)
@@ -130,43 +129,27 @@ public class RuleSet {
 		 * Should we generate even when there are errors? We will because we can
 		 * !!. Up to the caller to decide what to do with that
 		 */
-		src.append("package ").append(baseClass.getPackage().getName())
-				.append(";\n/**\n * generated class for rule set ").append(this.name);
+		src.append("package ").append(baseClass.getPackage().getName()).append(';');
+		src.append("\n\nimport ").append(InvalidRuleException.class.getName()).append(';');
+		src.append("\n/**\n * generated class for rule set ").append(this.name);
 		src.append("\n * generated at ").append(DATE_FORMATTER.format(new Date())).append("\n **/");
-		src.append("public class ").append(TextUtil.nameToClassName(this.name)).append(" extends ")
+		src.append("\npublic class ").append(TextUtil.nameToClassName(this.name)).append(" extends ")
 				.append(baseClass.getSimpleName()).append(" {");
 		/*
-		 * we assign index numbers to constants and globals
+		 * we assign index numbers to constants and globals. small optimization
+		 * : collect index while looping for emitting declaration
 		 */
-		int idx = 0;
-		Map<String, Integer> globalIndexes = new HashMap<>();
-		for (String f : this.rules.keySet()) {
-			globalIndexes.put(f, idx++);
-		}
-		/*
-		 * small optimization : collect index while looping for emitting
-		 * declaration
-		 */
+		Map<String, Integer> globalIndexes = this.emitGlobalNames(src);
 		Map<String, Integer> constIndexes = this.emitConstants(src);
 		Map<String, Integer> inputIndexes = this.emitInputParams(src);
 		this.emitOutputParams(src);
-
-		int nbrGlobals = this.rules.size();
-		src.append(L0).append("private long[] val = new long[").append(nbrGlobals).append("];");
-		src.append(L0).append("private boolean[] isReady;");
-		src.append(L0).append("private boolean[] isLooping;");
-		src.append(L0).append("private long[] ival;");
-
 		this.emitMainFunctions(src, globalIndexes);
 		for (Map.Entry<String, IRule> entry : this.rules.entrySet()) {
 			this.emitRule(src, entry.getKey(), entry.getValue(), constIndexes, inputIndexes, globalIndexes);
 		}
 
-		src.append("}\n");
-
-		if (tst != null && testValues != null) {
-			this.generateJunit(tst, testValues);
-		}
+		this.emitGettersAndSetters(src, globalIndexes);
+		src.append("\n}\n");
 		return;
 	}
 
@@ -210,6 +193,9 @@ public class RuleSet {
 		Set<String> globalNames = new HashSet<>();
 		globalNames.addAll(this.rules.keySet());
 		globalNames.addAll(this.constants.keySet());
+		for (String fieldName : this.inputParameters) {
+			globalNames.add(fieldName);
+		}
 		Set<String> functionNames = AbstractCalculator.getPredefinedFunctions();
 		for (Map.Entry<String, IRule> entry : this.rules.entrySet()) {
 			IRule rule = entry.getValue();
@@ -305,51 +291,75 @@ public class RuleSet {
 
 	private Map<String, Integer> emitConstants(StringBuilder src) {
 		Map<String, Integer> indexes = new HashMap<>();
-		src.append(L0).append("private static final long[] C = {");
+		src.append(FINAL).append("long[] C = {");
 		int idx = 0;
+		StringBuilder names = new StringBuilder(L0);
+		names.append(FINAL).append("String[] CONSTANTS = {\"");
 		for (Map.Entry<String, Long> entry : this.constants.entrySet()) {
 			if (idx != 0) {
 				src.append(", ");
+				names.append("\", \"");
 			}
-			indexes.put(entry.getKey(), idx++);
+			String key = entry.getKey();
+			indexes.put(key, idx++);
 			Long value = entry.getValue();
 			if (value == null) {
 				value = 0L;
 			}
 			src.append(value);
+			names.append(key);
 
 		}
 		src.append("};");
+		names.append("\"};");
+		src.append(names);
+		return indexes;
+	}
+
+	private Map<String, Integer> emitGlobalNames(StringBuilder src) {
+		Map<String, Integer> indexes = new HashMap<>();
+		src.append(FINAL).append("String[] GLOBALS = {\"");
+		int idx = 0;
+		for (String s : this.rules.keySet()) {
+			if (idx != 0) {
+				src.append("\", \"");
+			}
+			src.append(s);
+			indexes.put(s, idx++);
+		}
+		src.append("\"};");
+		src.append(FINAL).append("int NBR_GLOBALS = ").append(this.rules.size()).append(';');
 		return indexes;
 	}
 
 	private Map<String, Integer> emitInputParams(StringBuilder src) {
 		Map<String, Integer> indexes = new HashMap<>();
-		src.append(L0).append("private static final String[] INPUTS = {");
+		src.append(FINAL).append("String[] INPUTS = {\"");
 		int idx = 0;
 		for (String fieldName : this.inputParameters) {
 			if (idx != 0) {
-				src.append(", ");
+				src.append("\", \"");
 			}
-			src.append('"').append(fieldName).append('"');
+			src.append(fieldName);
 			indexes.put(fieldName, idx);
+			idx++;
 		}
-		src.append("};");
+		src.append("\"};");
 		return indexes;
 	}
 
 	private void emitOutputParams(StringBuilder src) {
-		src.append(L0).append("private static final String[] OUTPUTS = {");
+		src.append(FINAL).append("String[] OUTPUTS = {\"");
 		boolean firstOne = true;
 		for (String fieldName : this.outputParameters) {
 			if (firstOne) {
 				firstOne = false;
 			} else {
-				src.append(", ");
+				src.append("\", \"");
 			}
-			src.append('"').append(fieldName).append('"');
+			src.append(fieldName);
 		}
-		src.append("};");
+		src.append("\"};");
 	}
 
 	private static final String OVERRIDE = L0 + "@Override" + L0;
@@ -363,27 +373,29 @@ public class RuleSet {
 		src.append(L1).append("return OUTPUTS;");
 		src.append(L0_CLOSE);
 
-		String excp = RuleException.class.getName();
-		src.append(OVERRIDE).append("public long[] calculate(long[] inp)throws ")
-				.append(excp).append("{");
-		/*
-		 * set input values
-		 */
-		src.append(L1).append("if (inp == null){");
-		src.append(L2).append("throw new ").append(excp).append("(\"input array is null\");");
-		src.append(L1_CLOSE);
+		src.append(OVERRIDE).append("public String[] getConstants(){");
+		src.append(L1).append("return CONSTANTS;");
+		src.append(L0_CLOSE);
 
-		int inpNbr = this.inputParameters.length;
-		src.append(L1).append("if (inp.length != ").append(inpNbr).append("){");
-		src.append(L2).append("throw new ").append(excp)
-				.append("(\"input array has \" + inp.length + \" elements but we epxected ").append(inpNbr)
-				.append(" elements\");");
-		src.append(L1_CLOSE);
+		src.append(OVERRIDE).append("public String[] getGlobalParameters(){");
+		src.append(L1).append("return GLOBALS;");
+		src.append(L0_CLOSE);
 
-		int nbrGlobals = this.rules.size();
-		src.append(L1).append("this.ival = inp;");
-		src.append(L1).append("this.isReady = new boolean[").append(nbrGlobals).append("];");
-		src.append(L1).append("this.isLooping = new boolean[").append(nbrGlobals).append("];");
+		src.append(OVERRIDE).append("public long[] getConstantValues(){");
+		src.append(L1).append("return C;");
+		src.append(L0_CLOSE);
+
+		src.append(OVERRIDE).append("protected void init(long[] constValues, long[]inputValues){");
+		src.append(L1).append("this.cVal = constValues;");
+		src.append(L1).append("this.iVal = inputValues;");
+		src.append(L1).append("this.gVal = new long[NBR_GLOBALS];");
+		src.append(L1).append("this.isReady = new boolean[NBR_GLOBALS];");
+		src.append(L1).append("this.isLooping = new boolean[NBR_GLOBALS];");
+		src.append(L0_CLOSE);
+
+		src.append(OVERRIDE).append("public long[] doCalculate(long[] inp)").append(THROWS);
+		src.append(L1).append("this.init(C, inp);");
+
 		/*
 		 * calculate initial fields
 		 */
@@ -392,7 +404,7 @@ public class RuleSet {
 			if (idx == null) {
 				src.append(L1).append("//invalid parameter ->").append(fieldName);
 			} else {
-				src.append(L1).append("_g").append(idx).append("();");
+				src.append(L1).append("this.f").append(idx).append("();");
 			}
 		}
 		/*
@@ -410,38 +422,21 @@ public class RuleSet {
 			if (idx == null) {
 				src.append("0");
 			} else {
-				src.append("_g").append(idx).append("()");
+				src.append("this.f").append(idx).append("()");
 			}
 		}
 		src.append("};");
 		src.append(L1).append("return _r;");
 		src.append(L0_CLOSE);
-		/*
-		 * global check before calcr
-		 */
-		src.append(L0).append("private  bool _toCalc(int idx){");
-
-		src.append(L1).append("if (isReady[idx]){");
-		src.append(L2).append("return false;");
-		src.append(L1_CLOSE);
-
-		src.append(EMPTY_LINE);
-		src.append(L1).append("if (isLooping[idx]){");
-		src.append(L2).append("throw new ").append(RuleException.class.getName()).append(
-				"(\"Semantic error in rules : global field for index \" + idx + \" has a rule that recursivel requires its own value, there by causing an infinite loop\"); ");
-		src.append(L1_CLOSE);
-
-		src.append(EMPTY_LINE);
-		src.append(L1).append("return true;");
-		src.append(L0_CLOSE);
 
 		/*
 		 * global check for after calc
 		 */
-		src.append(L0).append("private  void _calced(int idx){");
+		src.append(EMPTY_LINE);
+		src.append(L0).append("private  void calced(int idx){");
 
-		src.append(L1).append("isReady[idx] = true;");
-		src.append(L2).append("isLooping[idx] = false;");
+		src.append(L1).append("this.isReady[idx] = true;");
+		src.append(L1).append("this.isLooping[idx] = false;");
 		src.append(L0_CLOSE);
 	}
 
@@ -456,35 +451,87 @@ public class RuleSet {
 		}
 
 		int idx = obj;
-		src.append(L0).append("private  long _g").append(idx).append("(){");
-		src.append(L1).append("if (this._isReady(").append(idx).append(")){");
-		src.append(L1).append("return val[").append(idx).append("];");
+		src.append(L0).append("private  long f").append(idx).append("()").append(THROWS);
+		src.append(L1).append("if (this.isReady[").append(idx).append("]){");
+		src.append(L2).append("return this.gVal[").append(idx).append("];");
 		src.append(L1_CLOSE);
+		src.append(L1).append("if (this.isLooping[").append(idx).append("]){");
+
+		src.append(L2).append("throw new ").append(EXCP).append("(\"Rule for calculating ").append(fieldName)
+				.append(" is recursively dependant on itself. This leads to infinite loop.\");");
+		src.append(L1_CLOSE);
+		src.append(L1).append("this.isLooping[").append(idx).append("] = true;");
 
 		src.append(L1).append("long _r = 0;");
 		/*
 		 * rule has to put code to set value to _r;
 		 */
 		rule.toJava(src, constIndexes, inputIndexes, globalIndexes);
-		src.append(L1).append("val[").append(idx).append("] = _r;");
-		src.append(L1).append("this._calced(").append(idx).append(");");
+		src.append(L1).append("this.gVal[").append(idx).append("] = _r;");
+		src.append(L1).append("this.calced(").append(idx).append(");");
 		src.append(L1).append("return _r;");
 		src.append(L0_CLOSE);
 	}
 
-	/**
-	 * @param tst
-	 * @param testValues
-	 */
-	private void generateJunit(StringBuilder tst, long[][] testValues) {
-		// TODO Auto-generated method stub
+	private void emitGettersAndSetters(StringBuilder src, Map<String, Integer> globalIndexes) {
+		Method[] methods = AbstractCalculator.class.getDeclaredMethods();
+		for (Method method : methods) {
+			String methodName = method.getName();
+			Class<?> returnType = method.getReturnType();
+			Class<?>[] types = method.getParameterTypes();
+			if (methodName.startsWith("get")) {
+				if (returnType.equals(long.class) && types.length == 0) {
+					this.emitGetter(src, methodName, globalIndexes);
+				}
+			} else if (methodName.startsWith("set")) {
+				if (returnType.equals(void.class) && types.length == 1 && types[0].equals(long.class)) {
+					this.emitSetter(src, methodName, globalIndexes);
+				}
+			}
+		}
 
+	}
+
+	private String methodToFieldName(String methodName) {
+		return methodName.substring(3, 4).toLowerCase() + methodName.substring(4);
+	}
+
+	private void emitSetter(StringBuilder src, String methodName, Map<String, Integer> globalIndexes) {
+		String fieldName = this.methodToFieldName(methodName);
+		Integer obj = globalIndexes.get(fieldName);
+		if (obj == null) {
+			src.append(
+					"//ERROR: method " + methodName + " not generated because " + fieldName + " is not a global field");
+			return;
+		}
+		src.append(OVERRIDE);
+		src.append(L0).append("protected void ").append(methodName).append("(long val)").append(THROWS);
+		src.append(L1).append("this.gVal[").append(obj).append("] = val;");
+		src.append(L1).append("this.calced(").append(obj).append(");");
+		src.append(L0_CLOSE);
+	}
+
+	/**
+	 * @param substring
+	 */
+	private void emitGetter(StringBuilder src, String methodName, Map<String, Integer> globalIndexes) {
+		String fieldName = this.methodToFieldName(methodName);
+		Integer obj = globalIndexes.get(fieldName);
+		if (obj == null) {
+			src.append(
+					"//ERROR: method " + methodName + " not generated because " + fieldName + " is not a global field");
+			return;
+		}
+		src.append(OVERRIDE);
+		src.append(L0).append("protected long ").append(methodName).append("()").append(THROWS);
+		src.append(L1).append("return this.f").append(obj).append("();");
+		src.append(L0_CLOSE);
 	}
 
 	/**
 	 *
 	 * @param json
-	 * @return errors detected while loading the josn into this rule set.
+	 * @return errors detected while loading the json into this rule set.
 	 */
 	public List<String> fromJson(JSONObject json) {
 		List<String> errors = new ArrayList<>();
@@ -603,7 +650,7 @@ public class RuleSet {
 				if (isLocal) {
 					errors.add("Rule " + key + " is a local rule, and hence it can not have local rules again.");
 				} else {
-					locals = parseLocalRules(att, value, errors);
+					locals = parseLocalRules(value, errors);
 				}
 			} else if ("expression".equals(att)) {
 				expr = parseExpr(value, errors);
@@ -678,7 +725,7 @@ public class RuleSet {
 		return steps.toArray(new RuleStep[0]);
 	}
 
-	private static AbstractRule[] parseLocalRules(String key, Object value, List<String> errors) {
+	private static AbstractRule[] parseLocalRules(Object value, List<String> errors) {
 		if (value == null || value instanceof JSONArray == false) {
 			errors.add("Expeted an array of rules, but found " + value);
 			return null;
@@ -781,4 +828,40 @@ public class RuleSet {
 		}
 	}
 
+	/**
+	 *
+	 * @param args
+	 * @throws IOException
+	 */
+	public static void main(String[] args) throws IOException {
+		String fileName = "C:/repos/sity/simplity/core/src/main/resources/org/simplity/comp/rule/itr1.json";
+		String outFile = "C:/repos/sity/simplity/core/src/main/java/org/simplity/rule/Itr1.java";
+		String text = IoUtil.streamToText(IoUtil.getStream(fileName));
+		JSONObject json = new JSONObject(text);
+		RuleSet set = new RuleSet();
+		List<String> errors = new ArrayList<>();
+		set.fromJson(json);
+		if (errors.size() == 0) {
+			System.out.println("Sofaaaa so goood");
+		} else {
+			for (String err : errors) {
+				System.out.println(err);
+			}
+		}
+
+		StringBuilder sbf = new StringBuilder();
+		set.generateSource(AbstractCalculator.class, sbf, errors);
+		if (errors.size() == 0) {
+			System.out.println("still very goood");
+			File file = new File(outFile);
+			try (Writer writer = new BufferedWriter(new FileWriter(file))) {
+				writer.write(sbf.toString());
+			}
+		} else {
+			for (String err : errors) {
+				System.out.println(err);
+			}
+		}
+
+	}
 }

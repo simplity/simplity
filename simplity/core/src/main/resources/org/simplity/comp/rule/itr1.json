@@ -2,6 +2,7 @@
 	"name": "itr1",
 	"inputParameters": [
 		"age",
+		"gender",
 		"employerCategory",
 		"PortugeseSectionApplicable",
 		"salary",
@@ -91,8 +92,6 @@
 		"refundDue"
 	],
 	"fieldsToInitialize": [],
-	"constants": {
-	},
 	"fields": {
 		"maxHousingInterestForNonSenior" : 200000,
 		"maxHousingInterestForSenior" : 300000,
@@ -178,7 +177,7 @@
 					"name": "_maxInterest",
 					"steps": [
 						{
-							"condition":"assesseCategory == 2 || assesseCategory == 3",
+							"condition":"assesseeCategory == 2 || assesseeCategory == 3",
 							"expression":"maxHousingInterestForSenior"
 						},
 						{

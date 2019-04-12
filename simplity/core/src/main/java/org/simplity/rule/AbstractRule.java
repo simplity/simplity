@@ -226,15 +226,15 @@ public abstract class AbstractRule implements IRule {
 		}
 		Integer obj = constIndexes.get(fieldName);
 		if (obj != null) {
-			return "C[" + obj.toString() + ']';
+			return "this.cVal[" + obj.toString() + ']';
 		}
 		obj = inputIndexes.get(fieldName);
 		if (obj != null) {
-			return "ival[" + obj.toString() + ']';
+			return "this.iVal[" + obj.toString() + ']';
 		}
 		obj = globalIndexes.get(fieldName);
 		if (obj != null) {
-			return "_g" + obj.toString() + "()";
+			return "this.f" + obj.toString() + "()";
 		}
 		return "0 /*" + fieldName + "*/";
 	}
