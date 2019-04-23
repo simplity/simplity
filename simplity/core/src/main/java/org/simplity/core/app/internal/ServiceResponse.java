@@ -134,6 +134,7 @@ public class ServiceResponse implements IServiceResponse {
 	 *
 	 * @return service result
 	 */
+	@Override
 	public ServiceResult getServiceResult() {
 		return this.result;
 	}
@@ -200,15 +201,7 @@ public class ServiceResponse implements IServiceResponse {
 		return "";
 	}
 
-	/**
-	 * session fields are to be used by the client agent to set the Conversation
-	 * context. These fields are to be added to every subsequent request. If the
-	 * value of a field is null, then it means that the field is to be removed
-	 * from the session context
-	 *
-	 * @return fields to be used as session context fields. null or empty, if
-	 *         session context is not affected by this service
-	 */
+	@Override
 	public Map<String, Object> getSessionFields() {
 		return this.sessionFields;
 	}
@@ -223,13 +216,12 @@ public class ServiceResponse implements IServiceResponse {
 	 *
 	 * @return execution time claimed by the service in milliseconds
 	 */
+	@Override
 	public int getExecutionTime() {
 		return this.executionTime;
 	}
 
-	/**
-	 * @return the messages
-	 */
+	@Override
 	public FormattedMessage[] getMessages() {
 		return this.messages;
 	}

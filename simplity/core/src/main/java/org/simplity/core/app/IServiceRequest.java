@@ -85,4 +85,14 @@ public interface IServiceRequest {
 	 * @return set containing all the fields. empty set if there are no fields
 	 */
 	public Map<String, Object> getFieldValues();
+
+	/**
+	 * @param appUser
+	 */
+	public void setUser(AppUser appUser);
+
+	/**
+	 * @param object
+	 */
+	public void setClientContext(Object object);
 }

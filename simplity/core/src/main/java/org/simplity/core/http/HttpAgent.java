@@ -34,6 +34,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -44,13 +45,17 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.simplity.core.app.AppConventions;
 import org.simplity.core.app.AppManager;
+import org.simplity.core.app.AppUser;
 import org.simplity.core.app.Application;
 import org.simplity.core.app.IApp;
+import org.simplity.core.app.IServiceRequest;
+import org.simplity.core.app.IServiceResponse;
 import org.simplity.core.app.ServiceResult;
 import org.simplity.core.app.StandInApp;
 import org.simplity.core.app.internal.ServiceRequest;
 import org.simplity.core.app.internal.ServiceResponse;
 import org.simplity.core.util.IoUtil;
+import org.simplity.core.value.Value;
 import org.simplity.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,6 +77,18 @@ public abstract class HttpAgent extends HttpServlet {
 
 	private static final String XML_CONTENT = "application/xml";
 	private static final String JSON_CONTENT = "application/json";
+	private static final String AUTH_HEADER = "Authorization";
+	private static final String USER_ID = AppConventions.Name.USER_ID;
+	private static final String[] HDR_NAMES = { "Access-Control-Allow-Methods", "Access-Control-Allow-Headers",
+			"Access-Control-Max-Age", "Connection" };
+	private static final String[] HDR_TEXTS = { "POST, GET, OPTIONS", "authorization,content-type", "1728000",
+			"Keep-Alive" };
+	private static final String REQ_ORIGIN = "Origin";
+	private static final String RESP_ORIGIN = "Access-Control-Allow-Origin";
+	private static final int STATUS_ALL_OK = 200;
+	private static final int STATUS_AUTH_REQUIRED = 401;
+	private static final int STATUS_METHOD_NOT_ALLOWED = 405;
+
 	/**
 	 * path-to-service mappings
 	 */
@@ -104,8 +121,18 @@ public abstract class HttpAgent extends HttpServlet {
 	 * map of service names used by client to the one used by server.
 	 */
 	protected JSONObject serviceAliases = null;
+
 	/**
-	 * legth of root folder is all that we use during execution. keeping it
+	 * login service name
+	 */
+	protected String loginServiceName;
+
+	/**
+	 * logout service name
+	 */
+	protected String logoutServiceName;
+	/**
+	 * length of root folder is all that we use during execution. keeping it
 	 * rather than keep checking it.
 	 */
 	private int rootFolderLength = 0;
@@ -123,6 +150,11 @@ public abstract class HttpAgent extends HttpServlet {
 	 * use the REST sway of specifying resource-specific-path and operation
 	 */
 	protected boolean cleintCanSpecifyServiceName = true;
+
+	/**
+	 * during development, we may want to simplify it by not requiring a login
+	 */
+	protected boolean allowGuests = false;
 	/**
 	 * many a times, developers do not notice the error message thrown by
 	 * set-up. They look at only the error message thrown by service request and
@@ -159,9 +191,40 @@ public abstract class HttpAgent extends HttpServlet {
 		AppManager.removeApp(AppManager.getApp().getAppId());
 	}
 
+	/**
+	 * we expect OPTIONS method only as a pre-flight request in a CORS
+	 * environment. We have a ready response
+	 */
+	@Override
+	protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		resp.setHeader(RESP_ORIGIN, req.getHeader(REQ_ORIGIN));
+		for (int i = 0; i < HDR_NAMES.length; i++) {
+			resp.setHeader(HDR_NAMES[i], HDR_TEXTS[i]);
+		}
+		resp.setStatus(STATUS_ALL_OK);
+	}
+
+	/*
+	 * we allow get, post and options. Nothing else
+	 */
 	@Override
 	protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		this.serve(req, resp);
+		resp.setStatus(STATUS_METHOD_NOT_ALLOWED);
+	}
+
+	@Override
+	protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		resp.setStatus(STATUS_METHOD_NOT_ALLOWED);
+	}
+
+	@Override
+	protected void doHead(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		resp.setStatus(STATUS_METHOD_NOT_ALLOWED);
+	}
+
+	@Override
+	protected void doTrace(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		resp.setStatus(STATUS_METHOD_NOT_ALLOWED);
 	}
 
 	@Override
@@ -171,26 +234,6 @@ public abstract class HttpAgent extends HttpServlet {
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		this.serve(req, resp);
-	}
-
-	@Override
-	protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		this.serve(req, resp);
-	}
-
-	@Override
-	protected void doHead(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		this.serve(req, resp);
-	}
-
-	@Override
-	protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		this.serve(req, resp);
-	}
-
-	@Override
-	protected void doTrace(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		this.serve(req, resp);
 	}
 
@@ -215,97 +258,102 @@ public abstract class HttpAgent extends HttpServlet {
 		}
 		String serviceName = null;
 		long bigin = System.currentTimeMillis();
+		String ct = req.getContentType();
+		boolean isXml = ct != null && ct.indexOf("xml") != -1;
 
+		if (isXml) {
+			resp.setContentType(XML_CONTENT);
+		} else {
+			resp.setContentType(JSON_CONTENT);
+		}
+
+		this.setResponseHeaders(resp);
+		IApp app = AppManager.getApp();
+		if (app == null) {
+			String msg = "No service app is running. All requests are responded back as internal error";
+			logger.error(msg);
+			this.respondWithError(resp, msg);
+			return;
+		}
+
+		/*
+		 * data from non-payload sources, like header and cookies is in this map
+		 */
+		Map<String, Object> fields = new HashMap<>();
+		/*
+		 * path-data is extracted during path-parsing for serviceName
+		 */
+		serviceName = this.getServiceName(req, fields);
+		if (serviceName == null) {
+			logger.warn("No service name is inferred from request.");
+			if (app instanceof StandInApp) {
+				/*
+				 * StandInApp is not a real app. So, we go in with unknown
+				 * service
+				 */
+				serviceName = "unknownService";
+			} else {
+				this.respondWithError(resp, "Sorry, that request is beyond us!!");
+				return;
+			}
+		}
+		this.mineFields(req, fields);
+		String authToken = this.getSessionFields(req, fields);
+		if (authToken == null) {
+			if (this.allowGuests == false) {
+				if (this.loginServiceName == null || this.loginServiceName.equals(serviceName) == false) {
+					resp.setStatus(STATUS_AUTH_REQUIRED);
+					this.respondWithError(resp, "We do not serve guests. Please come back with authenticated token");
+					return;
+				}
+			}
+		}
 		/*
 		 * no washing dirty linen in public. try-catch to ensure that we ALWAYS
 		 * return in a controlled manner
 		 */
 		try (InputStream ins = req.getInputStream(); Writer writer = new PrintWriter(resp.getOutputStream())) {
+			IServiceRequest request = new ServiceRequest(serviceName, fields, ins, isXml);
+			IServiceResponse response = new ServiceResponse(writer, isXml);
+			Value userId = (Value) fields.get(USER_ID);
+			if (userId != null) {
+				request.setUser(new AppUser(userId));
+			}
+			/*
+			 * app specific code to copy anything from client-layer to request
+			 * as well as set anything to response
+			 */
+			boolean okToProceed = this.prepareRequestAndResponse(serviceName, req, resp, request, response, fields);
 
-			String ct = req.getContentType();
-			boolean isXml = ct != null && ct.indexOf("xml") != -1;
-
-			if (isXml) {
-				resp.setContentType(XML_CONTENT);
-			} else {
-				resp.setContentType(JSON_CONTENT);
+			if (okToProceed) {
+				app.serve(request, response);
+				/*
+				 * app-specific hook to do anything before responding back
+				 */
+				this.postProcess(req, resp, request, response);
 			}
 
-			this.setResponseHeaders(resp);
-			IApp app = AppManager.getApp();
-			if (app == null) {
-				String msg = "No service app is running. All requests are responded back as internal error";
-				logger.error(msg);
-				this.respondWithError(resp, msg, writer);
+			ServiceResult result = response.getServiceResult();
+			logger.info("Service {} ended with result={} ", serviceName, result);
+
+			if (result != ServiceResult.ALL_OK) {
+				this.respondWithError(resp, "Sorry, your request failed to execute : " + result);
 				return;
 			}
-
-			/*
-			 * data from non-payload sources, like header and cookies is in this
-			 * map
-			 */
-			Map<String, Object> fields = new HashMap<>();
-			this.mineFields(req, fields);
-			/*
-			 * path-data is extracted during path-parsing for serviceName
-			 */
-			serviceName = this.getServiceName(req, fields);
-			if (serviceName == null) {
-				logger.warn("No service name is inferred from request.");
-				if (app instanceof StandInApp) {
-					/*
-					 * StandInApp is not a real app. So, we go in with unknown
-					 * service
-					 */
-					serviceName = "unknownService";
-				} else {
-					this.respondWithError(resp, "Sorry, that request is beyond us!!", writer);
-					return;
-				}
+			logger.info("Server-layer reported {} ms as time taken to execute service {}",
+					response.getExecutionTime(), serviceName);
+			if (this.loginServiceName != null && this.loginServiceName.equals(serviceName)) {
+				authToken = this.createSession(req, response.getSessionFields());
+				this.respondToLogin(resp, writer, authToken);
+			} else if (this.logoutServiceName != null && this.logoutServiceName.equals(serviceName)) {
+				this.destroySession(req, authToken);
 			}
+		} catch (Exception e) {
+			String msg = "Error occured while serving the request";
+			logger.error(msg, e);
+			this.respondWithError(resp, msg);
 
-			/*
-			 * try-catch to isolate service related exceptions
-			 */
-			try {
-
-				ServiceRequest request = new ServiceRequest(serviceName, fields, ins, isXml);
-				ServiceResponse response = new ServiceResponse(writer, isXml);
-				/*
-				 * app specific code to copy anything from client-layer to
-				 * request as well as set anything to response
-				 */
-				boolean okToProceed = this.prepareRequestAndResponse(serviceName, req, resp, request, response, fields);
-
-				if (okToProceed) {
-					app.serve(request, response);
-					/*
-					 * app-specific hook to do anything before responding back
-					 */
-					this.postProcess(req, resp, request, response);
-				}
-
-				ServiceResult result = response.getServiceResult();
-				logger.info("Service {} ended with result={} ", serviceName, result);
-
-				if (result == ServiceResult.ALL_OK) {
-					logger.info("Server-layer reported {} ms as time taken to execute service {}",
-							response.getExecutionTime(), serviceName);
-				} else {
-					/*
-					 * TODO: device a way to respond back with an error.
-					 */
-					this.respondWithError(resp, "Sorry, your request failed to execute : " + result, writer);
-				}
-			} catch (Exception e) {
-				String msg = "Error occured while serving the request";
-				logger.error(msg, e);
-				this.respondWithError(resp, msg, writer);
-			}
 		} finally {
-			if (serviceName == null) {
-				serviceName = "unknown";
-			}
 			logger.info("Http server took {} ms to deliver service {}", System.currentTimeMillis() - bigin,
 					serviceName);
 		}
@@ -333,9 +381,55 @@ public abstract class HttpAgent extends HttpServlet {
 	 *            response writer used for this request
 	 * @throws IOException
 	 */
-	protected void respondWithError(HttpServletResponse resp, String message, Writer writer) throws IOException {
+	protected void respondWithError(HttpServletResponse resp, String message) throws IOException {
 		resp.setStatus(500);
-		writer.write(message);
+		try (Writer writer = resp.getWriter()) {
+			writer.write("{\"status\":\"error\",\"message\":\"");
+			writer.write(message);
+			writer.write("\"}");
+		}
+	}
+
+	/**
+	 * default session management is to save it under app-scoped map with token
+	 * as the key. May be over-ridden by app-specific controller
+	 *
+	 * @param req
+	 * @param fields
+	 * @return
+	 */
+	protected String getSessionFields(HttpServletRequest req, Map<String, Object> fields) {
+		String token = req.getHeader(AUTH_HEADER);
+		if (token == null) {
+			logger.info("No auth token recd in header {}", AUTH_HEADER);
+			return null;
+		}
+		ServletContext ctx = req.getServletContext();
+		Object obj = ctx.getAttribute(token);
+		if (obj == null) {
+			logger.info("Auth token recd in header={} this is not valid", token);
+			return null;
+		}
+		@SuppressWarnings("unchecked")
+		Map<String, Object> sessionData = (Map<String, Object>) obj;
+		Value userId = (Value) sessionData.get(USER_ID);
+		if (userId == null) {
+			logger.info("Session data is found for token {} but userId is not found with name {}. Session invalidated.",
+					token, USER_ID);
+			ctx.removeAttribute(token);
+			return null;
+		}
+		fields.put(USER_ID, userId);
+
+		if (this.sessionFields != null) {
+			for (String name : this.sessionFields) {
+				Object value = sessionData.get(name);
+				if (value != null) {
+					fields.put(name, value);
+				}
+			}
+		}
+		return token;
 	}
 
 	/**
@@ -374,16 +468,6 @@ public abstract class HttpAgent extends HttpServlet {
 		if (this.headerFields != null) {
 			for (String name : this.headerFields) {
 				String value = req.getHeader(name);
-				if (value != null) {
-					fields.put(name, value);
-				}
-			}
-		}
-
-		if (this.sessionFields != null) {
-			ServletContext ctx = this.getServletContext();
-			for (String name : this.sessionFields) {
-				Object value = ctx.getAttribute(name);
 				if (value != null) {
 					fields.put(name, value);
 				}
@@ -548,6 +632,59 @@ public abstract class HttpAgent extends HttpServlet {
 			logger.info("{} is/are the request attributes that will be used as input data", text);
 			this.requestAttributes = text.split(HttpConventions.FIELD_NAME_SEPARATOR);
 		}
+		text = ctx.getInitParameter(HttpConventions.FieldNames.LOGIN_SERVICE);
+		if (text == null) {
+			logger.info(
+					"{} is not set. Login process is not managed by the app. We assume that it is handled outside of the app.",
+					HttpConventions.FieldNames.LOGIN_SERVICE);
+		} else {
+			logger.info("{} is the login service", text);
+			this.loginServiceName = text;
+		}
+		text = ctx.getInitParameter(HttpConventions.FieldNames.LOGOUT_SERVICE);
+		if (text == null) {
+			logger.info(
+					"{} is not set. Login process is not managed by the app. We assume that it is handled outside of the app.",
+					HttpConventions.FieldNames.LOGOUT_SERVICE);
+		} else {
+			logger.info("{} is the logout service", text);
+			this.logoutServiceName = text;
+		}
+	}
+
+	/**
+	 * default is to use HttpSession that is created in need basis, and saved
+	 * with a map in the app context. App-specific controller can over-ride this
+	 * to use mem-cache solutions like redis
+	 *
+	 * @param req
+	 * @param sessionData
+	 * @return
+	 */
+	protected String createSession(HttpServletRequest req, Object sessionData) {
+		String token = UUID.randomUUID().toString();
+		req.getServletContext().setAttribute(token, sessionData);
+		return token;
+	}
+
+	/**
+	 * @param req
+	 */
+	protected void destroySession(HttpServletRequest req, String token) {
+		req.getServletContext().removeAttribute(token);
+	}
+
+	/**
+	 *
+	 * @param resp
+	 * @param writer
+	 * @param token
+	 * @throws IOException
+	 */
+	protected void respondToLogin(HttpServletResponse resp, Writer writer, String token) throws IOException {
+		writer.write("{\"status\":\"ok\", \"token\":\"");
+		writer.write(token.replace("\"", "\"\""));
+		writer.write("\"}");
 	}
 
 	/**
@@ -569,7 +706,7 @@ public abstract class HttpAgent extends HttpServlet {
 	 *         error is detected.
 	 */
 	protected abstract boolean prepareRequestAndResponse(String serviceName, HttpServletRequest req,
-			HttpServletResponse resp, ServiceRequest request, ServiceResponse response, Map<String, Object> fields);
+			HttpServletResponse resp, IServiceRequest request, IServiceResponse response, Map<String, Object> fields);
 
 	/**
 	 * application specific functionality in web-layer after service layer
@@ -581,7 +718,7 @@ public abstract class HttpAgent extends HttpServlet {
 	 * @param serviceResponse
 	 */
 	protected abstract void postProcess(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
-			ServiceRequest serviceRequest, ServiceResponse serviceResponse);
+			IServiceRequest serviceRequest, IServiceResponse serviceResponse);
 
 	/**
 	 * app specific aspects to be handled at init() time

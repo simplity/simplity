@@ -102,6 +102,19 @@ public class HttpConventions {
 		 * server is in stub-mode for simulation
 		 */
 		public static final String TEST_ID = "_testId";
+
+		/**
+		 * if login is managed by the app, then this is the name of the login
+		 * service. Note that the login service should put all fields as session
+		 * fields, and should not have any outSpec. Fields expected by the
+		 * client are to be added by the controller.
+		 */
+		public static final String LOGIN_SERVICE = "_loginService";
+
+		/**
+		 * if logout is managed by the app
+		 */
+		public static final String LOGOUT_SERVICE = "_logoutService";
 	}
 
 	/**

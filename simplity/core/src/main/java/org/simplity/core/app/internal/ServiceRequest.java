@@ -172,6 +172,7 @@ public class ServiceRequest implements IServiceRequest {
 	 *
 	 * @param appUser
 	 */
+	@Override
 	public void setUser(AppUser appUser) {
 		this.appUser = appUser;
 	}
@@ -242,6 +243,7 @@ public class ServiceRequest implements IServiceRequest {
 	 *            to co-exist with Apps that need this feature. This will be
 	 *            available in service context with getClientContext() method
 	 */
+	@Override
 	public void setClientContext(Object clientContext) {
 		this.clientContext = clientContext;
 	}

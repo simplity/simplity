@@ -22,6 +22,8 @@
 
 package org.simplity.core.app;
 
+import java.util.Map;
+
 import org.simplity.core.msg.FormattedMessage;
 
 /**
@@ -75,4 +77,30 @@ public interface IServiceResponse {
 	 * @return non-null response writer for this response
 	 */
 	public IResponseWriter getPayloadWriter(boolean responseIsAnArray);
+
+	/**
+	 * @return result of this service execution
+	 */
+	public ServiceResult getServiceResult();
+
+	/**
+	 * @return execution time in number of milliseconds
+	 */
+	public int getExecutionTime();
+
+	/**
+	 * session fields are to be used by the client agent to set the Conversation
+	 * context. These fields are to be added to every subsequent request. If the
+	 * value of a field is null, then it means that the field is to be removed
+	 * from the session context
+	 *
+	 * @return fields to be used as session context fields. null or empty, if
+	 *         session context is not affected by this service
+	 */
+	public Map<String, Object> getSessionFields();
+
+	/**
+	 * @return the messages
+	 */
+	public FormattedMessage[] getMessages();
 }

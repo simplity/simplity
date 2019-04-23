@@ -29,8 +29,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.simplity.core.app.AppUser;
-import org.simplity.core.app.internal.ServiceRequest;
-import org.simplity.core.app.internal.ServiceResponse;
+import org.simplity.core.app.IServiceRequest;
+import org.simplity.core.app.IServiceResponse;
 import org.simplity.core.value.Value;
 
 /**
@@ -47,7 +47,7 @@ public class ExampleController extends HttpAgent {
 
 	@Override
 	protected void postProcess(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
-			ServiceRequest serviceRequest, ServiceResponse serviceResponse) {
+			IServiceRequest serviceRequest, IServiceResponse serviceResponse) {
 		// anything from response to be set to session?, logging?
 
 	}
@@ -63,7 +63,7 @@ public class ExampleController extends HttpAgent {
 
 	@Override
 	protected boolean prepareRequestAndResponse(String serviceName, HttpServletRequest req, HttpServletResponse resp,
-			ServiceRequest request, ServiceResponse response, Map<String, Object> fields) {
+			IServiceRequest request, IServiceResponse response, Map<String, Object> fields) {
 		boolean allOk = true;
 
 		/*
