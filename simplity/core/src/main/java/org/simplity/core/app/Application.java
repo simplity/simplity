@@ -393,6 +393,15 @@ public class Application implements IApp {
 		return this.applicationId;
 	}
 
+	/**
+	 * get root/prefix for all resources
+	 *
+	 * @return folder/package prefix for resources
+	 */
+	public String getResourceRoot() {
+		return this.resourceRoot;
+	}
+
 	@Override
 	public boolean openShop(Map<String, String> params, List<String> messages) {
 		this.resourceRoot = params.get(AppConventions.Name.RESOURCE_ROOT);
@@ -574,6 +583,17 @@ public class Application implements IApp {
 				IResponseWriter respWriter = response.getPayloadWriter(service.responseIsAnArray());
 				outSpec.write(respWriter, ctx);
 				respWriter.done();
+			}
+		}
+		String[] sessionFields = service.getSessionFields();
+		if (sessionFields != null) {
+			for (String f : sessionFields) {
+				Value value = ctx.getValue(f);
+				if (value == null) {
+					logger.info("Session field {} not set because value is absent in ctx", f);
+				} else {
+					response.setSessionField(f, value.toString());
+				}
 			}
 		}
 		IServicePrePostProcessor hook = this.plugins.getServicePrePostProcessor();

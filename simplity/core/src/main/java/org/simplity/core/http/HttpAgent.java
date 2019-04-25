@@ -45,7 +45,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.simplity.core.app.AppConventions;
 import org.simplity.core.app.AppManager;
-import org.simplity.core.app.AppUser;
 import org.simplity.core.app.Application;
 import org.simplity.core.app.IApp;
 import org.simplity.core.app.IServiceRequest;
@@ -55,7 +54,6 @@ import org.simplity.core.app.StandInApp;
 import org.simplity.core.app.internal.ServiceRequest;
 import org.simplity.core.app.internal.ServiceResponse;
 import org.simplity.core.util.IoUtil;
-import org.simplity.core.value.Value;
 import org.simplity.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,11 +78,10 @@ public abstract class HttpAgent extends HttpServlet {
 	private static final String AUTH_HEADER = "Authorization";
 	private static final String USER_ID = AppConventions.Name.USER_ID;
 	private static final String[] HDR_NAMES = { "Access-Control-Allow-Methods", "Access-Control-Allow-Headers",
-			"Access-Control-Max-Age", "Connection" };
-	private static final String[] HDR_TEXTS = { "POST, GET, OPTIONS", "authorization,content-type", "1728000",
-			"Keep-Alive" };
-	private static final String REQ_ORIGIN = "Origin";
-	private static final String RESP_ORIGIN = "Access-Control-Allow-Origin";
+			"Access-Control-Max-Age", "Access-Control-Allow-Origin", "Connection", "Cache-Control", "Expires" };
+	private static final String[] HDR_TEXTS = { "POST, GET, OPTIONS", "authorization,content-type", "1728000", "*",
+			"Keep-Alive", "no-cache, no-store, must-revalidate", "0" };
+	// private static final String REQ_ORIGIN = "Origin";
 	private static final int STATUS_ALL_OK = 200;
 	private static final int STATUS_AUTH_REQUIRED = 401;
 	private static final int STATUS_METHOD_NOT_ALLOWED = 405;
@@ -143,7 +140,7 @@ public abstract class HttpAgent extends HttpServlet {
 	 * passing to the service layer. Similarly, service layer passes the
 	 * response object back which is written out to response stream
 	 */
-	protected boolean useStreamingPayload = true;
+	protected boolean useStreamingPayload = false;
 
 	/**
 	 * http client can either specify service name explicitly (non-rest) or can
@@ -197,7 +194,6 @@ public abstract class HttpAgent extends HttpServlet {
 	 */
 	@Override
 	protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		resp.setHeader(RESP_ORIGIN, req.getHeader(REQ_ORIGIN));
 		for (int i = 0; i < HDR_NAMES.length; i++) {
 			resp.setHeader(HDR_NAMES[i], HDR_TEXTS[i]);
 		}
@@ -260,102 +256,98 @@ public abstract class HttpAgent extends HttpServlet {
 		long bigin = System.currentTimeMillis();
 		String ct = req.getContentType();
 		boolean isXml = ct != null && ct.indexOf("xml") != -1;
-
 		if (isXml) {
 			resp.setContentType(XML_CONTENT);
 		} else {
 			resp.setContentType(JSON_CONTENT);
 		}
 
-		this.setResponseHeaders(resp);
-		IApp app = AppManager.getApp();
-		if (app == null) {
-			String msg = "No service app is running. All requests are responded back as internal error";
-			logger.error(msg);
-			this.respondWithError(resp, msg);
-			return;
-		}
-
-		/*
-		 * data from non-payload sources, like header and cookies is in this map
-		 */
-		Map<String, Object> fields = new HashMap<>();
-		/*
-		 * path-data is extracted during path-parsing for serviceName
-		 */
-		serviceName = this.getServiceName(req, fields);
-		if (serviceName == null) {
-			logger.warn("No service name is inferred from request.");
-			if (app instanceof StandInApp) {
-				/*
-				 * StandInApp is not a real app. So, we go in with unknown
-				 * service
-				 */
-				serviceName = "unknownService";
-			} else {
-				this.respondWithError(resp, "Sorry, that request is beyond us!!");
-				return;
-			}
-		}
-		this.mineFields(req, fields);
-		String authToken = this.getSessionFields(req, fields);
-		if (authToken == null) {
-			if (this.allowGuests == false) {
-				if (this.loginServiceName == null || this.loginServiceName.equals(serviceName) == false) {
-					resp.setStatus(STATUS_AUTH_REQUIRED);
-					this.respondWithError(resp, "We do not serve guests. Please come back with authenticated token");
+		try (InputStream ins = req.getInputStream(); Writer writer = new PrintWriter(resp.getOutputStream())) {
+			try {
+				this.setResponseHeaders(resp);
+				IApp iapp = AppManager.getApp();
+				if (iapp == null || iapp instanceof Application == false) {
+					String msg = "No service app is running. All requests are responded back as internal error";
+					logger.error(msg);
+					this.respondWithError(resp, writer, msg);
 					return;
 				}
-			}
-		}
-		/*
-		 * no washing dirty linen in public. try-catch to ensure that we ALWAYS
-		 * return in a controlled manner
-		 */
-		try (InputStream ins = req.getInputStream(); Writer writer = new PrintWriter(resp.getOutputStream())) {
-			IServiceRequest request = new ServiceRequest(serviceName, fields, ins, isXml);
-			IServiceResponse response = new ServiceResponse(writer, isXml);
-			Value userId = (Value) fields.get(USER_ID);
-			if (userId != null) {
-				request.setUser(new AppUser(userId));
-			}
-			/*
-			 * app specific code to copy anything from client-layer to request
-			 * as well as set anything to response
-			 */
-			boolean okToProceed = this.prepareRequestAndResponse(serviceName, req, resp, request, response, fields);
 
-			if (okToProceed) {
-				app.serve(request, response);
+				Application app = (Application) iapp;
 				/*
-				 * app-specific hook to do anything before responding back
+				 * data from non-payload sources, like header and cookies is in
+				 * this map
 				 */
-				this.postProcess(req, resp, request, response);
-			}
+				Map<String, Object> fields = new HashMap<>();
+				/*
+				 * path-data is extracted during path-parsing for serviceName
+				 */
+				serviceName = this.getServiceName(req, fields);
+				if (serviceName == null) {
+					logger.warn("No service name is inferred from request.");
+					this.respondWithError(resp, writer, "Sorry, that request is beyond us!!");
+					return;
+				}
+				this.mineFields(req, fields);
+				String authToken = this.getSessionFields(req, fields);
+				if (authToken == null) {
+					if (this.allowGuests == false) {
+						if (this.loginServiceName == null || this.loginServiceName.equals(serviceName) == false) {
+							resp.setStatus(STATUS_AUTH_REQUIRED);
+							this.respondWithError(resp, writer,
+									"We do not serve guests. Please come back with authenticated token");
+							return;
+						}
+					}
+				}
+				/*
+				 * no washing dirty linen in public. try-catch to ensure that we
+				 * ALWAYS return in a controlled manner
+				 */
+				IServiceRequest request = new ServiceRequest(serviceName, fields, ins, isXml);
+				IServiceResponse response = new ServiceResponse(writer, isXml);
+				Object userId = fields.get(USER_ID);
+				if (userId != null) {
+					request.setUser(app.createAppUser(userId.toString()));
+				}
+				/*
+				 * app specific code to copy anything from client-layer to
+				 * request as well as set anything to response
+				 */
+				boolean okToProceed = this.prepareRequestAndResponse(serviceName, req, resp, request, response, fields);
 
-			ServiceResult result = response.getServiceResult();
-			logger.info("Service {} ended with result={} ", serviceName, result);
+				if (okToProceed) {
+					app.serve(request, response);
+					/*
+					 * app-specific hook to do anything before responding back
+					 */
+					this.postProcess(req, resp, request, response);
+				}
 
-			if (result != ServiceResult.ALL_OK) {
-				this.respondWithError(resp, "Sorry, your request failed to execute : " + result);
-				return;
-			}
-			logger.info("Server-layer reported {} ms as time taken to execute service {}",
-					response.getExecutionTime(), serviceName);
-			if (this.loginServiceName != null && this.loginServiceName.equals(serviceName)) {
-				authToken = this.createSession(req, response.getSessionFields());
-				this.respondToLogin(resp, writer, authToken);
-			} else if (this.logoutServiceName != null && this.logoutServiceName.equals(serviceName)) {
-				this.destroySession(req, authToken);
-			}
-		} catch (Exception e) {
-			String msg = "Error occured while serving the request";
-			logger.error(msg, e);
-			this.respondWithError(resp, msg);
+				ServiceResult result = response.getServiceResult();
+				logger.info("Service {} ended with result={} ", serviceName, result);
 
-		} finally {
-			logger.info("Http server took {} ms to deliver service {}", System.currentTimeMillis() - bigin,
-					serviceName);
+				if (result != ServiceResult.ALL_OK) {
+					this.respondWithError(resp, writer, "Sorry, your request failed to execute : " + result);
+					return;
+				}
+				logger.info("Server-layer reported {} ms as time taken to execute service {}",
+						response.getExecutionTime(), serviceName);
+				if (this.loginServiceName != null && this.loginServiceName.equals(serviceName)) {
+					authToken = this.createSession(req, response.getSessionFields());
+					this.respondToLogin(resp, writer, authToken);
+				} else if (this.logoutServiceName != null && this.logoutServiceName.equals(serviceName)) {
+					this.destroySession(req, authToken);
+				}
+			} catch (Exception e) {
+				String msg = "Error occured while serving the request";
+				logger.error(msg, e);
+				this.respondWithError(resp, writer, msg);
+
+			} finally {
+				logger.info("Http server took {} ms to deliver service {}", System.currentTimeMillis() - bigin,
+						serviceName);
+			}
 		}
 	}
 
@@ -367,6 +359,9 @@ public abstract class HttpAgent extends HttpServlet {
 	 * @param resp
 	 */
 	protected void setResponseHeaders(HttpServletResponse resp) {
+		for (int i = 0; i < HDR_NAMES.length; i++) {
+			resp.setHeader(HDR_NAMES[i], HDR_TEXTS[i]);
+		}
 		resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 		resp.setDateHeader("Expires", 0);
 	}
@@ -381,13 +376,12 @@ public abstract class HttpAgent extends HttpServlet {
 	 *            response writer used for this request
 	 * @throws IOException
 	 */
-	protected void respondWithError(HttpServletResponse resp, String message) throws IOException {
+	protected void respondWithError(HttpServletResponse resp, Writer writer, String message) throws IOException {
 		resp.setStatus(500);
-		try (Writer writer = resp.getWriter()) {
-			writer.write("{\"status\":\"error\",\"message\":\"");
-			writer.write(message);
-			writer.write("\"}");
-		}
+		writer.write("{\"status\":\"error\",\"message\":\"");
+		writer.write(message);
+		writer.write("\"}");
+
 	}
 
 	/**
@@ -412,7 +406,7 @@ public abstract class HttpAgent extends HttpServlet {
 		}
 		@SuppressWarnings("unchecked")
 		Map<String, Object> sessionData = (Map<String, Object>) obj;
-		Value userId = (Value) sessionData.get(USER_ID);
+		Object userId = sessionData.get(USER_ID);
 		if (userId == null) {
 			logger.info("Session data is found for token {} but userId is not found with name {}. Session invalidated.",
 					token, USER_ID);

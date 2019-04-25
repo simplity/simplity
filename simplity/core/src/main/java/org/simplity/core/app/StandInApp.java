@@ -32,8 +32,8 @@ import org.simplity.json.JSONObject;
 import org.slf4j.LoggerFactory;
 
 /**
- * app that is to be used win a situation of no-app. Idea is to respond-back to
- * a service request, more like an echo.
+ * app that is to be used in a situation of no-app. Idea is to respond-back to a
+ * service request, more like an echo.
  *
  * @author simplity.org
  *

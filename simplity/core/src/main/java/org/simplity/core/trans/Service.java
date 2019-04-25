@@ -37,7 +37,10 @@ import org.simplity.core.service.InputData;
 import org.simplity.core.service.InputField;
 import org.simplity.core.service.OutputData;
 import org.simplity.core.service.ServiceContext;
+import org.simplity.core.util.IoUtil;
 import org.simplity.core.value.Value;
+import org.simplity.json.JSONArray;
+import org.simplity.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +51,7 @@ import org.slf4j.LoggerFactory;
 public class Service implements IService, IComponent {
 	protected static final Logger logger = LoggerFactory.getLogger(Service.class);
 	private static final ComponentType MY_TYPE = ComponentType.SERVICE;
+	private static final String OUTPUT_OBJECT_NAME = "outputJson";
 	/**
 	 * simple name
 	 */
@@ -71,6 +75,11 @@ public class Service implements IService, IComponent {
 	@FieldMetaData(leaderField = "dbTableNameToGenerateFrom")
 	ServiceOperation serviceOperation;
 
+	/**
+	 * if this is true, then the designated json file in data folder is used as
+	 * ready response. Actions are skipped
+	 */
+	boolean runAsDemo;
 	/**
 	 * input fields/grids for this service. not valid if requestTextFieldName is
 	 * specified
@@ -145,6 +154,13 @@ public class Service implements IService, IComponent {
 	 * find its way to the payload.
 	 */
 	boolean writesDataDirectlyToWriter;
+
+	/**
+	 * if this service is to alter the session/context, this is the list of
+	 * fields. Service execution should have put values to these fields in the
+	 * context
+	 */
+	String[] fieldsToAddToSession;
 	/**
 	 * actual processing is done by the processor.
 	 */
@@ -165,6 +181,11 @@ public class Service implements IService, IComponent {
 	 * that is populated at getReay()
 	 */
 	private String[] parsedCacheKeys;
+
+	/**
+	 * json read from data folder. to be used in demo mode
+	 */
+	private Object readyJson;
 
 	@Override
 	public final String getSimpleName() {
@@ -221,6 +242,10 @@ public class Service implements IService, IComponent {
 
 	@Override
 	public void serve(ServiceContext ctx) {
+		if (this.readyJson != null) {
+			this.copyReadyJson(ctx);
+			return;
+		}
 		this.processor.execute(ctx);
 		if (this.okToCache()) {
 			String key = createCachingKey(this.getQualifiedName(), this.cacheKeyNames, ctx);
@@ -228,6 +253,18 @@ public class Service implements IService, IComponent {
 		} else if (this.serviceCachesToInvalidate != null) {
 			ctx.setInvalidations(this.getInvalidations(ctx));
 		}
+	}
+
+	/**
+	 *
+	 */
+	private void copyReadyJson(ServiceContext ctx) {
+		/*
+		 * we intend to provide input-sensitive output in the future. hence this
+		 * separate method
+		 */
+		ctx.setObject(OUTPUT_OBJECT_NAME, this.readyJson);
+
 	}
 
 	@Override
@@ -245,6 +282,10 @@ public class Service implements IService, IComponent {
 		this.gotReady = true;
 		Application app = Application.getActiveInstance();
 
+		if (this.runAsDemo) {
+			this.getReadyForDemo(app);
+			return;
+		}
 		if (this.dbTableNameToGenerateFrom != null) {
 			DbTable tbl = (DbTable) app.getRecord(this.dbTableNameToGenerateFrom);
 			Service s = this.serviceOperation.generateService(tbl);
@@ -295,6 +336,36 @@ public class Service implements IService, IComponent {
 		}
 
 		this.processor.getReady(this);
+	}
+
+	/**
+	 *
+	 */
+	private void getReadyForDemo(Application app) {
+		String resource = app.getResourceRoot() + "data/" + this.getQualifiedName().replace('.', '/') + ".json";
+		logger.info("Trying to use contents of resource {} as ready response for service {}", resource,
+				this.getQualifiedName());
+		String text = IoUtil.readResource(resource);
+		if (text == null) {
+			logger.error("Error while readiing json file. Empty response will be sent for service {}",
+					this.getQualifiedName());
+			text = "{\"msg\":\" resource " + resource + " not found \"}";
+		}
+		text = text.trim();
+		boolean isArray = false;
+		if (text.charAt(0) == '{') {
+			this.readyJson = new JSONObject(text);
+		} else if (text.charAt(0) == '[') {
+			this.readyJson = new JSONArray(text);
+			isArray = true;
+		} else {
+			logger.error("{} is to contain a JSON array or Object. It has an invalid content");
+			this.readyJson = new JSONObject();
+		}
+		this.inputData = InputData.getDemoSpec();
+		this.outputData = OutputData.getDemoSpec(OUTPUT_OBJECT_NAME, isArray);
+		this.processor = null;
+		logger.info("Service {} will run in demo mode with data from {}", resource, this.getQualifiedName());
 	}
 
 	/**
@@ -411,6 +482,11 @@ public class Service implements IService, IComponent {
 	@Override
 	public boolean responseIsAnArray() {
 		return this.outputData != null && this.outputData.outputIsAnArray();
+	}
+
+	@Override
+	public String[] getSessionFields() {
+		return this.fieldsToAddToSession;
 	}
 
 }

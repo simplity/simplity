@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <dbTable
-  xmlns="http://www.simplity.org/schema"
+  
   name="_customField"
-  description="specification for aa custom field in a table for a tenant. "
+  description="specification for a custom field in a table for a tenant. "
 >
   <fields>
     <tenantKey
@@ -33,6 +33,7 @@
       name="enumeration"
       dataType="_entityList"
       description="comma separated list of valid values"
+      />
   
   </fields>
 </dbTable>

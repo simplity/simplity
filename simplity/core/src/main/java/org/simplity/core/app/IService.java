@@ -159,4 +159,12 @@ public interface IService {
 	 *         is an object
 	 */
 	public boolean responseIsAnArray();
+
+	/**
+	 * fields that this service is designed to put to service session
+	 *
+	 * @return array of field names to be set in the session. Service would have
+	 *         set values for these in the context. null if no such fields
+	 */
+	public String[] getSessionFields();
 }

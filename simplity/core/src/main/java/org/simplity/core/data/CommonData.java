@@ -396,6 +396,7 @@ public class CommonData implements ICommonData {
 		}
 		if (dataName.indexOf(SEP_CHAR) == -1) {
 			this.allObjects.put(dataName, object);
+			return;
 		}
 		String[] parts = dataName.split(NAME_PART_SEPARATOR);
 		Object obj = this.allObjects.get(dataName);

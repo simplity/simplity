@@ -38,6 +38,8 @@ import org.simplity.core.dm.field.Field;
 import org.simplity.core.msg.FormattedMessage;
 import org.simplity.core.util.TextUtil;
 import org.simplity.core.value.Value;
+import org.simplity.json.JSONArray;
+import org.simplity.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,6 +56,27 @@ public class OutputData {
 	static final String EMPTY_RESPONSE = "{\"" + AppConventions.Name.REQUEST_STATUS + "\":\""
 			+ AppConventions.Value.Status.OK
 			+ "\"}";
+
+	/**
+	 * create an output for a demo service
+	 *
+	 * @param outputObjectName
+	 *            name in which the output json is saved in
+	 * @param itIsAnArray
+	 * @return an instance that expects a json in a field name to be sent to
+	 *         client as response.
+	 */
+	public static OutputData getDemoSpec(String outputObjectName, boolean itIsAnArray) {
+		OutputData result = new OutputData();
+		result.outputIsAnArray = itIsAnArray;
+		result.readyOutputObjectName = outputObjectName;
+		return result;
+	}
+
+	/**
+	 * name with which the output is readily made available in the context
+	 */
+	String readyOutputObjectName;
 	/**
 	 * special case when we output an array, and not an object. When this is set
 	 * to true, there should be just one record specified with output, with no
@@ -91,13 +114,6 @@ public class OutputData {
 	 * comma separated list of objects to be output
 	 */
 	String[] objectNames;
-	/**
-	 * if this service wants to set/reset some session fields. Note that this
-	 * directive is independent of fieldNames or outputRecords. That is if a is
-	 * set as sessionFields, it is not sent to client, unless "a" is also
-	 * specified as fieldNames
-	 */
-	String[] sessionFields;
 
 	/**
 	 * comma separated list of field names that carry key to attachments. these
@@ -300,6 +316,10 @@ public class OutputData {
 	 * @param ctx
 	 */
 	public void write(IResponseWriter writer, ServiceContext ctx) {
+		if (this.readyOutputObjectName != null) {
+			this.outputObject(writer, ctx);
+			return;
+		}
 		this.prepareForOutput(ctx);
 		/*
 		 * extract attachments if required
@@ -349,6 +369,47 @@ public class OutputData {
 			for (OutputRecord rec : this.outputRecords) {
 				rec.write(writer, ctx);
 			}
+		}
+	}
+
+	/**
+	 * @param ctx
+	 */
+	private void outputObject(IResponseWriter writer, ServiceContext ctx) {
+		Object obj = ctx.getObject(this.readyOutputObjectName);
+		if (obj == null) {
+			logger.error("Output object named {} is missing in the cotext", this.readyOutputObjectName);
+			return;
+		}
+		logger.info("output object is of type {}", obj.getClass().getName());
+		if (obj instanceof JSONObject) {
+			JSONObject json = (JSONObject) obj;
+			for (String key : json.keySet()) {
+				logger.info("{} = {}", key, json.opt(key).getClass().getName());
+			}
+			if (this.outputIsAnArray) {
+				writer.addToArray(json);
+				return;
+			}
+			for (String key : json.keySet()) {
+				logger.info("Going to set {} = {}", key, json.opt(key).getClass().getName());
+				writer.setObject(key, json.opt(key));
+				logger.info("Done writing value for key {} ", key);
+			}
+			logger.info("done with outputting JSON");
+			return;
+		}
+		if (obj instanceof JSONArray) {
+			if (!this.outputIsAnArray) {
+				writer.setField("value", obj);
+				return;
+			}
+			JSONArray json = (JSONArray) obj;
+			int nbr = json.length();
+			for (int i = 0; i < nbr; i++) {
+				writer.addToArray(json.opt(i));
+			}
+			return;
 		}
 	}
 

@@ -211,6 +211,17 @@ public class InputData {
 	}
 
 	/**
+	 * get an instance that is suitable for a demo service
+	 *
+	 * @return an input spec that reads everything coming from the client
+	 */
+	public static InputData getDemoSpec() {
+		InputData result = new InputData();
+		result.justInputEveryThing = true;
+		return result;
+	}
+
+	/**
 	 * validate this specification
 	 *
 	 * @param vtx

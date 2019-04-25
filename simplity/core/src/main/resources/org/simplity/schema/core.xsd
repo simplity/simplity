@@ -1293,7 +1293,20 @@
         <xs:annotation>
           <xs:documentation>to be used only if dbTableNameToGenerateFrom is
             used. This is the operation for which the service is to be
-            generated</xs:documentation>
+            generated
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+      <xs:attribute
+        name="fieldsToAddToSession"
+        type="xs:string"
+        use="optional"
+      >
+        <xs:annotation>
+          <xs:documentation>comma separated list of field names that are to
+            be added to the session after this service is executed. This is
+            useful if the session tracks some important fields that are to
+            be used as default etc..</xs:documentation>
         </xs:annotation>
       </xs:attribute>
     </xs:complexType>
@@ -4338,7 +4351,7 @@
         </xs:annotation>
         <xs:restriction base="xs:string">
           <xs:enumeration value="mysql" />
-          <xs:enumeration value="postgre" />
+          <xs:enumeration value="postgresql" />
           <xs:enumeration value="oracle" />
           <xs:enumeration value="mssql" />
           <xs:enumeration value="h2" />
