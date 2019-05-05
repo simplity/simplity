@@ -30,22 +30,35 @@ import org.simplity.core.value.Value;
  * used across services. Typically this set of data is saved in session
  *
  * We have used an immutable data structure design.
+ *
  * @author simplity.org
  *
  */
 public class AppUser {
 
-/**
- * logged-in user id
- */
+	/**
+	 * logged-in user id
+	 */
 	protected final Value userId;
+
+	protected final String token;
+
+	protected final Value tenantId;
 
 	/**
 	 * @param userId
+	 *            internal id of the logged-in user. (not the login name)
+	 * @param tenantId
+	 *            null if this is not a multi-tenant one
+	 * @param authToken
+	 *            with which the user has authenticated. null if this not
+	 *            relevant
 	 *
 	 */
-	public AppUser(Value userId) {
+	public AppUser(Value userId, Value tenantId, String authToken) {
 		this.userId = userId;
+		this.token = authToken;
+		this.tenantId = tenantId;
 	}
 
 	/**
@@ -53,5 +66,13 @@ public class AppUser {
 	 */
 	public Value getUserId() {
 		return this.userId;
+	}
+
+	/**
+	 * @return the token with which the user authenticated. null if no
+	 *         authentication token was used
+	 */
+	public String getAuthToken() {
+		return this.token;
 	}
 }

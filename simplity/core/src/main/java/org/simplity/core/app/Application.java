@@ -43,7 +43,6 @@ import org.simplity.core.comp.IValidationContext;
 import org.simplity.core.comp.ValidationUtil;
 import org.simplity.core.dm.Record;
 import org.simplity.core.dt.DataType;
-import org.simplity.core.expr.Expression;
 import org.simplity.core.fn.Concat;
 import org.simplity.core.fn.IFunction;
 import org.simplity.core.gateway.Gateways;
@@ -62,14 +61,11 @@ import org.simplity.core.sql.Sql;
 import org.simplity.core.sql.StoredProcedure;
 import org.simplity.core.test.TestRun;
 import org.simplity.core.trans.Service;
-import org.simplity.core.util.IoUtil;
-import org.simplity.core.util.JsonUtil;
 import org.simplity.core.util.TextUtil;
 import org.simplity.core.util.XmlParseException;
 import org.simplity.core.util.XmlUtil;
 import org.simplity.core.value.Value;
 import org.simplity.core.value.ValueType;
-import org.simplity.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -465,7 +461,7 @@ public class Application implements IApp {
 		AppUser user = request.getUser();
 		if (user == null) {
 			logger.info("Service requested with no user. Dummy user is assumed.");
-			user = new AppUser(this.dummyUser);
+			user = new AppUser(this.dummyUser, null, null);
 		}
 		ServiceContext ctx = new ServiceContext(this, serviceName, user, this.dummyUser);
 		appStartedServing(this);
@@ -535,14 +531,8 @@ public class Application implements IApp {
 		 * is it cached?
 		 */
 
-		if (this.simulateWithLocalData) {
-			logger.info(
-					"Application is set-up to simulate servcie action using local data. Service actions will be ignored");
-			this.readLocalData(ctx, service);
-		} else {
-			logger.info("Control handed over to service");
-			service.serve(ctx);
-		}
+		logger.info("Control handed over to service");
+		service.serve(ctx);
 		if (ctx.isInError()) {
 			logger.info("service execution returned with errors");
 			return;
@@ -612,44 +602,6 @@ public class Application implements IApp {
 		if (cacher != null) {
 			logger.info("Invalidating cache for the service " + serviceName);
 			cacher.invalidate(serviceName);
-		}
-	}
-
-	/**
-	 * @param ctx
-	 * @param service
-	 */
-	private void readLocalData(ServiceContext ctx, IService service) {
-		String res = this.resourceRoot + "data/" + service.getServiceName().replace('.', '/')
-				+ ".json";
-		String text = IoUtil.readResource(res);
-		if (text == null) {
-			logger.error("Unable to locate data for service at {}. NO data added to context.", res);
-			return;
-		}
-		try {
-			JSONObject json = new JSONObject(text);
-			JSONObject data = null;
-			for (String key : json.keySet()) {
-				if (key.equals("*")) {
-					data = json.getJSONObject(key);
-				} else {
-					Expression exp = new Expression(key);
-					Value val = exp.evaluate(ctx);
-					if (Value.intepretAsBoolean(val)) {
-						data = json.getJSONObject(key);
-						break;
-					}
-				}
-			}
-			if (data == null) {
-				logger.error("JSON data does not have an entry for \"*\" ");
-			} else {
-				JsonUtil.extractAll(data, ctx);
-				logger.info("Data extracted from file into serviceContext");
-			}
-		} catch (Exception e) {
-			logger.error("Error while parsing data from file into service context. ERROR: {} ", e.getMessage());
 		}
 	}
 
@@ -903,16 +855,22 @@ public class Application implements IApp {
 
 	/**
 	 * @param userId
+	 * @param tenantId
+	 * @param authToken
 	 * @return app user for this user id
 	 */
-	public AppUser createAppUser(String userId) {
+	public AppUser createAppUser(String userId, String tenantId, String authToken) {
 		Value uid = null;
 		if (this.userIdIsNumeric) {
 			uid = Value.parseValue(userId, ValueType.INTEGER);
 		} else {
 			uid = Value.newTextValue(userId);
 		}
-		return new AppUser(uid);
+		Value tid = null;
+		if (tenantId != null) {
+			tid = Value.parseValue(tenantId);
+		}
+		return new AppUser(uid, tid, authToken);
 	}
 
 	/**

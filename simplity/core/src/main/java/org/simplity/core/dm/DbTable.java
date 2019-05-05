@@ -47,6 +47,7 @@ import org.simplity.core.dm.field.DbField;
 import org.simplity.core.dm.field.Field;
 import org.simplity.core.dm.field.ModifiedByUser;
 import org.simplity.core.dm.field.ModifiedTimestamp;
+import org.simplity.core.dt.DataType;
 import org.simplity.core.idb.IDbDriver;
 import org.simplity.core.idb.IMetadataHandle;
 import org.simplity.core.idb.IReadOnlyHandle;
@@ -70,6 +71,37 @@ import org.slf4j.LoggerFactory;
  */
 public class DbTable extends Record {
 
+	/**
+	 *
+	 * @return a DbYable instance that is meant for customFields
+	 */
+	public static DbTable getCustomFieldsTable() {
+		return customTableInstance;
+	}
+
+	private static final DbTable customTableInstance = initCustomTable();
+
+	private static DbTable initCustomTable() {
+
+		Application app = Application.getActiveInstance();
+		DbField[] arr = new DbField[8];
+		DataType text = app.getDataType("_text");
+		DataType numbr = app.getDataType("_number");
+
+		arr[0] = DbField.createDbField("tenantId", numbr);
+		arr[1] = DbField.createDbField("tableName", text);
+		arr[2] = DbField.createDbField("seqNo", numbr);
+		arr[3] = DbField.createDbField("label", text);
+		arr[4] = DbField.createDbField("valueType", app.getDataType("_valueType"));
+		arr[5] = DbField.createDbField("maxLength", numbr);
+		arr[6] = DbField.createDbField("isRequired", app.getDataType("_boolean"));
+		arr[7] = DbField.createDbField("validValues", app.getDataType("_entityList"));
+		DbTable ct = new DbTable();
+		ct.name = "_customField";
+		ct.fields = arr;
+		return ct;
+	}
+
 	private static final Logger logger = LoggerFactory.getLogger(DbTable.class);
 	/** header row of returned sheet when there is only one column */
 	private static String[] SINGLE_HEADER = { "value" };
@@ -84,7 +116,6 @@ public class DbTable extends Record {
 	private static final char KEY_JOINER = 0;
 
 	private static final String KEY_PREFIX = "rec.";
-	private static final String GENERIC_FIELD_NAME = "field";
 	/**
 	 * name of the rdbms table, if this is either a storage table, or a view
 	 * that is to be defined in the rdbms
@@ -176,10 +207,10 @@ public class DbTable extends Record {
 	/*
 	 * design note:
 	 *
-	 * data base will have varchar fields named field0, field1.... all nullable.
-	 * All dbTable based operations treat them as text fields. A tenant-level
-	 * metadata describes these fields (name data-type) input/output is managed
-	 * as if the fields are pre-defined like that
+	 * data base will have varchar fields named tableName_0, tbleName_1.... all
+	 * nullable. All dbTable based operations treat them as text fields. A
+	 * tenant-level metadata describes these fields (name data-type)
+	 * input/output is managed as if the fields are pre-defined like that
 	 */
 	/**
 	 * in multi-tenancy design, we may need different sets of fields for an
@@ -1653,8 +1684,9 @@ public class DbTable extends Record {
 		} catch (Exception e) {
 			throw new ApplicationError(e, "Error while copying DbTable fields to accomodate generic fields");
 		}
+		String fieldPrefix = this.name + '_';
 		for (int i = 0; i < this.nbrGenericFields; i++) {
-			this.fields[idx++] = DbField.getDefaultField(GENERIC_FIELD_NAME + i, ValueType.TEXT);
+			this.fields[idx++] = DbField.getDefaultField(fieldPrefix + i, ValueType.TEXT);
 		}
 	}
 

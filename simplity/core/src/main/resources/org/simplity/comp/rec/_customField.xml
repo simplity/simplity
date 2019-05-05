@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <dbTable
-  
+
   name="_customField"
   description="specification for a custom field in a table for a tenant. "
 >
@@ -30,10 +30,12 @@
       dataType="_number"
       description="maximum character allowed for this field" />
     <dbField
-      name="enumeration"
+      name="isRequired"
+      dataType="_boolean" />
+    <dbField
+      name="validValues"
       dataType="_entityList"
-      description="comma separated list of valid values"
-      />
-  
+      description="comma separated list of valid values" />
+
   </fields>
 </dbTable>

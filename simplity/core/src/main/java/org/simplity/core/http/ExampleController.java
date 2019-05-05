@@ -70,7 +70,7 @@ public class ExampleController extends HttpAgent {
 		 * app user. We add a dummy user
 		 *
 		 */
-		request.setUser(new AppUser(Value.newTextValue("420")));
+		request.setUser(new AppUser(Value.newTextValue("420"), null, null));
 
 		/*
 		 * client context ?

@@ -80,6 +80,22 @@ public class DbField extends Field {
 	}
 
 	/**
+	 * used by utility that generates fields from the database
+	 *
+	 * @param name
+	 * @param dt
+	 * @return a nullable db field
+	 */
+	public static DbField createDbField(String name, DataType dt) {
+		DbField f = new DbField();
+		f.name = name;
+		f.isNullable = true;
+		f.dataTypeObject = dt;
+		f.dataType = dt.getQualifiedName();
+		return f;
+	}
+
+	/**
 	 * @return is this field nullable
 	 */
 	public boolean isNullable() {

@@ -56,7 +56,7 @@ public class TestContext {
 	 */
 	public void start(String userId) {
 		this.app = Application.getActiveInstance();
-		this.appUser = this.app.createAppUser(userId);
+		this.appUser = this.app.createAppUser(userId, null, null);
 	}
 
 	/**

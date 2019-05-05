@@ -45,6 +45,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.simplity.core.app.AppConventions;
 import org.simplity.core.app.AppManager;
+import org.simplity.core.app.AppUser;
 import org.simplity.core.app.Application;
 import org.simplity.core.app.IApp;
 import org.simplity.core.app.IServiceRequest;
@@ -76,7 +77,6 @@ public abstract class HttpAgent extends HttpServlet {
 	private static final String XML_CONTENT = "application/xml";
 	private static final String JSON_CONTENT = "application/json";
 	private static final String AUTH_HEADER = "Authorization";
-	private static final String USER_ID = AppConventions.Name.USER_ID;
 	private static final String[] HDR_NAMES = { "Access-Control-Allow-Methods", "Access-Control-Allow-Headers",
 			"Access-Control-Max-Age", "Access-Control-Allow-Origin", "Connection", "Cache-Control", "Expires" };
 	private static final String[] HDR_TEXTS = { "POST, GET, OPTIONS", "authorization,content-type", "1728000", "*",
@@ -159,6 +159,11 @@ public abstract class HttpAgent extends HttpServlet {
 	 * error each time. This field captures the error, if any
 	 */
 	private String errorMessage;
+
+	/**
+	 * local cached storage in the absence of any plugin
+	 */
+	private Map<String, AppUser> activeUsers = null;
 
 	@Override
 	public void init() throws ServletException {
@@ -289,8 +294,8 @@ public abstract class HttpAgent extends HttpServlet {
 					return;
 				}
 				this.mineFields(req, fields);
-				String authToken = this.getSessionFields(req, fields);
-				if (authToken == null) {
+				AppUser user = this.getLoggedInUser(req);
+				if (user == null) {
 					if (this.allowGuests == false) {
 						if (this.loginServiceName == null || this.loginServiceName.equals(serviceName) == false) {
 							resp.setStatus(STATUS_AUTH_REQUIRED);
@@ -306,9 +311,8 @@ public abstract class HttpAgent extends HttpServlet {
 				 */
 				IServiceRequest request = new ServiceRequest(serviceName, fields, ins, isXml);
 				IServiceResponse response = new ServiceResponse(writer, isXml);
-				Object userId = fields.get(USER_ID);
-				if (userId != null) {
-					request.setUser(app.createAppUser(userId.toString()));
+				if (user != null) {
+					request.setUser(user);
 				}
 				/*
 				 * app specific code to copy anything from client-layer to
@@ -325,19 +329,30 @@ public abstract class HttpAgent extends HttpServlet {
 				}
 
 				ServiceResult result = response.getServiceResult();
-				logger.info("Service {} ended with result={} ", serviceName, result);
+				logger.info("Server-layer reported {} ms as time taken to execute service {} with result = {}",
+						response.getExecutionTime(), serviceName, result);
 
 				if (result != ServiceResult.ALL_OK) {
 					this.respondWithError(resp, writer, "Sorry, your request failed to execute : " + result);
 					return;
 				}
-				logger.info("Server-layer reported {} ms as time taken to execute service {}",
-						response.getExecutionTime(), serviceName);
 				if (this.loginServiceName != null && this.loginServiceName.equals(serviceName)) {
-					authToken = this.createSession(req, response.getSessionFields());
-					this.respondToLogin(resp, writer, authToken);
+					Object obj = response.getSessionFields().get(AppConventions.Name.USER_ID);
+					if (obj == null) {
+						this.respondWithError(resp, writer, "Sorry, your request failed to execute : " + result);
+						return;
+					}
+					String userId = obj.toString();
+					String token = UUID.randomUUID().toString();
+					obj = response.getSessionFields().get(AppConventions.Name.TENANT_ID);
+					String tenant = null;
+					if (obj != null) {
+						tenant = obj.toString();
+					}
+					this.processLogin(app.createAppUser(userId, token, tenant), writer);
+
 				} else if (this.logoutServiceName != null && this.logoutServiceName.equals(serviceName)) {
-					this.destroySession(req, authToken);
+					this.destroySession(req);
 				}
 			} catch (Exception e) {
 				String msg = "Error occured while serving the request";
@@ -389,41 +404,19 @@ public abstract class HttpAgent extends HttpServlet {
 	 * as the key. May be over-ridden by app-specific controller
 	 *
 	 * @param req
-	 * @param fields
 	 * @return
 	 */
-	protected String getSessionFields(HttpServletRequest req, Map<String, Object> fields) {
+	protected AppUser getLoggedInUser(HttpServletRequest req) {
 		String token = req.getHeader(AUTH_HEADER);
 		if (token == null) {
 			logger.info("No auth token recd in header {}", AUTH_HEADER);
 			return null;
 		}
-		ServletContext ctx = req.getServletContext();
-		Object obj = ctx.getAttribute(token);
-		if (obj == null) {
+		AppUser user = this.activeUsers.get(token);
+		if (user == null) {
 			logger.info("Auth token recd in header={} this is not valid", token);
-			return null;
 		}
-		@SuppressWarnings("unchecked")
-		Map<String, Object> sessionData = (Map<String, Object>) obj;
-		Object userId = sessionData.get(USER_ID);
-		if (userId == null) {
-			logger.info("Session data is found for token {} but userId is not found with name {}. Session invalidated.",
-					token, USER_ID);
-			ctx.removeAttribute(token);
-			return null;
-		}
-		fields.put(USER_ID, userId);
-
-		if (this.sessionFields != null) {
-			for (String name : this.sessionFields) {
-				Object value = sessionData.get(name);
-				if (value != null) {
-					fields.put(name, value);
-				}
-			}
-		}
-		return token;
+		return user;
 	}
 
 	/**
@@ -647,35 +640,40 @@ public abstract class HttpAgent extends HttpServlet {
 	}
 
 	/**
-	 * default is to use HttpSession that is created in need basis, and saved
-	 * with a map in the app context. App-specific controller can over-ride this
-	 * to use mem-cache solutions like redis
+	 * default is to use a locl Map. App-specific controller can over-ride this
+	 * to use solutions like mem-cache and redis
 	 *
-	 * @param req
-	 * @param sessionData
-	 * @return
+	 * @return token that can be used to retrieve this user id
 	 */
-	protected String createSession(HttpServletRequest req, Object sessionData) {
-		String token = UUID.randomUUID().toString();
-		req.getServletContext().setAttribute(token, sessionData);
+	protected String createSession(AppUser user) {
+		String token = user.getAuthToken();
+		this.activeUsers.put(token, user);
 		return token;
 	}
 
 	/**
 	 * @param req
 	 */
-	protected void destroySession(HttpServletRequest req, String token) {
-		req.getServletContext().removeAttribute(token);
+	protected void destroySession(HttpServletRequest req) {
+		String token = req.getHeader(AUTH_HEADER);
+		if (token == null) {
+			logger.info("Logout with no token, Ignored");
+			return;
+		}
+		this.activeUsers.remove(token);
 	}
 
 	/**
+	 * take care of any thing to be done on login, including creating a session,
+	 * and communicating to the client about the token to be used for subsequent
+	 * interactions
 	 *
-	 * @param resp
+	 * @param user
 	 * @param writer
-	 * @param token
 	 * @throws IOException
 	 */
-	protected void respondToLogin(HttpServletResponse resp, Writer writer, String token) throws IOException {
+	protected void processLogin(AppUser user, Writer writer) throws IOException {
+		String token = this.createSession(user);
 		writer.write("{\"status\":\"ok\", \"token\":\"");
 		writer.write(token.replace("\"", "\"\""));
 		writer.write("\"}");

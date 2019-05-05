@@ -1281,14 +1281,14 @@
         <xs:annotation>
           <xs:documentation>to be used if this is an auto-service. That is,
             a service whose inputData, outputData and processors are
-            generated automatically based on dbTable.If this is used,
+            generated automatically based on dbTable. If this is used,
             servieOperation MUST be specified
           </xs:documentation>
         </xs:annotation>
       </xs:attribute>
       <xs:attribute
         name="serviceOperation"
-        type="xs:string"
+        type="serviceOperaiton"
       >
         <xs:annotation>
           <xs:documentation>to be used only if dbTableNameToGenerateFrom is
@@ -1306,7 +1306,21 @@
           <xs:documentation>comma separated list of field names that are to
             be added to the session after this service is executed. This is
             useful if the session tracks some important fields that are to
-            be used as default etc..</xs:documentation>
+            be used as default etc..
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+      <xs:attribute
+        name="runAsDemo"
+        type="booleanType"
+        use="optional"
+      >
+        <xs:annotation>
+          <xs:documentation>utility attribute to use a saved json as
+            response rather than actually executing this service. When set
+            to true, service definition is ignored and the content of json
+            file in the corresponding dta folder is used as response
+          </xs:documentation>
         </xs:annotation>
       </xs:attribute>
     </xs:complexType>

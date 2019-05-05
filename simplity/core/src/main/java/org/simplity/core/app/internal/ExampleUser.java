@@ -33,7 +33,7 @@ import org.simplity.core.value.Value;
  * @author simplity.org
  *
  */
-public class ExampleUser extends AppUser{
+public class ExampleUser extends AppUser {
 	/**
 	 * user type that is used to decide privileges
 	 */
@@ -41,19 +41,26 @@ public class ExampleUser extends AppUser{
 
 	/**
 	 * DO NOT USE THIS. This constructor is defined for syntactic reason.
+	 *
 	 * @param userId
+	 * @param tenantId
+	 * @param authToken
 	 */
-	public ExampleUser(Value userId){
-		super(userId);
+	public ExampleUser(Value userId, Value tenantId, String authToken) {
+		super(userId, tenantId, authToken);
 		throw new ApplicationError("ExampleUser should be constructed with all fields");
 	}
+
 	/**
 	 * user with id and type
+	 *
 	 * @param userId
+	 * @param tenantId
+	 * @param authToken
 	 * @param userType
 	 */
-	public ExampleUser(Value userId, Value userType) {
-		super(userId);
+	public ExampleUser(Value userId, Value tenantId, String authToken, Value userType) {
+		super(userId, tenantId, authToken);
 		this.userType = userType;
 	}
 }

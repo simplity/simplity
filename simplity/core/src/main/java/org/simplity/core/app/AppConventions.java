@@ -203,6 +203,17 @@ public class AppConventions {
 		 */
 		public static final String REQUEST_STATUS = "_requestStatus";
 
+		/**
+		 * record (dbTable) name with which customField table is defined. A
+		 * table with the same name is also expected to be created in the db
+		 */
+		public static final String CUSTOM_FIELDS_TABLE = "_customField";
+
+		/**
+		 * in multi-tenant app, the name with which the tenant id is available
+		 * in service context
+		 */
+		public static final String TENANT_ID = "_tenantId";
 	}
 
 	/**
