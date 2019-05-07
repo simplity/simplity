@@ -463,7 +463,7 @@ public class Application implements IApp {
 			logger.info("Service requested with no user. Dummy user is assumed.");
 			user = new AppUser(this.dummyUser, null, null);
 		}
-		ServiceContext ctx = new ServiceContext(this, serviceName, user, this.dummyUser);
+		ServiceContext ctx = new ServiceContext(this, serviceName, user);
 		appStartedServing(this);
 		try {
 			this.callService(ctx, request, response, service);
@@ -490,7 +490,7 @@ public class Application implements IApp {
 		IServicePrePostProcessor hook = this.plugins.getServicePrePostProcessor();
 		if (hook != null) {
 			if (hook.beforeInput(request, response, ctx) == false) {
-				logger.info("App specific hook requested that the service be abandoned before iinputting data.");
+				logger.info("App specific hook requested that the service be abandoned before inputting data.");
 				return;
 			}
 		}
@@ -557,19 +557,16 @@ public class Application implements IApp {
 	 * @param service
 	 * @param response
 	 */
-	@SuppressWarnings("resource")
 	private void writeResponse(ServiceContext ctx, IService service, IServiceResponse response) {
 		if (service.directlyWritesDataToResponse()) {
 			ctx.getWriter().done();
 			logger.info(
 					"Service wrote response directly to the response writerve output response directly to the stream.");
 		} else {
-
 			OutputData outSpec = service.getOutputSpecification();
 			if (outSpec == null) {
 				logger.warn("Service has no output specification and hence no response is emitted.");
 			} else {
-
 				IResponseWriter respWriter = response.getPayloadWriter(service.responseIsAnArray());
 				outSpec.write(respWriter, ctx);
 				respWriter.done();

@@ -75,4 +75,11 @@ public class AppUser {
 	public String getAuthToken() {
 		return this.token;
 	}
+
+	/**
+	 * @return the tenantId
+	 */
+	public Value getTenantId() {
+		return this.tenantId;
+	}
 }

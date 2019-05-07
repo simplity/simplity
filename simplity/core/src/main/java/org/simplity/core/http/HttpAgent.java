@@ -84,7 +84,13 @@ public abstract class HttpAgent extends HttpServlet {
 	// private static final String REQ_ORIGIN = "Origin";
 	private static final int STATUS_ALL_OK = 200;
 	private static final int STATUS_AUTH_REQUIRED = 401;
+	private static final int STATUS_INVALID_SERVICE = 404;
 	private static final int STATUS_METHOD_NOT_ALLOWED = 405;
+	private static final int STATUS_INVALID_DATA = 406;
+	private static final int STATUS_NO_APP = 503;
+	private static final int STATUS_INTERNAL_ERROR = 500;
+	private static final String RETRY = "Retry-After";
+	private static final String RETRY_VALUE = "600";
 
 	/**
 	 * path-to-service mappings
@@ -190,7 +196,14 @@ public abstract class HttpAgent extends HttpServlet {
 	@Override
 	public void destroy() {
 		super.destroy();
-		AppManager.removeApp(AppManager.getApp().getAppId());
+		/*
+		 * this looks stupid right now. To be reviewed based on actual
+		 * deployment scenarios
+		 */
+		IApp app = AppManager.getApp();
+		if (app != null) {
+			AppManager.removeApp(app.getAppId());
+		}
 	}
 
 	/**
@@ -250,16 +263,20 @@ public abstract class HttpAgent extends HttpServlet {
 	 *
 	 */
 	public void serve(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-		if (this.errorMessage != null) {
+		Application app = this.getApp();
+		if (app == null) {
 			/*
 			 * app was not configured properly
 			 */
-			logger.error(this.errorMessage);
+			resp.setStatus(STATUS_NO_APP);
+			resp.setHeader(RETRY, RETRY_VALUE);
 			return;
 		}
+
 		String serviceName = null;
 		long bigin = System.currentTimeMillis();
 		String ct = req.getContentType();
+
 		boolean isXml = ct != null && ct.indexOf("xml") != -1;
 		if (isXml) {
 			resp.setContentType(XML_CONTENT);
@@ -270,15 +287,6 @@ public abstract class HttpAgent extends HttpServlet {
 		try (InputStream ins = req.getInputStream(); Writer writer = new PrintWriter(resp.getOutputStream())) {
 			try {
 				this.setResponseHeaders(resp);
-				IApp iapp = AppManager.getApp();
-				if (iapp == null || iapp instanceof Application == false) {
-					String msg = "No service app is running. All requests are responded back as internal error";
-					logger.error(msg);
-					this.respondWithError(resp, writer, msg);
-					return;
-				}
-
-				Application app = (Application) iapp;
 				/*
 				 * data from non-payload sources, like header and cookies is in
 				 * this map
@@ -289,31 +297,27 @@ public abstract class HttpAgent extends HttpServlet {
 				 */
 				serviceName = this.getServiceName(req, fields);
 				if (serviceName == null) {
+					resp.setStatus(STATUS_INVALID_SERVICE);
 					logger.warn("No service name is inferred from request.");
-					this.respondWithError(resp, writer, "Sorry, that request is beyond us!!");
 					return;
 				}
+
 				this.mineFields(req, fields);
 				AppUser user = this.getLoggedInUser(req);
 				if (user == null) {
 					if (this.allowGuests == false) {
 						if (this.loginServiceName == null || this.loginServiceName.equals(serviceName) == false) {
 							resp.setStatus(STATUS_AUTH_REQUIRED);
-							this.respondWithError(resp, writer,
-									"We do not serve guests. Please come back with authenticated token");
 							return;
 						}
 					}
 				}
-				/*
-				 * no washing dirty linen in public. try-catch to ensure that we
-				 * ALWAYS return in a controlled manner
-				 */
+
 				IServiceRequest request = new ServiceRequest(serviceName, fields, ins, isXml);
-				IServiceResponse response = new ServiceResponse(writer, isXml);
 				if (user != null) {
 					request.setUser(user);
 				}
+				IServiceResponse response = new ServiceResponse(writer, isXml);
 				/*
 				 * app specific code to copy anything from client-layer to
 				 * request as well as set anything to response
@@ -333,13 +337,13 @@ public abstract class HttpAgent extends HttpServlet {
 						response.getExecutionTime(), serviceName, result);
 
 				if (result != ServiceResult.ALL_OK) {
-					this.respondWithError(resp, writer, "Sorry, your request failed to execute : " + result);
+					resp.setStatus(result.getHttpStatus());
 					return;
 				}
 				if (this.loginServiceName != null && this.loginServiceName.equals(serviceName)) {
 					Object obj = response.getSessionFields().get(AppConventions.Name.USER_ID);
 					if (obj == null) {
-						this.respondWithError(resp, writer, "Sorry, your request failed to execute : " + result);
+						resp.setStatus(STATUS_INVALID_DATA);
 						return;
 					}
 					String userId = obj.toString();
@@ -355,15 +359,28 @@ public abstract class HttpAgent extends HttpServlet {
 					this.destroySession(req);
 				}
 			} catch (Exception e) {
-				String msg = "Error occured while serving the request";
-				logger.error(msg, e);
-				this.respondWithError(resp, writer, msg);
-
+				logger.error("Error occured while serving the request", e);
+				resp.setStatus(STATUS_INTERNAL_ERROR);
+				return;
 			} finally {
 				logger.info("Http server took {} ms to deliver service {}", System.currentTimeMillis() - bigin,
 						serviceName);
 			}
 		}
+	}
+
+	private Application getApp() {
+		if (this.errorMessage != null) {
+			logger.error(this.errorMessage);
+			return null;
+		}
+		IApp app = AppManager.getApp();
+		if (app == null || app instanceof Application == false) {
+			String msg = "No service app is running. All requests are responded back as internal error";
+			logger.error(msg);
+			return null;
+		}
+		return (Application) app;
 	}
 
 	/**
@@ -377,26 +394,6 @@ public abstract class HttpAgent extends HttpServlet {
 		for (int i = 0; i < HDR_NAMES.length; i++) {
 			resp.setHeader(HDR_NAMES[i], HDR_TEXTS[i]);
 		}
-		resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-		resp.setDateHeader("Expires", 0);
-	}
-
-	/**
-	 * app-specific implementations can use templates to respond back
-	 *
-	 * @param resp
-	 * @param message
-	 *            error message
-	 * @param writer
-	 *            response writer used for this request
-	 * @throws IOException
-	 */
-	protected void respondWithError(HttpServletResponse resp, Writer writer, String message) throws IOException {
-		resp.setStatus(500);
-		writer.write("{\"status\":\"error\",\"message\":\"");
-		writer.write(message);
-		writer.write("\"}");
-
 	}
 
 	/**

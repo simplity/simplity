@@ -33,6 +33,11 @@ import org.simplity.json.JSONObject;
  *
  */
 public class Test {
+	/**
+	 *
+	 * @param args
+	 * @throws InvalidRuleException
+	 */
 	public static void main(String[] args) throws InvalidRuleException {
 		AbstractCalculator calc = new Itr1();
 		Map<String, Long> inputs = new HashMap<String, Long>();
@@ -43,10 +48,13 @@ public class Test {
 		System.out.println(result);
 	}
 
+	/**
+	 *
+	 */
 	public static void foo() {
 		String fileName = "C:/repos/sity/simplity/core/src/main/resources/org/simplity/comp/rule/itr1Test.json";
 		String text = IoUtil.readResource(fileName);
 		JSONObject json = new JSONObject(text);
-
+		System.out.println(json.toString());
 	}
 }

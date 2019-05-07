@@ -164,8 +164,6 @@ public class ProcedureParameter {
 	 *         be continues
 	 * @throws SQLException
 	 */
-	@SuppressWarnings("resource")
-	// warning on con : we are not to close it by design
 	public boolean setParameter(CallableStatement stmt, IReadOnlyHandle handle, IFieldsCollection inputFields,
 			ServiceContext ctx)
 			throws SQLException {

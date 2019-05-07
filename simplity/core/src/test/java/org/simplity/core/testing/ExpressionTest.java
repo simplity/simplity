@@ -43,6 +43,9 @@ import org.simplity.core.value.Value;
  */
 public class ExpressionTest {
 
+	/**
+	 *
+	 */
 	@Rule
 	public final ExpectedException exception = ExpectedException.none();
 
@@ -144,6 +147,11 @@ public class ExpressionTest {
 			3, -1, -2, 111111111, 6, 8, -10, 3, 3, 0, 2, 0, 17, 12, -580, 12
 	};
 
+	/**
+	 *
+	 * @throws InvalidExpressionException
+	 */
+	@SuppressWarnings("unused")
 	@Test
 	public final void testInvalids() throws InvalidExpressionException {
 		for (String text : ExpressionTest.badExamples) {
@@ -152,13 +160,23 @@ public class ExpressionTest {
 		}
 	}
 
+	/**
+	 *
+	 * @throws InvalidExpressionException
+	 */
 	@Test
+	@SuppressWarnings("unused")
 	public final void testValids() throws InvalidExpressionException {
 		for (String text : ExpressionTest.goodExamples) {
 			new Expression(text);
 		}
 	}
 
+	/**
+	 *
+	 * @throws InvalidExpressionException
+	 * @throws InvalidOperationException
+	 */
 	@Test
 	public final void testRuntimeErrors()
 			throws InvalidExpressionException, InvalidOperationException {
@@ -171,6 +189,12 @@ public class ExpressionTest {
 		}
 	}
 
+	/**
+	 *
+	 * @throws InvalidExpressionException
+	 * @throws InvalidOperationException
+	 * @throws InvalidValueException
+	 */
 	@Test
 	public final void testResults()
 			throws InvalidExpressionException, InvalidOperationException, InvalidValueException {

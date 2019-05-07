@@ -156,16 +156,13 @@ public class ServiceContext extends CommonData {
 	 *            non-null for which this context is created
 	 * @param appUser
 	 *            non-null user who requested this service
-	 * @param tenantId
-	 *            can be null. relevant if this app is designed as a
-	 *            multi-tenant app
 	 */
-	public ServiceContext(Application app, String serviceName, AppUser appUser, Value tenantId) {
+	public ServiceContext(Application app, String serviceName, AppUser appUser) {
 		this.app = app;
 		this.userId = appUser.getUserId();
 		this.serviceName = serviceName;
 		this.appUser = appUser;
-		this.tenantId = tenantId;
+		this.tenantId = appUser.getTenantId();
 	}
 
 	/**

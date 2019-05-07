@@ -30,34 +30,48 @@ public enum ServiceResult {
 	/**
 	 * bingo
 	 */
-	ALL_OK,
+	ALL_OK(200),
 	/**
 	 * security related issues
 	 */
-	INSUFFICIENT_PRIVILEGE,
+	INSUFFICIENT_PRIVILEGE(404),
 	/**
 	 * input data has errors. input data has violated input specification
 	 * constraints
 	 */
-	INVALID_DATA,
+	INVALID_DATA(406),
 	/**
 	 * requested operation is not valid
 	 */
-	INVALID_OPERATION,
+	INVALID_OPERATION(405),
 	/**
 	 * service is not available at this time
 	 */
-	SCHEDULED_OUTAGE,
+	SCHEDULED_OUTAGE(503),
 	/**
 	 * server is taking too long, and we have decided not to wait
 	 */
-	TIME_OUT,
+	TIME_OUT(408),
 	/**
 	 * programming/set-up errors or infrastructure failure
 	 */
-	INTERNAL_ERROR,
+	INTERNAL_ERROR(500),
 	/**
 	 * we do not serve this item
 	 */
-	NO_SUCH_SERVICE
+	NO_SUCH_SERVICE(405);
+
+	private final int httpStatus;
+
+	private ServiceResult(int httpStatus) {
+		this.httpStatus = httpStatus;
+	}
+
+	/**
+	 *
+	 * @return eqvt http status
+	 */
+	public int getHttpStatus() {
+		return this.httpStatus;
+	}
 }
