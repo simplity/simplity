@@ -388,18 +388,6 @@
       type="xs:NCName"
       use="optional" />
     <xs:attribute
-      name="isEncrypted"
-      type="booleanType"
-      use="optional"
-    >
-      <xs:annotation>
-        <xs:documentation>Is this field to be encrypted before pushing to
-          data base? Once this is set, all record-based actions (like read,
-          filter save)will automatically take care of encrypt/decrypt
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-    <xs:attribute
       name="dataType"
       use="optional"
       type="declaredDataTypes" />
@@ -3759,6 +3747,23 @@
               </xs:documentation>
             </xs:annotation>
           </xs:attribute>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element
+    name="inaction"
+    substitutionGroup="abstractAction"
+  >
+    <xs:annotation>
+      <xs:documentation>Action that actually does not do anything. Meant to
+        provide a label as a target for control actions, like onErrorGoTo
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:complexContent>
+        <xs:extension base="abstractAction">
         </xs:extension>
       </xs:complexContent>
     </xs:complexType>

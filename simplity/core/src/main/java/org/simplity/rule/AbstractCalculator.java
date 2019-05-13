@@ -29,6 +29,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ * Class that calculates set of output fields based on the input fields and the
+ * rules to calculate the output fields
+ *
  * @author simplity.org
  *
  */

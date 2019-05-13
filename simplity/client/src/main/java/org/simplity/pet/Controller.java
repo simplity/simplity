@@ -22,6 +22,8 @@
 
 package org.simplity.pet;
 
+import java.io.IOException;
+import java.io.Writer;
 import java.util.Map;
 
 import javax.servlet.ServletContext;
@@ -31,6 +33,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.simplity.core.app.AppUser;
 import org.simplity.core.app.IServiceRequest;
 import org.simplity.core.app.IServiceResponse;
+import org.simplity.core.app.ServiceResult;
 import org.simplity.core.http.HttpAgent;
 import org.simplity.core.value.Value;
 
@@ -83,4 +86,14 @@ public class Controller extends HttpAgent {
 		return allOk;
 	}
 
+	@Override
+	protected void respondWithError(HttpServletResponse resp, ServiceResult status, String errorMessaage, Writer writer)
+			throws IOException {
+		resp.setStatus(status.getHttpStatus());
+		writer.write("{\"errorCode\":");
+		writer.write("" + status);
+		writer.write(", \"errorMessage\":\"");
+		writer.write(errorMessaage.replace('"', '\''));
+		writer.write("\"}");
+	}
 }

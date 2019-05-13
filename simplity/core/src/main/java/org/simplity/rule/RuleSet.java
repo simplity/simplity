@@ -79,7 +79,7 @@ public class RuleSet {
 	Map<String, Long> constants = new HashMap<>();
 
 	/**
-	 * fields that require rules to calculate them
+	 * fields mapped to the rule to be used to calculate their values
 	 */
 	Map<String, IRule> rules = new HashMap<>();
 
@@ -101,7 +101,8 @@ public class RuleSet {
 	/**
 	 * this rule set is designed to calculate and return values for these
 	 * parameters as output. an output parameter should either be a constant or
-	 * a global field
+	 * should be associated with a rule. That is, each output parameter is found
+	 * either in constants collection, or rules collection.
 	 */
 	String[] outputParameters;
 

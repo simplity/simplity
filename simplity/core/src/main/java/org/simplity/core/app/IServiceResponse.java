@@ -94,8 +94,8 @@ public interface IServiceResponse {
 	 * value of a field is null, then it means that the field is to be removed
 	 * from the session context
 	 *
-	 * @return fields to be used as session context fields. null or empty, if
-	 *         session context is not affected by this service
+	 * @return non-null. fields to be used as session context fields. null or
+	 *         empty, if session context is not affected by this service
 	 */
 	public Map<String, Object> getSessionFields();
 

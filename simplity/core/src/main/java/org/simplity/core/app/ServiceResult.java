@@ -34,7 +34,11 @@ public enum ServiceResult {
 	/**
 	 * security related issues
 	 */
-	INSUFFICIENT_PRIVILEGE(404),
+	INSUFFICIENT_PRIVILEGE(405),
+	/**
+	 * security related issues
+	 */
+	AUTH_REQUIRED(401),
 	/**
 	 * input data has errors. input data has violated input specification
 	 * constraints

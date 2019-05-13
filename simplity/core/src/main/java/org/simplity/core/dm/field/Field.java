@@ -189,11 +189,6 @@ public class Field {
 	 */
 	String commonCodeType;
 	/**
-	 * is this field encrypted
-	 */
-	boolean isEncrypted;
-
-	/**
 	 * * message or help text that is to be flashed to user on the client as a
 	 * help text and/or error text when the field value is in error. This
 	 * defaults to recordName.fieldName so that a project can have some utility
@@ -268,15 +263,6 @@ public class Field {
 	 */
 	public void write(IResponseWriter writer, Value value) {
 		writer.setField(this.externalName, this.dataTypeObject.formatValue(value));
-	}
-
-	/**
-	 * is this field encrypted externally (in the db, or by the client)
-	 *
-	 * @return true if this field is encrypted
-	 */
-	public boolean isEncrypted() {
-		return this.isEncrypted;
 	}
 
 	/**

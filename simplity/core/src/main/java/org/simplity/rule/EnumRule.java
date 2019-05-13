@@ -29,7 +29,9 @@ import java.util.Set;
 import org.simplity.core.expr.Expression;
 
 /**
- * value is enumerated based on another field value
+ * rule that specifies how to calculate based depending on the value of an
+ * enumerated field. Like a multiple if-then-else blocks based on possible
+ * enumerated values
  *
  * @author simplity.org
  */

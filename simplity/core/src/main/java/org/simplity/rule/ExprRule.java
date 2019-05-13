@@ -29,7 +29,7 @@ import java.util.Set;
 import org.simplity.core.expr.Expression;
 
 /**
- * value is just an expression
+ * simplest way to calculate a value : just evaluate an expression
  *
  * @author simplity.org
  */

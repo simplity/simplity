@@ -23,6 +23,9 @@
 package org.simplity.rule;
 
 /**
+ * represents a design error in setting up the rules. This is not because of
+ * data, but because of an error in designing the rule set
+ *
  * @author simplity.org
  *
  */

@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ * defines a rule in a rule-set
+ * 
  * @author simplity.org
  *
  */

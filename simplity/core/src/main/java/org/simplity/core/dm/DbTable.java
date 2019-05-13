@@ -350,9 +350,6 @@ public class DbTable extends Record {
 			values[i] = vals;
 		}
 		handle.readBatch(this.readSql, values, outSheet);
-		if (this.encryptedFields != null) {
-			this.crypt(outSheet, true);
-		}
 		return outSheet;
 	}
 
@@ -424,10 +421,7 @@ public class DbTable extends Record {
 			}
 		}
 		outData = this.createSheet(true, false);
-		int nbr = handle.read(this.readSql, values, outData);
-		if (this.encryptedFields != null && nbr > 0) {
-			this.crypt(outData, true);
-		}
+		handle.read(this.readSql, values, outData);
 		if (this.okToCache) {
 			this.cacheRow(inData, outData);
 		}
@@ -496,9 +490,6 @@ public class DbTable extends Record {
 		SqlAndValues temp = this.getSqlAndValues(handle, inData, inputRecord);
 		IDataSheet result = this.createSheet(false, false);
 		handle.read(temp.sql, temp.values, result);
-		if (this.encryptedFields != null) {
-			this.crypt(result, true);
-		}
 		return result;
 	}
 
@@ -682,9 +673,6 @@ public class DbTable extends Record {
 						throw new ApplicationError("Column " + field.getColumnName() + " in table " + this.tableName
 								+ " is designed to be non-null, but a row is being inserted with a null value in it.");
 					}
-				}
-				if (field.isEncrypted()) {
-					value = this.crypt(value, false);
 				}
 				values[valueIdx] = value;
 			}
@@ -1170,9 +1158,6 @@ public class DbTable extends Record {
 			sbf.append(')');
 		}
 		handle.read(sbf.toString(), values, result);
-		if (this.encryptedFields != null) {
-			this.crypt(result, true);
-		}
 	}
 
 	/**
@@ -1194,9 +1179,6 @@ public class DbTable extends Record {
 			allValues[idx++] = this.getParentValues(prentRow);
 		}
 		handle.readBatch(sql, allValues, outSheet);
-		if (this.encryptedFields != null) {
-			this.crypt(outSheet, true);
-		}
 	}
 
 	/**
@@ -1229,9 +1211,6 @@ public class DbTable extends Record {
 		Value[] values = this.getParentValues(parentData);
 		String sql = this.filterSql + this.getParentWhereClause();
 		handle.read(sql, values, result);
-		if (this.encryptedFields != null) {
-			this.crypt(result, true);
-		}
 		return result;
 	}
 
@@ -1436,9 +1415,6 @@ public class DbTable extends Record {
 					throw new ApplicationError("Column " + field.getColumnName() + " in table " + this.tableName
 							+ " is designed to be non-null, but a row is being updated with a null value in it.");
 				}
-			}
-			if (field.isEncrypted()) {
-				value = this.crypt(value, false);
 			}
 			values[i] = value;
 			i++;

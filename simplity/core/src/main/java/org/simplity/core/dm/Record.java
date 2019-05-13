@@ -46,7 +46,6 @@ import org.simplity.core.data.SingleRowSheet;
 import org.simplity.core.dm.field.Field;
 import org.simplity.core.service.InputRecord;
 import org.simplity.core.service.ServiceContext;
-import org.simplity.core.util.TextUtil;
 import org.simplity.core.value.Value;
 import org.simplity.core.value.ValueType;
 import org.slf4j.Logger;
@@ -107,8 +106,6 @@ public class Record implements IComponent {
 
 	/** and field names of course. cached after loading */
 	protected String[] fieldNames;
-
-	protected Field[] encryptedFields;
 
 	protected RecordUsageType recordUsageType;
 
@@ -441,7 +438,6 @@ public class Record implements IComponent {
 		}
 
 		this.fieldNames = new String[this.fields.length];
-		int nbrEncrypted = 0;
 
 		for (int i = 0; i < this.fields.length; i++) {
 			Field field = this.fields[i];
@@ -455,14 +451,8 @@ public class Record implements IComponent {
 			if (!this.hasInterFieldValidations && field.hasInterFieldValidations()) {
 				this.hasInterFieldValidations = true;
 			}
-			if (field.isEncrypted()) {
-				nbrEncrypted++;
-			}
 		}
 
-		if (nbrEncrypted > 0) {
-			this.cacheEncryptedFields(nbrEncrypted);
-		}
 		this.getReadyExtension(refRecord);
 		/*
 		 * we have successfully loaded. remove this record from stack.
@@ -484,17 +474,6 @@ public class Record implements IComponent {
 	 */
 	public boolean isKeyGenerated() {
 		return false;
-	}
-
-	private void cacheEncryptedFields(int nbrEncrypted) {
-		this.encryptedFields = new Field[nbrEncrypted];
-		int encrIdx = 0;
-		for (Field field : this.fields) {
-			if (field.isEncrypted()) {
-				this.encryptedFields[encrIdx] = field;
-				encrIdx++;
-			}
-		}
 	}
 
 	/**
@@ -653,59 +632,6 @@ public class Record implements IComponent {
 			result[i] = ctx.getValue(field.getName());
 		}
 		return result;
-	}
-
-	/**
-	 * encrypt/decrypt columns in this data sheet
-	 *
-	 * @param sheet
-	 * @param toDecrypt
-	 *            true means decrypt, else encrypt
-	 */
-	protected void crypt(IDataSheet sheet, boolean toDecrypt) {
-		int nbrRows = sheet.length();
-		if (nbrRows == 0) {
-
-			logger.info("Data sheet has no data and hance no encryption.");
-
-			return;
-		}
-		for (Field field : this.encryptedFields) {
-			int colIdx = sheet.getColIdx(field.getName());
-			if (colIdx == -1) {
-
-				logger.info("Data sheet has no column named " + field.getName() + " hance no encryption.");
-
-				continue;
-			}
-			for (int rowIdx = 0; rowIdx < nbrRows; rowIdx++) {
-				Value[] row = sheet.getRow(rowIdx);
-				row[colIdx] = this.crypt(row[colIdx], toDecrypt);
-			}
-		}
-		logger.info(nbrRows + " rows and " + this.encryptedFields.length + " columns " + (toDecrypt ? "un-" : "")
-				+ "obsfuscated");
-	}
-
-	/**
-	 * encrypt/decrypt a value
-	 *
-	 * @param value
-	 * @param toDecrypt
-	 *            true means decrypt, else encrypt
-	 * @return
-	 */
-	protected Value crypt(Value value, boolean toDecrypt) {
-		if (Value.isNull(value)) {
-			return value;
-		}
-		String txt = value.toString();
-		if (toDecrypt) {
-			txt = TextUtil.decrypt(txt);
-		} else {
-			txt = TextUtil.encrypt(txt);
-		}
-		return Value.newTextValue(txt);
 	}
 
 	/**

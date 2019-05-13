@@ -82,15 +82,15 @@ public abstract class HttpAgent extends HttpServlet {
 	private static final String[] HDR_TEXTS = { "POST, GET, OPTIONS", "authorization,content-type", "1728000", "*",
 			"Keep-Alive", "no-cache, no-store, must-revalidate", "0" };
 	// private static final String REQ_ORIGIN = "Origin";
-	private static final int STATUS_ALL_OK = 200;
-	private static final int STATUS_AUTH_REQUIRED = 401;
-	private static final int STATUS_INVALID_SERVICE = 404;
-	private static final int STATUS_METHOD_NOT_ALLOWED = 405;
-	private static final int STATUS_INVALID_DATA = 406;
-	private static final int STATUS_NO_APP = 503;
-	private static final int STATUS_INTERNAL_ERROR = 500;
-	private static final String RETRY = "Retry-After";
-	private static final String RETRY_VALUE = "600";
+	protected static final int STATUS_ALL_OK = 200;
+	protected static final int STATUS_AUTH_REQUIRED = 401;
+	protected static final int STATUS_INVALID_SERVICE = 404;
+	protected static final int STATUS_METHOD_NOT_ALLOWED = 405;
+	protected static final int STATUS_INVALID_DATA = 406;
+	protected static final int STATUS_NO_APP = 503;
+	protected static final int STATUS_INTERNAL_ERROR = 500;
+	protected static final String RETRY = "Retry-After";
+	protected static final String RETRY_VALUE = "600";
 
 	/**
 	 * path-to-service mappings
@@ -169,7 +169,7 @@ public abstract class HttpAgent extends HttpServlet {
 	/**
 	 * local cached storage in the absence of any plugin
 	 */
-	private Map<String, AppUser> activeUsers = null;
+	private Map<String, AppUser> activeUsers = new HashMap<>();
 
 	@Override
 	public void init() throws ServletException {
@@ -297,8 +297,10 @@ public abstract class HttpAgent extends HttpServlet {
 				 */
 				serviceName = this.getServiceName(req, fields);
 				if (serviceName == null) {
+					String msg = "No service name is inferred from request.";
 					resp.setStatus(STATUS_INVALID_SERVICE);
-					logger.warn("No service name is inferred from request.");
+					logger.warn(msg);
+					this.respondWithError(resp, ServiceResult.NO_SUCH_SERVICE, msg, writer);
 					return;
 				}
 
@@ -307,7 +309,7 @@ public abstract class HttpAgent extends HttpServlet {
 				if (user == null) {
 					if (this.allowGuests == false) {
 						if (this.loginServiceName == null || this.loginServiceName.equals(serviceName) == false) {
-							resp.setStatus(STATUS_AUTH_REQUIRED);
+							this.respondWithError(resp, ServiceResult.AUTH_REQUIRED, "Authentication required", writer);
 							return;
 						}
 					}
@@ -336,31 +338,32 @@ public abstract class HttpAgent extends HttpServlet {
 				logger.info("Server-layer reported {} ms as time taken to execute service {} with result = {}",
 						response.getExecutionTime(), serviceName, result);
 
-				if (result != ServiceResult.ALL_OK) {
-					resp.setStatus(result.getHttpStatus());
-					return;
-				}
 				if (this.loginServiceName != null && this.loginServiceName.equals(serviceName)) {
-					Object obj = response.getSessionFields().get(AppConventions.Name.USER_ID);
-					if (obj == null) {
-						resp.setStatus(STATUS_INVALID_DATA);
+					Map<String, Object> seshan = response.getSessionFields();
+					Object userId = null;
+					Object tenantId = null;
+					if (seshan != null) {
+						userId = seshan.get(AppConventions.Name.USER_ID);
+						tenantId = seshan.get(AppConventions.Name.TENANT_ID);
+					}
+					if (userId == null) {
+						this.respondWithError(resp, ServiceResult.AUTH_REQUIRED, "Invalid login credentials", writer);
 						return;
 					}
-					String userId = obj.toString();
 					String token = UUID.randomUUID().toString();
-					obj = response.getSessionFields().get(AppConventions.Name.TENANT_ID);
-					String tenant = null;
-					if (obj != null) {
-						tenant = obj.toString();
-					}
-					this.processLogin(app.createAppUser(userId, token, tenant), writer);
+					String tenant = tenantId == null ? null : tenantId.toString();
+					this.processLogin(app.createAppUser(userId.toString(), tenant, token), writer);
 
 				} else if (this.logoutServiceName != null && this.logoutServiceName.equals(serviceName)) {
 					this.destroySession(req);
+				} else if (result != ServiceResult.ALL_OK) {
+					this.respondWithError(resp, result, "Invalid data", writer);
+					return;
 				}
 			} catch (Exception e) {
-				logger.error("Error occured while serving the request", e);
-				resp.setStatus(STATUS_INTERNAL_ERROR);
+				String msg = "Error occured while serving the request";
+				logger.error(msg, e);
+				this.respondWithError(resp, ServiceResult.INTERNAL_ERROR, msg, writer);
 				return;
 			} finally {
 				logger.info("Http server took {} ms to deliver service {}", System.currentTimeMillis() - bigin,
@@ -715,4 +718,7 @@ public abstract class HttpAgent extends HttpServlet {
 	 * @param ctx
 	 */
 	protected abstract void appSpecificInit(ServletContext ctx);
+
+	protected abstract void respondWithError(HttpServletResponse resp, ServiceResult status, String errorMessaage,
+			Writer writer) throws IOException;
 }
