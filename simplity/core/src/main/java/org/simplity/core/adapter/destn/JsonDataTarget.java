@@ -21,7 +21,7 @@
  */
 package org.simplity.core.adapter.destn;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 import org.simplity.core.adapter.IDataListTarget;
 import org.simplity.core.adapter.IDataTarget;
@@ -106,7 +106,7 @@ public class JsonDataTarget {
 		}
 
 		@Override
-		public void setDateValue(String fieldName, Date fieldValue) {
+		public void setDateValue(String fieldName, LocalDate fieldValue) {
 			JsonUtil.setChildValue(this.target, fieldName, fieldValue);
 		}
 	}

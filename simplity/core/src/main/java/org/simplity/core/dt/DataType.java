@@ -22,9 +22,9 @@
  */
 package org.simplity.core.dt;
 
+import java.util.HashSet;
 import java.util.Set;
 
-import org.simplity.core.ApplicationError;
 import org.simplity.core.comp.ComponentType;
 import org.simplity.core.comp.FieldMetaData;
 import org.simplity.core.comp.IComponent;
@@ -89,8 +89,15 @@ public abstract class DataType implements IComponent {
 	@Override
 	public void getReady() {
 		if (this.valueList != null) {
-			this.validValues = Value.parseValueList(this.valueList, this.getValueType());
+			this.validValues = new HashSet<>();
+			for (String txt : this.valueList.split(",")) {
+				Value value = this.getValueType().parse(txt.split(":")[0]);
+				if (!Value.isNull(value)) {
+					this.validValues.add(value);
+				}
+			}
 		}
+
 		if (this.description == null) {
 			this.description = this.synthesiseDscription();
 		}
@@ -140,7 +147,7 @@ public abstract class DataType implements IComponent {
 		/*
 		 * parse and validate
 		 */
-		Value value = Value.parseValue(text, this.getValueType());
+		Value value = this.getValueType().parse(text);
 		if (value == null) {
 			return null;
 		}
@@ -218,10 +225,15 @@ public abstract class DataType implements IComponent {
 	public void validate(IValidationContext vtx) {
 		ValidationUtil.validateMeta(vtx, this);
 		if (this.valueList != null) {
-			try {
-				Value.parseValueList(this.valueList, this.getValueType());
-			} catch (ApplicationError e) {
-				vtx.message(new ValidationMessage(this, ValidationMessage.SEVERITY_ERROR, e.getMessage(), "valueList"));
+			for (String txt : this.valueList.split(",")) {
+				Value value = this.getValueType().parse(txt.split(":")[0]);
+				if (Value.isNull(value)) {
+					vtx.message(
+							new ValidationMessage(this, ValidationMessage.SEVERITY_ERROR,
+									this.valueList + " is an invalid list for value type " + this.getValueType(),
+									"valueList"));
+					break;
+				}
 			}
 		}
 		this.validateSpecific(vtx);
@@ -260,10 +272,6 @@ public abstract class DataType implements IComponent {
 		if (Value.isNull(value)) {
 			return "";
 		}
-		return this.formatVal(value);
-	}
-
-	protected String formatVal(Value value) {
 		return value.toString();
 	}
 }

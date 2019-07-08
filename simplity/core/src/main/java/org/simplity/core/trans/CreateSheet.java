@@ -118,7 +118,7 @@ public class CreateSheet extends AbstractNonDbAction {
 			 */
 			String fldName = TextUtil.getFieldName(cell);
 			if (fldName == null) {
-				value = Value.parseValue(cell);
+				value = Value.parse(cell);
 				if (value == null) {
 					throw new ApplicationError(
 							"data for createSheet action has an invalid cell value of " + cell);
@@ -172,7 +172,7 @@ public class CreateSheet extends AbstractNonDbAction {
 				 */
 				String fldName = TextUtil.getFieldName(cell);
 				if (fldName == null) {
-					Value val = Value.parseValue(cell);
+					Value val = Value.parse(cell);
 					if (val == null) {
 						vtx.message(new ValidationMessage(this, ValidationMessage.SEVERITY_ERROR,
 								"Cell at row "

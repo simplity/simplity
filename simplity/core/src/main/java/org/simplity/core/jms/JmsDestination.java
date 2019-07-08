@@ -584,7 +584,7 @@ public class JmsDestination {
 		for (String nam : names) {
 			Object val = message.getObject(nam);
 			if (val != null) {
-				ctx.setValue(nam, Value.parseObject(val));
+				ctx.setValue(nam, Value.parse(val));
 			}
 		}
 	}
@@ -602,7 +602,7 @@ public class JmsDestination {
 				String nam = names.nextElement();
 				Object val = message.getObject(nam);
 				if (val != null) {
-					ctx.setValue(nam, Value.parseObject(val));
+					ctx.setValue(nam, Value.parse(val));
 				}
 			} catch (NoSuchElementException e) {
 				/*
@@ -627,7 +627,7 @@ public class JmsDestination {
 				String nam = names.nextElement();
 				Object val = message.getObjectProperty(nam);
 				if (val != null) {
-					ctx.setValue(nam, Value.parseObject(val));
+					ctx.setValue(nam, Value.parse(val));
 				}
 			} catch (NoSuchElementException e) {
 				/*
@@ -649,7 +649,7 @@ public class JmsDestination {
 		for (String nam : names) {
 			Object val = message.getObjectProperty(nam);
 			if (val != null) {
-				ctx.setValue(nam, Value.parseObject(val));
+				ctx.setValue(nam, Value.parse(val));
 			}
 		}
 	}

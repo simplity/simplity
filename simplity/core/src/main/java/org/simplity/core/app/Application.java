@@ -859,13 +859,13 @@ public class Application implements IApp {
 	public AppUser createAppUser(String userId, String tenantId, String authToken) {
 		Value uid = null;
 		if (this.userIdIsNumeric) {
-			uid = Value.parseValue(userId, ValueType.INTEGER);
+			uid = ValueType.INTEGER.parse(userId);
 		} else {
 			uid = Value.newTextValue(userId);
 		}
 		Value tid = null;
 		if (tenantId != null) {
-			tid = Value.parseValue(tenantId);
+			tid = Value.parse(tenantId);
 		}
 		return new AppUser(uid, tid, authToken);
 	}

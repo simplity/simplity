@@ -26,11 +26,8 @@ import org.simplity.core.comp.IValidationContext;
 import org.simplity.core.comp.ValidationMessage;
 import org.simplity.core.value.DecimalValue;
 import org.simplity.core.value.IntegerValue;
-import org.simplity.core.value.InvalidValueException;
 import org.simplity.core.value.Value;
 import org.simplity.core.value.ValueType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * numeric with or without decimals
@@ -69,8 +66,6 @@ public class NumericDataType extends DataType {
 	public static NumericDataType getDefaultDecimalInstance() {
 		return defaultDecimalInstance;
 	}
-
-	private static final Logger logger = LoggerFactory.getLogger(NumericDataType.class);
 
 	/** min digits before decimal places required for this value */
 	long minValue = Long.MIN_VALUE;
@@ -194,19 +189,5 @@ public class NumericDataType extends DataType {
 		}
 		sbf.append("between ").append(this.minValue).append(" and ").append(this.maxValue);
 		return sbf.toString();
-	}
-
-	@Override
-	public String formatVal(Value value) {
-		try {
-			if (this.nbrFractionDigits == 0) {
-				return "" + value.toInteger();
-			}
-			return String.format("%." + this.nbrFractionDigits + "f", new Double(value.toDecimal()));
-		} catch (InvalidValueException e) {
-
-			logger.info("Numeric data type is asked to format " + value.getValueType());
-		}
-		return Value.FALSE_TEXT_VALUE;
 	}
 }

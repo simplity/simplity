@@ -68,7 +68,7 @@ public class JSONFields implements IFieldsCollection {
 		if (obj instanceof Value) {
 			return (Value) obj;
 		}
-		return Value.parseObject(obj);
+		return Value.parse(obj);
 	}
 
 	@Override

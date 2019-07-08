@@ -23,7 +23,7 @@ package org.simplity.core.adapter.destn;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.simplity.core.adapter.IDataListTarget;
@@ -183,7 +183,7 @@ public class PojoDataTarget {
 		}
 
 		@Override
-		public void setDateValue(String fieldName, Date fieldValue) {
+		public void setDateValue(String fieldName, LocalDate fieldValue) {
 			ReflectUtil.setAttribute(this.target, fieldName, fieldValue, false);
 		}
 	}

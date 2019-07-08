@@ -25,8 +25,8 @@ package org.simplity.core.util;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.reflect.Array;
+import java.time.LocalDate;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -102,7 +102,7 @@ public class JsonUtil {
 			JSONArray row = arr.getJSONArray(i);
 			Value[] values = new Value[nbrCols];
 			for (int j = 0; j < nbrCols; j++) {
-				values[j] = Value.parseValue(row.getString(j), fields[j].getValueType());
+				values[j] = fields[j].getValueType().parse(row.getString(j));
 			}
 			sheet.addRow(values);
 		}
@@ -346,7 +346,7 @@ public class JsonUtil {
 			 */
 			nbrCols++;
 			fields = new Field[nbrCols];
-			Value val = Value.parseObject(additionalVal);
+			Value val = Value.parse(additionalVal);
 			fields[fieldIdx] = Field.getDefaultField(additionalAtt, val.getValueType());
 			fieldIdx = 1;
 		}
@@ -359,7 +359,7 @@ public class JsonUtil {
 				 */
 				nonAtts++;
 			} else {
-				ValueType vt = Value.parseObject(val).getValueType();
+				ValueType vt = Value.parse(val).getValueType();
 				fields[fieldIdx] = Field.getDefaultField(colName, vt);
 				fieldIdx++;
 			}
@@ -395,7 +395,7 @@ public class JsonUtil {
 		int nbrCols = header.length();
 		Field[] fields = new Field[nbrCols];
 		for (int i = 0; i < nbrCols; i++) {
-			ValueType vt = Value.parseObject(data.opt(i)).getValueType();
+			ValueType vt = Value.parse(data.opt(i)).getValueType();
 			fields[i] = Field.getDefaultField(header.getString(i), vt);
 		}
 		return fields;
@@ -449,7 +449,7 @@ public class JsonUtil {
 				logger.info("{} retained as a JSON into ctx", key);
 				continue;
 			}
-			Value value = Value.parseObject(val);
+			Value value = Value.parse(val);
 			if (value == null) {
 				ctx.setValue(key, value);
 				logger.info("{} ={} extracted ", key, value);
@@ -472,7 +472,7 @@ public class JsonUtil {
 			Value val = row[1];
 			String[] params = null;
 			if (Value.isNull(val) == false) {
-				params = val.toText().split(",");
+				params = val.toString().split(",");
 			}
 			ctx.addMessage(row[0].toString(), params);
 			logger.info("Message {} added to context", row[0]);
@@ -499,7 +499,7 @@ public class JsonUtil {
 			Value value = (Value) obj;
 			value.writeJsonValue(writer);
 		}
-		if (obj instanceof String || obj instanceof Number || obj instanceof Boolean || obj instanceof Date
+		if (obj instanceof String || obj instanceof Number || obj instanceof Boolean || obj instanceof LocalDate
 				|| obj instanceof Enum) {
 			writer.value(obj);
 			return;

@@ -64,7 +64,7 @@ public class Log extends AbstractNonDbAction {
 				logger.info(nam + " = " + ctx.getValue(nam));
 
 				if (this.setMDC) {
-					MDC.put(nam, ctx.getValue(nam).toText());
+					MDC.put(nam, ctx.getValue(nam).toString());
 				}
 			}
 			if (ctx.hasDataSheet(nam)) {

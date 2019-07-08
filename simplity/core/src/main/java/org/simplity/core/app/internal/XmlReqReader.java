@@ -236,7 +236,7 @@ public class XmlReqReader implements IRequestReader {
 				}
 				break;
 			case VALUE:
-				ctx.setValue(key, Value.parseObject(value));
+				ctx.setValue(key, Value.parse(value));
 				break;
 			case NULL:
 				break;
@@ -268,7 +268,7 @@ public class XmlReqReader implements IRequestReader {
 			}
 
 			if (ivt == InputValueType.VALUE) {
-				Value value = Value.parseObject(obj);
+				Value value = Value.parse(obj);
 				values[i] = value;
 				types[i] = value.getValueType();
 				continue;
@@ -309,7 +309,7 @@ public class XmlReqReader implements IRequestReader {
 			Element ele = (Element) node;
 			Value[] row = new Value[nbrCols];
 			for (int j = 0; j < names.length; j++) {
-				row[j] = Value.parseObject(getFieldValue(ele, names[j]));
+				row[j] = Value.parse(getFieldValue(ele, names[j]));
 			}
 			ds.addRow(row);
 		}

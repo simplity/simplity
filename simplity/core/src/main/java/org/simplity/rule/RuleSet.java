@@ -29,8 +29,8 @@ import java.io.IOException;
 import java.io.Writer;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -133,7 +133,7 @@ public class RuleSet {
 		src.append("package ").append(baseClass.getPackage().getName()).append(';');
 		src.append("\n\nimport ").append(InvalidRuleException.class.getName()).append(';');
 		src.append("\n/**\n * generated class for rule set ").append(this.name);
-		src.append("\n * generated at ").append(DATE_FORMATTER.format(new Date())).append("\n **/");
+		src.append("\n * generated at ").append(LocalDateTime.now()).append("\n **/");
 		src.append("\npublic class ").append(TextUtil.nameToClassName(this.name)).append(" extends ")
 				.append(baseClass.getSimpleName()).append(" {");
 		/*

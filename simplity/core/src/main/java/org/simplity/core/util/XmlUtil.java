@@ -33,8 +33,8 @@ import java.io.Writer;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -981,8 +981,8 @@ public class XmlUtil {
 			return value.toString();
 		}
 
-		if (value instanceof Date) {
-			return DateUtil.format((Date) value);
+		if (value instanceof LocalDate) {
+			return value.toString();
 		}
 
 		Class<?> type = value.getClass();

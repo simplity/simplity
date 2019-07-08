@@ -60,7 +60,7 @@ public enum DataSerializationType {
 
 		@Override
 		public int parseFields(String text, IFieldsCollection inData, String[] names, int[] widths) {
-			Value value = Value.parseValue(text);
+			Value value = Value.parse(text);
 			if (value == null) {
 				return 0;
 			}
@@ -234,9 +234,9 @@ public enum DataSerializationType {
 			Value[] values = new Value[texts.length];
 			for (int i = 0; i < texts.length; i++) {
 				if (types == null) {
-					values[i] = Value.parseValue(texts[i]);
+					values[i] = Value.parse(texts[i]);
 				} else {
-					values[i] = Value.parseValue(texts[i], types[i]);
+					values[i] = types[i].parse(texts[i]);
 				}
 			}
 			return values;
@@ -350,7 +350,7 @@ public enum DataSerializationType {
 			for (String name : namesToUse) {
 				Object obj = json.opt(name);
 				if (obj != null) {
-					inData.setValue(name, Value.parseObject(obj));
+					inData.setValue(name, Value.parse(obj));
 					nbrFields++;
 				}
 			}
@@ -365,7 +365,7 @@ public enum DataSerializationType {
 				String name = field.getName();
 				Object obj = json.opt(name);
 				if (obj != null) {
-					inData.setValue(name, Value.parseObject(obj));
+					inData.setValue(name, Value.parse(obj));
 					nbrFields++;
 				}
 			}
@@ -406,7 +406,7 @@ public enum DataSerializationType {
 			for (int i = 0; i < names.length; i++) {
 				Object obj = json.opt(names[i]);
 				if (obj != null) {
-					values[i] = Value.parseObject(obj);
+					values[i] = Value.parse(obj);
 				}
 			}
 			return values;
@@ -417,7 +417,7 @@ public enum DataSerializationType {
 			for (int i = 0; i < fields.length; i++) {
 				Object obj = json.opt(fields[i].getName());
 				if (obj != null) {
-					values[i] = Value.parseObject(obj);
+					values[i] = Value.parse(obj);
 				}
 			}
 			return values;

@@ -77,7 +77,7 @@ public class AddRow extends AbstractNonDbAction {
 						"Found a value of type {} for column {} while we were expecting {}. Will be converted.",
 						value.getValueType(), name, vt);
 
-				value = Value.parseValue(txt, vt);
+				value = vt.parse(txt);
 				if (value == null) {
 					logger.info(
 							"Unable to convert {} to type {} . setting column to  NullValue", txt, vt);

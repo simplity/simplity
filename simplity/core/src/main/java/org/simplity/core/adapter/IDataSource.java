@@ -22,7 +22,7 @@
 
 package org.simplity.core.adapter;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 /**
  * source of data. defines methods to get input data from a data source
@@ -49,7 +49,7 @@ public interface IDataSource {
 	 * @return value as Date. null if no such field, or if it is not a date
 	 *         field.
 	 */
-	public Date getDateValue(String fieldName);
+	public LocalDate getDateValue(String fieldName);
 
 	/**
 	 *

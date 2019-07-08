@@ -22,12 +22,11 @@
 
 package org.simplity.core.adapter;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 import org.simplity.core.comp.IValidationContext;
 import org.simplity.core.comp.ValidationMessage;
 import org.simplity.core.service.ServiceContext;
-import org.simplity.core.util.DateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,16 +46,12 @@ public class DateField extends AbstractField {
 	 * number for past date.
 	 */
 	String defaultNbrDaysFromToday;
-	/**
-	 * is this a pure date, in which case we have to strip time from it.
-	 */
-	boolean stripTimeComponent;
 
 	private int nbrDays;
 
 	@Override
 	public void copy(IDataSource source, IDataTarget target, ServiceContext ctx) {
-		Date date = source.getDateValue(this.fromName);
+		LocalDate date = source.getDateValue(this.fromName);
 		if (date == null) {
 			date = this.getDefaultDate();
 			if (date == null) {
@@ -64,19 +59,16 @@ public class DateField extends AbstractField {
 				return;
 			}
 		}
-		if (this.stripTimeComponent) {
-			date = new Date(DateUtil.trimDate(date.getTime()));
-		}
 		target.setDateValue(this.toName, date);
 	}
 
-	private Date getDefaultDate() {
+	private LocalDate getDefaultDate() {
 		if (this.defaultNbrDaysFromToday == null) {
 			return null;
 		}
-		Date date = DateUtil.getToday();
+		LocalDate date = LocalDate.now();
 		if (this.nbrDays != 0) {
-			date = DateUtil.addDays(date, this.nbrDays);
+			return date.plusDays(this.nbrDays);
 		}
 		return date;
 	}

@@ -21,7 +21,7 @@
  */
 package org.simplity.core.adapter;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 /**
  * target that can receive data from an adapter
@@ -43,7 +43,7 @@ public interface IDataTarget {
 	public void setPrimitiveValue(String fieldName, String fieldValue);
 
 	/**
-	 * receive a date value. called only if the vaoue is non-null
+	 * receive a date value. called only if the value is non-null
 	 *
 	 * @param fieldName
 	 *            non-null name can be of the form a.b.c to go thru the object
@@ -51,7 +51,7 @@ public interface IDataTarget {
 	 * @param fieldValue
 	 *            non-null value
 	 */
-	public void setDateValue(String fieldName, Date fieldValue);
+	public void setDateValue(String fieldName, LocalDate fieldValue);
 
 	/**
 	 * receive a data structure

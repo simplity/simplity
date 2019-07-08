@@ -22,13 +22,12 @@
 
 package org.simplity.core.adapter.source;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 import org.simplity.core.adapter.IDataAdapterExtension;
 import org.simplity.core.adapter.IDataListSource;
 import org.simplity.core.adapter.IDataSource;
 import org.simplity.core.service.ServiceContext;
-import org.simplity.core.util.DateUtil;
 import org.simplity.core.value.DateValue;
 import org.simplity.core.value.Value;
 import org.simplity.core.value.ValueType;
@@ -91,17 +90,21 @@ public class ContextDataSource implements IDataSource {
 	}
 
 	@Override
-	public Date getDateValue(String fieldName) {
+	public LocalDate getDateValue(String fieldName) {
 		Value value = this.ctx.getValue(fieldName);
 		if (Value.isNull(value)) {
 			return null;
 		}
 		ValueType vt = value.getValueType();
 		if (vt == ValueType.DATE) {
-			return new Date(((DateValue) value).getDate());
+			return (((DateValue) value).getDate());
 		}
 		if (vt == ValueType.TEXT) {
-			return DateUtil.parseDateWithOptionalTime(value.toString());
+			try {
+				return LocalDate.parse(value.toString());
+			} catch (Exception ignore) {
+				//
+			}
 		}
 		return null;
 	}

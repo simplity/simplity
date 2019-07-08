@@ -561,7 +561,11 @@ public class ProcedureParameter {
 			ValueType[] types = { this.dataTypeObject.getValueType() };
 			return new MultiRowsSheet(columnNames, types);
 		}
-		Value[][] values = { vt.toValues(row) };
+		Value[] arr = new Value[row.length];
+		for (int i = 0; i < arr.length; i++) {
+			arr[i] = vt.parseObject(row[i]);
+		}
+		Value[][] values = { arr };
 		return new MultiRowsSheet(columnNames, values);
 	}
 

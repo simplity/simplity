@@ -63,7 +63,7 @@ public class TextDataType extends DataType {
 
 	@Override
 	public Value validateValue(Value value) {
-		String textValue = value.toText();
+		String textValue = value.toString();
 		int nbrChars = textValue.length();
 		if (nbrChars < this.minLength || nbrChars > this.maxLength) {
 			return null;

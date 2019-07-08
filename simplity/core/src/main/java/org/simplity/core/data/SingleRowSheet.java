@@ -108,7 +108,7 @@ public class SingleRowSheet implements IDataSheet {
 		this.valueTypes = valueTypes;
 		String[] values = rawData[1];
 		for (int i = 0; i < this.columnNames.length; i++) {
-			Value value = Value.parseValue(values[i], valueTypes[i]);
+			Value value = valueTypes[i].parse(values[i]);
 			if (value != null) {
 				this.fieldValues.put(this.columnNames[i], value);
 			}

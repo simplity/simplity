@@ -24,71 +24,40 @@ package org.simplity.core.value;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.sql.Types;
-import java.util.Date;
+import java.time.Instant;
 
 import org.simplity.json.JSONWriter;
 
 /**
- * Very special value, and should not be used except for specific timestap field
- * defined in an rdbms. Simplity uses time-stamp field to take care of
- * concurrency issues. This class is designed to facilitate that
+ * Instant of time. this is time-zone sensitive if being printed/rendered.
  *
  * @author simplity.org
  */
 public class TimestampValue extends Value {
-	private static final long NANO = 1000000000;
 
-	/** */
 	private static final long serialVersionUID = 1L;
-	/**
-	 * this is the number of nano-seconds from epoch.
-	 */
-	private long value;
 
-	protected TimestampValue(long value) {
+	private final Instant value;
+
+	protected TimestampValue(Instant value) {
 		this.value = value;
 	}
 
 	protected TimestampValue(Timestamp ts) {
-		/*
-		 * remove fractional secs from date and convert that to nanos
-		 */
-		long nanosInDate = (ts.getTime() / 1000) * 1000000000;
-		this.value = nanosInDate + ts.getNanos();
+		if (ts == null) {
+			this.value = null;
+		} else {
+			this.value = ts.toInstant();
+		}
 	}
 
 	protected TimestampValue() {
-		this.valueIsNull = true;
+		this.value = null;
 	}
 
 	@Override
 	public ValueType getValueType() {
 		return ValueType.TIMESTAMP;
-	}
-
-	@Override
-	protected void format() {
-		this.textValue = Long.toString(this.value);
-	}
-
-	@Override
-	public long toInteger() throws InvalidValueException {
-		return this.value;
-	}
-
-	@Override
-	public double toDecimal() throws InvalidValueException {
-		return this.value;
-	}
-
-	@Override
-	public Date toDate() throws InvalidValueException {
-		/*
-		 * we return new date instead of caching because Date, unfortunately, is
-		 * mutable
-		 */
-		return new Date(this.value / 1000000);
 	}
 
 	@Override
@@ -99,35 +68,26 @@ public class TimestampValue extends Value {
 		return false;
 	}
 
-	/**
-	 * method to be used on a concrete class to avoid exception handling
-	 *
-	 * @return date
-	 */
-	public long getDate() {
-		return this.value / 1000000;
+	@Override
+	public Instant toTimestamp() throws InvalidValueException {
+		return this.value;
 	}
 
 	/**
 	 * method to be used on a concrete class to avoid exception handling
 	 *
-	 * @return date
+	 * @return instant
 	 */
-	public long getInteger() {
+	public Instant getInstant() {
 		return this.value;
 	}
 
 	@Override
 	public void setToStatement(PreparedStatement statement, int idx) throws SQLException {
-		if (this.valueIsNull) {
-			statement.setNull(idx, Types.TIMESTAMP);
+		if (this.value == null) {
+			statement.setTimestamp(idx, null);
 		} else {
-			/*
-			 * create date with truncated seconds
-			 */
-			Timestamp dateValue = new Timestamp((this.value / NANO) * 1000);
-			dateValue.setNanos((int) (this.value % NANO));
-			statement.setTimestamp(idx, dateValue);
+			statement.setTimestamp(idx, Timestamp.from(this.value));
 		}
 	}
 
@@ -136,27 +96,21 @@ public class TimestampValue extends Value {
 		return this.value;
 	}
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public Object[] toArray(Value[] values) {
-		int n = values.length;
-		Long[] arr = new Long[n];
-		for (int i = 0; i < n; i++) {
-			TimestampValue val = (TimestampValue) values[i];
-			arr[i] = new Long(val.value);
-		}
-		return arr;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.simplity.json.Jsonable#writeJsonValue(org.simplity.json.JSONWriter)
-	 */
 	@Override
 	public void writeJsonValue(JSONWriter writer) {
 		writer.value(this.value);
 	}
 
+	@Override
+	public boolean isUnknown() {
+		return this.value == null;
+	}
+
+	@Override
+	public String toString() {
+		if (this.value == null) {
+			return Value.NULL_TEXT_VALUE;
+		}
+		return this.value.toString();
+	}
 }

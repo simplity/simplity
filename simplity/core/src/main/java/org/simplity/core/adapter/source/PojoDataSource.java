@@ -22,11 +22,10 @@
 
 package org.simplity.core.adapter.source;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 import org.simplity.core.adapter.IDataListSource;
 import org.simplity.core.adapter.IDataSource;
-import org.simplity.core.util.DateUtil;
 import org.simplity.core.util.ReflectUtil;
 
 /**
@@ -66,9 +65,6 @@ public class PojoDataSource {
 			if (obj == null) {
 				return null;
 			}
-			if (obj instanceof Date) {
-				return DateUtil.formatDateTime((Date) obj);
-			}
 			return obj.toString();
 		}
 
@@ -94,15 +90,20 @@ public class PojoDataSource {
 		}
 
 		@Override
-		public Date getDateValue(String fieldName) {
+		public LocalDate getDateValue(String fieldName) {
 			Object obj = ReflectUtil.getChildPrimitive(this.source, fieldName);
 			if (obj == null) {
 				return null;
 			}
-			if (obj instanceof Date) {
-				return (Date) obj;
+			if (obj instanceof LocalDate) {
+				return (LocalDate) obj;
 			}
-			return DateUtil.parseDateWithOptionalTime(obj.toString());
+			try {
+				return LocalDate.parse(obj.toString());
+			} catch (Exception e) {
+				//
+			}
+			return null;
 		}
 	}
 }

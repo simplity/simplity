@@ -35,8 +35,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.LocalDate;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -46,7 +46,6 @@ import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.Set;
 
-import org.simplity.core.util.DateUtil;
 import org.simplity.core.value.Value;
 
 /**
@@ -587,8 +586,8 @@ public class JSONObject implements JsonWritable {
 	 * @throws JSONException
 	 *             if the key is not found or if the value is not a Date object.
 	 */
-	public Date getDate(String key) throws JSONException {
-		Date date = this.optDate(key);
+	public LocalDate getDate(String key) throws JSONException {
+		LocalDate date = this.optDate(key);
 		if (date == null) {
 			throw new JSONException("JSONObject[" + quote(key) + "] is not a UTC formatted Date.");
 		}
@@ -610,7 +609,7 @@ public class JSONObject implements JsonWritable {
 		if (value instanceof Value) {
 			return (Value) value;
 		}
-		return Value.parseObject(value);
+		return Value.parse(value);
 	}
 
 	/**
@@ -629,7 +628,7 @@ public class JSONObject implements JsonWritable {
 		if (value instanceof Value) {
 			return (Value) value;
 		}
-		return Value.parseObject(value);
+		return Value.parse(value);
 	}
 
 	/**
@@ -1065,16 +1064,16 @@ public class JSONObject implements JsonWritable {
 	 *            A key string.
 	 * @return Date, or null if there is no value for this key
 	 */
-	public Date optDate(String key) {
+	public LocalDate optDate(String key) {
 		Object object = this.get(key);
 		if (object == null) {
 			return null;
 		}
-		if (object instanceof Date) {
-			return (Date) object;
+		if (object instanceof LocalDate) {
+			return (LocalDate) object;
 		}
 		try {
-			return DateUtil.parseDateWithOptionalTime(object.toString());
+			return LocalDate.parse(object.toString());
 		} catch (Exception e) {
 			return null;
 		}
@@ -1736,8 +1735,8 @@ public class JSONObject implements JsonWritable {
 		/*
 		 * date added by simplity.org
 		 */
-		if (value instanceof Date) {
-			return quote(DateUtil.formatDateTime((Date) value));
+		if (value instanceof LocalDate) {
+			return quote(value.toString());
 		}
 		if (value instanceof Map) {
 			Map<?, ?> map = (Map<?, ?>) value;
@@ -1849,8 +1848,8 @@ public class JSONObject implements JsonWritable {
 			writer.write(numberToString((Number) value));
 		} else if (value instanceof Boolean) {
 			writer.write(value.toString());
-		} else if (value instanceof Date) {
-			writer.write(quote(DateUtil.format((Date) value)));
+		} else if (value instanceof LocalDate) {
+			writer.write(quote(value.toString()));
 		} else if (value instanceof JSONString) {
 			Object o;
 			try {
@@ -1936,7 +1935,7 @@ public class JSONObject implements JsonWritable {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * org.simplity.json.Jsonable#writeJsonValue(org.simplity.json.JSONWriter)
 	 */

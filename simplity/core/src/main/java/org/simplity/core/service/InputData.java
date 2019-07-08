@@ -122,9 +122,9 @@ public class InputData {
 				}
 				String newKey = null;
 				if (toStore) {
-					newKey = AttachmentManager.moveToStorage(key.toText());
+					newKey = AttachmentManager.moveToStorage(key.toString());
 				} else {
-					newKey = AttachmentManager.moveFromStorage(key.toText());
+					newKey = AttachmentManager.moveFromStorage(key.toString());
 				}
 				if (newKey == null) {
 					throw new ApplicationError(

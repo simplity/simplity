@@ -24,14 +24,10 @@ package org.simplity.core.value;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.time.Instant;
+import java.time.LocalDate;
 
 import org.simplity.core.ApplicationError;
-import org.simplity.core.app.AppConventions;
-import org.simplity.core.util.DateUtil;
 import org.simplity.json.JsonWritable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,12 +68,7 @@ public abstract class Value implements Serializable, JsonWritable {
 	 * what is the text value of null? As we are focusing more on serialization,
 	 * rather than human readable, we use empty string
 	 */
-	public static final String NULL_TEXT_VALUE = "";
-	/** text value of a true boolean value :-) */
-	public static final String TRUE_TEXT_VALUE = "1";
-
-	/** text value of a boolean value of false */
-	public static final String FALSE_TEXT_VALUE = "0";
+	public static final String NULL_TEXT_VALUE = "null";
 
 	/** value is anyway immutable. no need to create new instance */
 	public static final BooleanValue VALUE_TRUE = new BooleanValue(true);
@@ -94,35 +85,23 @@ public abstract class Value implements Serializable, JsonWritable {
 	 * instances
 	 */
 	/** boolean unknown value */
-	public static final BooleanValue UNNOWN_BOOLEAN_VALUE = new BooleanValue();
+	public static final BooleanValue VALUE_UNKNOWN_BOOLEAN = new BooleanValue();
 	/** unknown date */
-	public static final DateValue UNKNOWN_DATE_VALUE = new DateValue();
+	public static final DateValue VALUE_UNKNOWN_DATE = new DateValue();
 	/** unknown decimal */
-	public static final DecimalValue UNKNOWN_DECIMAL_VALUE = new DecimalValue();
+	public static final DecimalValue VALUE_UNKNOWN_DECIMAL = new DecimalValue();
 	/** unknown integer */
-	public static final IntegerValue UNKNOWN_INTERGRAL_VALUE = new IntegerValue();
+	public static final IntegerValue VALUE_UNKNOWN_INTEGER = new IntegerValue();
 	/** unknown text */
-	public static final TextValue UNKNOWN_TEXT_VALUE = new TextValue();
-
-	/** unknown text */
-	public static final BlobValue UNKNOWN_BLOB_VALUE = new BlobValue();
-	/** unknown text */
-	public static final ClobValue UNKNOWN_CLOB_VALUE = new ClobValue();
+	public static final TextValue VALUE_UNKNOWN_TEXT = new TextValue();
 
 	/** unknown timestamp */
-	public static final TimestampValue UNKNOWN_TIMESTAMP_VALUE = new TimestampValue();
+	public static final TimestampValue VALUE_UNKNOWN_TIMESTAMP = new TimestampValue();
 	/** true Boolean */
 	public static final Boolean TRUE_OBJECT = new Boolean(true);
 
 	/** */
 	public static final Boolean FALSE_OBJECT = new Boolean(false);
-
-	/** */
-	public static final String JSON_NULL = "null";
-	/** */
-	public static final String JSON_TRUE = "true";
-	/** */
-	public static final String JSON_FALSE = "false";
 
 	private static final int DATE_LENGTH = 12; // "/yyyy-mm-dd-/".length();
 	private static final int LAST_POSITION = DATE_LENGTH - 1;
@@ -133,14 +112,6 @@ public abstract class Value implements Serializable, JsonWritable {
 	private static final char NINE = '9';
 	private static final char MINUS = '-';
 	private static final char DOT = '.';
-	/** text value. cached for non-text values. */
-	protected String textValue;
-
-	/**
-	 * We may have to deal with RDBMS that allows nullable fields. We treat such
-	 * a value as unknown.
-	 */
-	protected boolean valueIsNull = false;
 
 	/**
 	 * @param textValue
@@ -148,22 +119,6 @@ public abstract class Value implements Serializable, JsonWritable {
 	 */
 	public static TextValue newTextValue(String textValue) {
 		return new TextValue(textValue);
-	}
-
-	/**
-	 * @param key
-	 * @return an instance of Value for textValue.
-	 */
-	public static BlobValue newBlobValue(String key) {
-		return new BlobValue(key);
-	}
-
-	/**
-	 * @param key
-	 * @return an instance of Value for textValue.
-	 */
-	public static ClobValue newClobValue(String key) {
-		return new ClobValue(key);
 	}
 
 	/**
@@ -197,93 +152,22 @@ public abstract class Value implements Serializable, JsonWritable {
 	}
 
 	/**
-	 * @param milliseconds
+	 * @param date
 	 * @return returns an instance of Value for dateValue
 	 */
-	public static DateValue newDateValue(long milliseconds) {
-		return new DateValue(milliseconds);
-	}
-
-	/**
-	 * @param date
-	 * @return returns an instance of Value for date
-	 */
-	public static DateValue newDateValue(Date date) {
-		return new DateValue(date.getTime());
+	public static DateValue newDateValue(LocalDate date) {
+		return new DateValue(date);
 	}
 
 	/**
 	 * create a time-stamp value
 	 *
-	 * @param nanos
-	 *            nano seconds from epoch
+	 * @param instant
+	 *            an instant of time
 	 * @return new instance of time-stamp value
 	 */
-	public static TimestampValue newTimestampValue(long nanos) {
-		return new TimestampValue(nanos);
-	}
-
-	/**
-	 * create a time-stamp value
-	 *
-	 * @param stamp
-	 *            instance of a time-stamp
-	 * @return new instance of time-stamp value
-	 */
-	public static TimestampValue newTimestampValue(Timestamp stamp) {
-		return new TimestampValue(stamp);
-	}
-
-	/**
-	 * create a value of desired type by parsing the text input
-	 *
-	 * @param textValue
-	 *            text value to be parsed
-	 * @param valueType
-	 *            value type of the desired Value object instance
-	 * @return Value object of desired value type or null if the text value is
-	 *         not compatible for the desired value type
-	 */
-	public static Value parseValue(String textValue, ValueType valueType) {
-		if (textValue == null) {
-			return Value.newUnknownValue(valueType);
-		}
-
-		String text = textValue.trim();
-		try {
-			switch (valueType) {
-			case BOOLEAN:
-				if (Value.TRUE_TEXT_VALUE.equals(text)) {
-					return Value.VALUE_TRUE;
-				}
-				if (Value.FALSE_TEXT_VALUE.equals(text)) {
-					return Value.VALUE_FALSE;
-				}
-				return null;
-			case DATE:
-				Date date = DateUtil.parseDateWithOptionalTime(text);
-				if (date == null) {
-					return null;
-				}
-				return new DateValue(date.getTime());
-			case DECIMAL:
-				return new DecimalValue(Double.parseDouble(text));
-			case INTEGER:
-				return new IntegerValue(Math.round(Double.parseDouble(text)));
-			case TEXT:
-				return new TextValue(text);
-			case BLOB:
-				return new BlobValue(text);
-			case CLOB:
-				return new ClobValue(text);
-			case TIMESTAMP:
-				return new TimestampValue(Long.parseLong(text));
-			default:
-				return new TextValue(text);
-			}
-		} catch (NumberFormatException e) {
-			return null;
-		}
+	public static TimestampValue newTimestampValue(Instant instant) {
+		return new TimestampValue(instant);
 	}
 
 	/**
@@ -294,21 +178,17 @@ public abstract class Value implements Serializable, JsonWritable {
 	public static Value newUnknownValue(ValueType valueType) {
 		switch (valueType) {
 		case TEXT:
-			return Value.UNKNOWN_TEXT_VALUE;
+			return Value.VALUE_UNKNOWN_TEXT;
 		case BOOLEAN:
-			return Value.UNNOWN_BOOLEAN_VALUE;
+			return Value.VALUE_UNKNOWN_BOOLEAN;
 		case DATE:
-			return Value.UNKNOWN_DATE_VALUE;
+			return Value.VALUE_UNKNOWN_DATE;
 		case DECIMAL:
-			return Value.UNKNOWN_DECIMAL_VALUE;
+			return Value.VALUE_UNKNOWN_DECIMAL;
 		case INTEGER:
-			return Value.UNKNOWN_INTERGRAL_VALUE;
-		case BLOB:
-			return Value.UNKNOWN_BLOB_VALUE;
-		case CLOB:
-			return Value.UNKNOWN_CLOB_VALUE;
+			return Value.VALUE_UNKNOWN_INTEGER;
 		case TIMESTAMP:
-			return Value.UNKNOWN_TIMESTAMP_VALUE;
+			return Value.VALUE_UNKNOWN_TIMESTAMP;
 		default:
 			throw new ApplicationError("Value class does not take care of value type " + valueType);
 		}
@@ -319,33 +199,7 @@ public abstract class Value implements Serializable, JsonWritable {
 	 *
 	 * @return true if this is initialized with null (unknown) value
 	 */
-	public final boolean isUnknown() {
-		return this.valueIsNull;
-	}
-
-	/**
-	 * returns text value as per our convention. Intended use is for a
-	 * text-based representation, but not for human readability. decimal value
-	 * will have exactly four decimal places always. Date is represented as
-	 * milli-seconds-from-epoch. Boolean becomes "1"/"0"
-	 *
-	 * @return text value.
-	 */
-	public final String toText() {
-		if (this.textValue == null) {
-			if (this.valueIsNull) {
-				this.textValue = Value.NULL_TEXT_VALUE;
-			} else {
-				this.format();
-			}
-		}
-		return this.textValue;
-	}
-
-	@Override
-	public final String toString() {
-		return this.toText();
-	}
+	public abstract boolean isUnknown();
 
 	/**
 	 * true if obj is an instance of a compatible value, and both have non-null
@@ -356,11 +210,11 @@ public abstract class Value implements Serializable, JsonWritable {
 		if (this == obj) {
 			return true;
 		}
-		if (this.valueIsNull || obj == null || obj instanceof Value == false) {
+		if (this.isUnknown() || obj == null || obj instanceof Value == false) {
 			return false;
 		}
 		Value otherValue = (Value) obj;
-		if (otherValue.valueIsNull) {
+		if (otherValue.isUnknown()) {
 			return false;
 		}
 
@@ -405,15 +259,21 @@ public abstract class Value implements Serializable, JsonWritable {
 	 * @throws InvalidValueException
 	 *             if value type is not date
 	 */
-	public Date toDate() throws InvalidValueException {
+	public LocalDate toDate() throws InvalidValueException {
 		throw new InvalidValueException(this.getValueType(), ValueType.DATE);
+	}
+
+	/**
+	 * @return instant if internal value is of type timestamp
+	 * @throws InvalidValueException
+	 *             if value type is not timestamp
+	 */
+	public Instant toTimestamp() throws InvalidValueException {
+		throw new InvalidValueException(this.getValueType(), ValueType.TIMESTAMP);
 	}
 
 	/** @return value type */
 	public abstract ValueType getValueType();
-
-	/** format value to textValue attribute */
-	protected abstract void format();
 
 	/**
 	 * this as well as otherValue are have non-null value. Compare them
@@ -433,41 +293,6 @@ public abstract class Value implements Serializable, JsonWritable {
 	public abstract void setToStatement(PreparedStatement statement, int idx) throws SQLException;
 
 	/**
-	 * parse a value list and return a map of text value and the parsed value.
-	 *
-	 * @param textList
-	 *            of the form a,b,c or a:alpha,b:beta...
-	 * @param valueType
-	 * @return set of values in this list
-	 */
-	public static Set<Value> parseValueList(String textList, ValueType valueType) {
-		Set<Value> result = new HashSet<Value>();
-		String[] vals = textList.split(AppConventions.LIST_SEPARATOR + "");
-		for (String val : vals) {
-			val = val.trim();
-			int idx = val.indexOf(AppConventions.LIST_VALUE_SEPARATOR);
-			if (idx != -1) {
-				val = val.substring(idx + 1).trim();
-			}
-			if (val.length() == 0) {
-				/*
-				 * this is the blank/default option for client's sake. We treat
-				 * is not specified
-				 */
-				continue;
-			}
-			Value value = Value.parseValue(val, valueType);
-			if (value == null) {
-				throw new ApplicationError("Value list " + textList + " has an invalid value of " + val);
-			}
-			if (result.add(value) == false) {
-				throw new ApplicationError("Value list " + textList + " has duplicate value of " + val);
-			}
-		}
-		return result;
-	}
-
-	/**
 	 * parse an array of text values into an array of given value type
 	 *
 	 * @param textList
@@ -481,7 +306,7 @@ public abstract class Value implements Serializable, JsonWritable {
 
 		for (int i = 0; i < textList.length; i++) {
 			String val = textList[i].trim();
-			Value value = Value.parseValue(val, valueType);
+			Value value = valueType.parse(val);
 			if (value == null) {
 				return null;
 			}
@@ -508,22 +333,26 @@ public abstract class Value implements Serializable, JsonWritable {
 	 * @param text
 	 * @return parsed value
 	 */
-	public static Value parseValue(String text) {
+	public static Value parse(String text) {
 		if (text == null) {
 			return null;
 		}
+
 		int n = text.length();
 		if (n == 0) {
 			return VALUE_EMPTY;
 		}
+
 		char c = text.charAt(0);
 		if (n == DATE_LENGTH && c == DATE_DILIMITER && text.charAt(LAST_POSITION) == DATE_DILIMITER) {
 			String dateText = text.substring(1, text.length() - 1);
-			Date date = DateUtil.parseDate(dateText);
-			if (date != null) {
-				return Value.newDateValue(date);
+			try {
+				return Value.newDateValue(LocalDate.parse(dateText));
+			} catch (Exception ignore) {
+				//
 			}
 		}
+
 		if (text.equals(TRUE)) {
 			return VALUE_TRUE;
 		}
@@ -544,48 +373,42 @@ public abstract class Value implements Serializable, JsonWritable {
 		/*
 		 * date?
 		 */
-		Date date = DateUtil.parseDateWithOptionalTime(text);
-		if (date != null) {
-			return Value.newDateValue(date);
+		try {
+			return Value.newDateValue(LocalDate.parse(text));
+		} catch (Exception ignore) {
+			//
 		}
 
 		return Value.newTextValue(text);
 	}
-
-	/** @return an object that is suitable for db operation */
-	public abstract Object getObject();
-
-	/**
-	 * @param values
-	 * @return gets an array of primitives/object for the Value[] array
-	 */
-	public abstract <T> T[] toArray(Value[] values);
 
 	/**
 	 * @return java Object that represents the underlying value. String, Long,
 	 *         Double, Date or Boolean instance.
 	 */
 	public Object toObject() {
-		if (this.valueIsNull) {
+		if (this.isUnknown()) {
 			return null;
 		}
 		return this.getObject();
 	}
+
+	/** @return an object that is suitable for db operation */
+	protected abstract Object getObject();
 
 	/**
 	 * parse an object, say one that is returned from rdbms, or from JSON, into
 	 * a Value
 	 *
 	 * @param object
+	 *            non-null
 	 * @return Value of this object based on the object type that can be best
 	 *         guessed
 	 */
-	public static Value parseObject(Object object) {
+	public static Value parse(Object object) {
 		if (object == null) {
-
 			logger.info("Parse Object received null. Returning empty text value.");
-
-			return VALUE_EMPTY;
+			return null;
 		}
 		if (object instanceof Boolean) {
 			if (((Boolean) object).booleanValue()) {
@@ -600,20 +423,24 @@ public abstract class Value implements Serializable, JsonWritable {
 			return newIntegerValue(((Number) object).longValue());
 		}
 
-		if (object instanceof Date) {
-			if (object instanceof Timestamp) {
-				return newTimestampValue((Timestamp) object);
-			}
-			return newDateValue((Date) object);
+		if (object instanceof LocalDate) {
+			return newDateValue((LocalDate) object);
+		}
+		if (object instanceof Instant) {
+			return newTimestampValue((Instant) object);
 		}
 		/*
 		 * we wouldn't consider well-formed date strings as coincidence
 		 */
 		String val = object.toString();
-		Date date = DateUtil.parseDateWithOptionalTime(val);
-		if (date != null) {
-			return newDateValue(date);
+		if (val.length() == 10) {
+			try {
+				return newDateValue(LocalDate.parse(val));
+			} catch (Exception ignore) {
+				//
+			}
 		}
+
 		/*
 		 * when it is not anything else, it is text
 		 */
@@ -646,40 +473,6 @@ public abstract class Value implements Serializable, JsonWritable {
 	}
 
 	/**
-	 * time-stamp value is provided more flexibility to allow implementation
-	 * specific variations
-	 *
-	 * @param value
-	 * @return time stamp value
-	 */
-	public static Value newTimestampValue(Value value) {
-		if (value == null) {
-			return null;
-		}
-		switch (value.getValueType()) {
-		case TEXT:
-			String text = value.toText();
-			try {
-				return new TimestampValue(Long.parseLong(text));
-			} catch (Exception e) {
-				Date date = DateUtil.parseDateWithOptionalTime(text);
-				if (date != null) {
-					return new TimestampValue(date.getTime());
-				}
-			}
-			break;
-		case INTEGER:
-			return new TimestampValue(((IntegerValue) value).getLong());
-		case DATE:
-			return new TimestampValue(((DateValue) value).getDate());
-		default:
-			break;
-		}
-		throw new ApplicationError(
-				value.toString() + " is not a valid time stamp value. It has to be eithe rnumeric, or a valid date.");
-	}
-
-	/**
 	 *
 	 * @param objects
 	 *            array of primitive objects to be parsed into values
@@ -691,7 +484,7 @@ public abstract class Value implements Serializable, JsonWritable {
 	public static Value[] toValues(Object[] objects, ValueType[] valueTypes) {
 		Value[] values = new Value[objects.length];
 		for (int i = 0; i < values.length; i++) {
-			values[i] = valueTypes[i].fromObject(objects[i]);
+			values[i] = valueTypes[i].parseObject(objects[i]);
 		}
 		return values;
 	}

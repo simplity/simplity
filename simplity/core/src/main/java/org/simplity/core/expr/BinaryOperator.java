@@ -22,7 +22,9 @@
  */
 package org.simplity.core.expr;
 
-import org.simplity.core.util.DateUtil;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+
 import org.simplity.core.value.DateValue;
 import org.simplity.core.value.InvalidValueException;
 import org.simplity.core.value.Value;
@@ -128,12 +130,12 @@ public enum BinaryOperator {
 				return Value.newDecimalValue(leftValue.toDecimal() + rightValue.toDecimal());
 			}
 			if (opType == DATE_ADD_OPERATION) {
-				return Value.newDateValue(DateUtil.addDays(leftValue.toDate(), rightValue.toInteger()));
+				return Value.newDateValue(leftValue.toDate().plusDays(rightValue.toInteger()));
 			}
 			/*
 			 * plus is concatenate for nun-number
 			 */
-			return Value.newTextValue(leftValue.toText() + rightValue.toText());
+			return Value.newTextValue(leftValue.toString() + rightValue.toString());
 		}
 
 		@Override
@@ -161,9 +163,9 @@ public enum BinaryOperator {
 				return Value.newDecimalValue(leftValue.toDecimal() - rightValue.toDecimal());
 			}
 			if (opType == BinaryOperator.DATE_SUBTRACT_OPERATION) {
-				return Value.newIntegerValue(
-						DateUtil.daysBetweenDates(
-								((DateValue) leftValue).getDate(), ((DateValue) rightValue).getDate()));
+				LocalDate leftDate = ((DateValue) leftValue).getDate();
+				LocalDate rightDate = ((DateValue) rightValue).getDate();
+				return Value.newIntegerValue(rightDate.until(leftDate, ChronoUnit.DAYS));
 			}
 			throw new InvalidValueException("");
 		}
@@ -197,9 +199,9 @@ public enum BinaryOperator {
 				throw new InvalidValueException("");
 			}
 			if (lt == ValueType.DATE) {
-				return Value.newBooleanValue(leftValue.toDate().getTime() < rightValue.toDate().getTime());
+				leftValue.toDate().isBefore(rightValue.toDate());
 			}
-			return Value.newBooleanValue(leftValue.toText().compareToIgnoreCase(rightValue.toText()) < 0);
+			return Value.newBooleanValue(leftValue.toString().compareToIgnoreCase(rightValue.toString()) < 0);
 		}
 
 		@Override
@@ -231,10 +233,10 @@ public enum BinaryOperator {
 				throw new InvalidValueException("");
 			}
 			if (lt == ValueType.DATE) {
-				return Value.newBooleanValue(leftValue.toDate().getTime() <= rightValue.toDate().getTime());
+				return Value.newBooleanValue(!leftValue.toDate().isAfter(rightValue.toDate()));
 			}
 			return Value.newBooleanValue(
-					leftValue.toText().compareToIgnoreCase(rightValue.toText()) <= 0);
+					leftValue.toString().compareToIgnoreCase(rightValue.toString()) <= 0);
 		}
 
 		@Override
@@ -266,9 +268,9 @@ public enum BinaryOperator {
 				throw new InvalidValueException("");
 			}
 			if (lt == ValueType.DATE) {
-				return Value.newBooleanValue(leftValue.toDate().getTime() > rightValue.toDate().getTime());
+				return Value.newBooleanValue(leftValue.toDate().isAfter(rightValue.toDate()));
 			}
-			return Value.newBooleanValue(leftValue.toText().compareToIgnoreCase(rightValue.toText()) > 0);
+			return Value.newBooleanValue(leftValue.toString().compareToIgnoreCase(rightValue.toString()) > 0);
 		}
 
 		@Override
@@ -300,10 +302,10 @@ public enum BinaryOperator {
 				throw new InvalidValueException("");
 			}
 			if (lt == ValueType.DATE) {
-				return Value.newBooleanValue(leftValue.toDate().getTime() >= rightValue.toDate().getTime());
+				return Value.newBooleanValue(!leftValue.toDate().isBefore(rightValue.toDate()));
 			}
 			return Value.newBooleanValue(
-					leftValue.toText().compareToIgnoreCase(rightValue.toText()) >= 0);
+					leftValue.toString().compareToIgnoreCase(rightValue.toString()) >= 0);
 		}
 
 		@Override
@@ -336,13 +338,13 @@ public enum BinaryOperator {
 				throw new InvalidValueException("");
 			}
 			if (lt == ValueType.DATE) {
-				return Value.newBooleanValue(leftValue.toDate().getTime() == rightValue.toDate().getTime());
+				return Value.newBooleanValue(leftValue.toDate().equals(rightValue.toDate()));
 			}
 			if (lt == ValueType.BOOLEAN) {
 				return Value.newBooleanValue(leftValue.toBoolean() == rightValue.toBoolean());
 			}
 			return Value.newBooleanValue(
-					leftValue.toText().compareToIgnoreCase(rightValue.toText()) == 0);
+					leftValue.toString().compareToIgnoreCase(rightValue.toString()) == 0);
 		}
 
 		@Override
@@ -375,13 +377,13 @@ public enum BinaryOperator {
 				throw new InvalidValueException("");
 			}
 			if (lt == ValueType.DATE) {
-				return Value.newBooleanValue(leftValue.toDate().getTime() != rightValue.toDate().getTime());
+				return Value.newBooleanValue(!leftValue.toDate().equals(rightValue.toDate()));
 			}
 			if (lt == ValueType.BOOLEAN) {
 				return Value.newBooleanValue(leftValue.toBoolean() != rightValue.toBoolean());
 			}
 			return Value.newBooleanValue(
-					leftValue.toText().compareToIgnoreCase(rightValue.toText()) != 0);
+					leftValue.toString().compareToIgnoreCase(rightValue.toString()) != 0);
 		}
 
 		@Override

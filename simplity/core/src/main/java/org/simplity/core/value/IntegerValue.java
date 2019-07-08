@@ -35,102 +35,98 @@ import org.simplity.json.JSONWriter;
  */
 public class IntegerValue extends Value {
 
-  /** */
-  private static final long serialVersionUID = 1L;
+	/** */
+	private static final long serialVersionUID = 1L;
 
-  private long value;
+	private final long value;
+	private final boolean valueIsNull;
 
-  protected IntegerValue(long value) {
-    this.value = value;
-  }
+	protected IntegerValue(long value) {
+		this.value = value;
+		this.valueIsNull = false;
+	}
 
-  protected IntegerValue() {
-    this.valueIsNull = true;
-  }
+	protected IntegerValue() {
+		this.value = 0;
+		this.valueIsNull = true;
+	}
 
-  @Override
-  public ValueType getValueType() {
-    return ValueType.INTEGER;
-  }
+	@Override
+	public ValueType getValueType() {
+		return ValueType.INTEGER;
+	}
 
-  @Override
-  protected void format() {
-    this.textValue = "" + this.value;
-  }
+	@Override
+	protected boolean equalValue(Value otherValue) {
+		if (otherValue instanceof IntegerValue) {
+			return ((IntegerValue) otherValue).value == this.value;
+		}
 
-  @Override
-  protected boolean equalValue(Value otherValue) {
-    if (otherValue instanceof IntegerValue) {
-      return ((IntegerValue) otherValue).value == this.value;
-    }
+		if (otherValue instanceof DecimalValue) {
+			return ((DecimalValue) otherValue).getLong() == this.value;
+		}
 
-    if (otherValue instanceof DecimalValue) {
-      return ((DecimalValue) otherValue).getLong() == this.value;
-    }
+		return false;
+	}
 
-    return false;
-  }
+	@Override
+	public long toInteger() throws InvalidValueException {
+		return this.value;
+	}
 
-  @Override
-  public long toInteger() throws InvalidValueException {
-    return this.value;
-  }
+	@Override
+	public double toDecimal() throws InvalidValueException {
+		return this.value;
+	}
 
-  @Override
-  public double toDecimal() throws InvalidValueException {
-    return this.value;
-  }
-
-  /**
-   * preferred method if this concrete class is used. Avoids exception
-   *
-   * @return long value
-   */
-  public long getLong() {
-    return this.value;
-  }
-
-  /**
-   * preferred method if this concrete class is used. Avoids exception
-   *
-   * @return long value cast as decimal
-   */
-  public double getDouble() {
-    return this.value;
-  }
-
-  @Override
-  public void setToStatement(PreparedStatement statement, int idx) throws SQLException {
-    if (this.isUnknown()) {
-      statement.setNull(idx, Types.BIGINT);
-    } else {
-      statement.setLong(idx, this.value);
-    }
-  }
-
-  @Override
-  public Object getObject() {
-    return new Long(this.value);
-  }
-
-  @SuppressWarnings("unchecked")
-@Override
-  public Object[] toArray(Value[] values) {
-    int n = values.length;
-    Long[] arr = new Long[n];
-    for (int i = 0; i < n; i++) {
-      IntegerValue val = (IntegerValue) values[i];
-      arr[i] = new Long(val.value);
-    }
-    return arr;
-  }
-	/* (non-Javadoc)
-	 * @see org.simplity.json.Jsonable#writeJsonValue(org.simplity.json.JSONWriter)
+	/**
+	 * preferred method if this concrete class is used. Avoids exception
+	 *
+	 * @return long value
 	 */
+	public long getLong() {
+		return this.value;
+	}
+
+	/**
+	 * preferred method if this concrete class is used. Avoids exception
+	 *
+	 * @return long value cast as decimal
+	 */
+	public double getDouble() {
+		return this.value;
+	}
+
+	@Override
+	public void setToStatement(PreparedStatement statement, int idx) throws SQLException {
+		if (this.isUnknown()) {
+			statement.setNull(idx, Types.BIGINT);
+		} else {
+			statement.setLong(idx, this.value);
+		}
+	}
+
+	@Override
+	public Object getObject() {
+		return new Long(this.value);
+	}
+
 	@Override
 	public void writeJsonValue(JSONWriter writer) {
 		writer.value(this.value);
 	}
 
+	@Override
+	public boolean isUnknown() {
+		return this.valueIsNull;
+	}
+
+	@Override
+	public String toString() {
+		if (this.valueIsNull) {
+			return Value.NULL_TEXT_VALUE;
+		}
+		return "" + this.value;
+	}
 
 }

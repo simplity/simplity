@@ -58,7 +58,7 @@ public class InputField {
 		if (this.valueType == null) {
 			throw new ApplicationError("valueType is required for an input field");
 		}
-		this.valueObject = Value.parseValue(this.value, this.valueType);
+		this.valueObject = this.valueType.parse(this.value);
 		if (Value.isNull(this.valueObject)) {
 			throw new ApplicationError("Field " + this.name + " is of type " + this.valueType
 					+ " and has an invalid value of " + this.value);

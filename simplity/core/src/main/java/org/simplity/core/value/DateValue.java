@@ -22,111 +22,89 @@
  */
 package org.simplity.core.value;
 
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.sql.Types;
-import java.util.Date;
+import java.time.LocalDate;
 
-import org.simplity.core.util.DateUtil;
 import org.simplity.json.JSONWriter;
 
 /**
- * represents a date value. java.lang.Date is mutable, and hence is not suitable to represent a
- * value. We keep date.getTime() as a long. We return a new Date() each time some one asks for value
+ * represents a date value. internally represented by LocalDate
  *
  * @author simplity.org
  */
 public class DateValue extends Value {
-  /** */
-  private static final long serialVersionUID = 1L;
+	/** */
+	private static final long serialVersionUID = 1L;
 
-  private long value;
+	private final LocalDate value;
 
-  protected DateValue(long value) {
-    this.value = value;
-  }
+	protected DateValue(LocalDate value) {
+		this.value = value;
+	}
 
-  protected DateValue() {
-    this.valueIsNull = true;
-  }
+	protected DateValue() {
+		this.value = null;
+	}
 
-  @Override
-  public ValueType getValueType() {
-    return ValueType.DATE;
-  }
+	@Override
+	public ValueType getValueType() {
+		return ValueType.DATE;
+	}
 
-  @Override
-  protected void format() {
-    this.textValue = DateUtil.formatDateTime(this.value);
-  }
+	@Override
+	public LocalDate toDate() throws InvalidValueException {
+		return this.value;
+	}
 
-  @Override
-  public Date toDate() throws InvalidValueException {
-    /*
-     * we return new date instead of caching because Date, unfortunately, is
-     * mutable
-     */
-    return new Date(this.value);
-  }
+	@Override
+	protected boolean equalValue(Value otherValue) {
+		if (otherValue instanceof DateValue) {
+			return ((DateValue) otherValue).value == this.value;
+		}
+		return false;
+	}
 
-  @Override
-  protected boolean equalValue(Value otherValue) {
-    if (otherValue instanceof DateValue) {
-      return ((DateValue) otherValue).value == this.value;
-    }
-    return false;
-  }
-
-  /**
-   * method to be used on a concrete class to avoid exception handling
-   *
-   * @return date
-   */
-  public long getDate() {
-    return this.value;
-  }
-
-  @Override
-  public void setToStatement(PreparedStatement statement, int idx) throws SQLException {
-    if (this.isUnknown()) {
-      statement.setNull(idx, Types.DATE);
-    } else {
-      if (DateUtil.hasTime(this.value)) {
-        Timestamp dateValue = new Timestamp(this.value);
-        statement.setTimestamp(idx, dateValue);
-      } else {
-        java.sql.Date dateValue = new java.sql.Date(this.value);
-        statement.setDate(idx, dateValue);
-      }
-    }
-  }
-
-  @Override
-  public Object getObject() {
-    /*
-     * should it be java.lang.Date? anyways java.sql.Date extends it.
-     */
-    return new java.sql.Date(this.value);
-  }
-
-  @SuppressWarnings("unchecked")
-@Override
-  public Object[] toArray(Value[] values) {
-    int n = values.length;
-    java.sql.Date[] arr = new java.sql.Date[n];
-    for (int i = 0; i < n; i++) {
-      DateValue val = (DateValue) values[i];
-      arr[i] = new java.sql.Date(val.value);
-    }
-    return arr;
-  }
-
-  /* (non-Javadoc)
-	 * @see org.simplity.json.Jsonable#writeJsonValue(org.simplity.json.JSONWriter)
+	/**
+	 * method to be used on a concrete class to avoid exception handling
+	 *
+	 * @return date
 	 */
+	public LocalDate getDate() {
+		return this.value;
+	}
+
+	@Override
+	public void setToStatement(PreparedStatement statement, int idx) throws SQLException {
+		if (this.isUnknown()) {
+			statement.setNull(idx, Types.DATE);
+			return;
+		}
+		statement.setDate(idx, Date.valueOf(this.value));
+	}
+
+	@Override
+	public LocalDate getObject() {
+		return this.value;
+	}
+
 	@Override
 	public void writeJsonValue(JSONWriter writer) {
-		writer.value(new Date(this.value));
+		writer.value(this.value);
+	}
+
+	@Override
+	public boolean isUnknown() {
+		return this.value == null;
+	}
+
+	@Override
+	public String toString() {
+		if (this.value == null) {
+			return Value.NULL_TEXT_VALUE;
+		}
+		return this.value.toString();
 	}
 }

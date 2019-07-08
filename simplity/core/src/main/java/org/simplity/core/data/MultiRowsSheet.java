@@ -330,7 +330,7 @@ public class MultiRowsSheet implements IDataSheet {
 		Value[] values = new Value[texts.length];
 		int i = 0;
 		for (String text : texts) {
-			values[i] = Value.parseValue(text, this.columnValueTypes[i]);
+			values[i] = this.columnValueTypes[i].parse(text);
 			i++;
 		}
 		return values;

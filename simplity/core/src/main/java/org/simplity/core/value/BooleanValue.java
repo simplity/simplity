@@ -34,83 +34,80 @@ import org.simplity.json.JSONWriter;
  * @author simplity.org
  */
 public class BooleanValue extends Value {
-  /** */
-  private static final long serialVersionUID = 1L;
+	/** */
+	private static final long serialVersionUID = 1L;
 
-  private boolean value;
+	private final boolean value;
+	private final boolean valueIsNull;
 
-  protected BooleanValue(boolean value) {
-    this.value = value;
-  }
+	protected BooleanValue(boolean value) {
+		this.value = value;
+		this.valueIsNull = false;
+	}
 
-  protected BooleanValue() {
-    this.valueIsNull = true;
-  }
+	protected BooleanValue() {
+		this.value = false;
+		this.valueIsNull = true;
+	}
 
-  @Override
-  public ValueType getValueType() {
-    return ValueType.BOOLEAN;
-  }
+	@Override
+	public boolean isUnknown() {
+		return this.valueIsNull;
+	}
 
-  @Override
-  protected void format() {
-    this.textValue = this.value ? Value.TRUE_TEXT_VALUE : Value.FALSE_TEXT_VALUE;
-  }
+	@Override
+	public ValueType getValueType() {
+		return ValueType.BOOLEAN;
+	}
 
-  @Override
-  public boolean toBoolean() throws InvalidValueException {
-    return this.value;
-  }
+	@Override
+	public String toString() {
+		if (this.valueIsNull) {
+			return Value.NULL_TEXT_VALUE;
+		}
+		return "" + this.value;
+	}
 
-  @Override
-  protected boolean equalValue(Value otherValue) {
-    if (otherValue instanceof BooleanValue) {
-      return ((BooleanValue) otherValue).value == this.value;
-    }
-    return false;
-  }
+	@Override
+	public boolean toBoolean() throws InvalidValueException {
+		return this.value;
+	}
 
-  /**
-   * if you are accessing this class, this method is better than toBoolean, as you do not have to
-   * deal with exception
-   *
-   * @return boolean
-   */
-  public boolean getBoolean() {
-    return this.value;
-  }
+	@Override
+	protected boolean equalValue(Value otherValue) {
+		if (otherValue instanceof BooleanValue) {
+			return ((BooleanValue) otherValue).value == this.value;
+		}
+		return false;
+	}
 
-  @Override
-  public void setToStatement(PreparedStatement statement, int idx) throws SQLException {
-    if (this.isUnknown()) {
-      statement.setNull(idx, Types.BOOLEAN);
-    } else {
-      statement.setBoolean(idx, this.value);
-    }
-  }
-
-  @Override
-  public Object getObject() {
-    if (this.value) {
-      return Boolean.TRUE;
-    }
-    return Boolean.FALSE;
-  }
-
-  @SuppressWarnings("unchecked")
-@Override
-  public Object[] toArray(Value[] values) {
-    int n = values.length;
-    Boolean[] arr = new Boolean[n];
-    for (int i = 0; i < n; i++) {
-      BooleanValue val = (BooleanValue) values[i];
-      arr[i] = val.value ? TRUE_OBJECT : FALSE_OBJECT;
-    }
-    return arr;
-  }
-	/* (non-Javadoc)
-	 * @see org.simplity.json.Jsonable#writeJsonValue(org.simplity.json.JSONWriter)
+	/**
+	 * if you are accessing this class, this method is better than toBoolean, as
+	 * you do not have to deal with exception
+	 *
+	 * @return boolean
 	 */
+	public boolean getBoolean() {
+		return this.value;
+	}
+
+	@Override
+	public void setToStatement(PreparedStatement statement, int idx) throws SQLException {
+		if (this.isUnknown()) {
+			statement.setNull(idx, Types.BOOLEAN);
+		} else {
+			statement.setBoolean(idx, this.value);
+		}
+	}
+
+	@Override
+	public Object getObject() {
+		if (this.value) {
+			return Boolean.TRUE;
+		}
+		return Boolean.FALSE;
+	}
+
 	@Override
 	public void writeJsonValue(JSONWriter writer) {
 		writer.value(this.value);

@@ -21,7 +21,7 @@
  */
 package org.simplity.core.data;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -108,7 +108,7 @@ public class CommonData implements ICommonData {
 				if (obj instanceof Value) {
 					return (Value) obj;
 				}
-				return Value.parseObject(obj);
+				return Value.parse(obj);
 			}
 		}
 		return null;
@@ -235,7 +235,7 @@ public class CommonData implements ICommonData {
 				obj = json.opt(fieldName);
 				Value val = null;
 				if (obj != null) {
-					val = Value.parseObject(obj);
+					val = Value.parse(obj);
 					json.remove(fieldName);
 				}
 				return val;
@@ -488,14 +488,14 @@ public class CommonData implements ICommonData {
 	}
 
 	@Override
-	public Date getDateValue(String fieldName) {
+	public LocalDate getDateValue(String fieldName) {
 		Value val = this.getValue(fieldName);
 		if (Value.isNull(val)) {
 			return null;
 		}
 
 		if (val.getValueType() == ValueType.DECIMAL) {
-			return new Date(((DateValue) val).getDate());
+			return ((DateValue) val).getDate();
 		}
 		return null;
 	}
@@ -544,7 +544,7 @@ public class CommonData implements ICommonData {
 	}
 
 	@Override
-	public void setDateValue(String fieldName, Date value) {
+	public void setDateValue(String fieldName, LocalDate value) {
 		this.setValue(fieldName, Value.newDateValue(value));
 	}
 

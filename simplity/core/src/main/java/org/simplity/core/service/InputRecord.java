@@ -515,7 +515,7 @@ public class InputRecord {
 				continue;
 			}
 
-			value = valueType.fromObject(obj);
+			value = valueType.parseObject(obj);
 			if (value == null) {
 				logger.error("{} is not valid for field {}", obj, fieldInputName);
 				ctx.addValidationMessage(Messages.INVALID_DATA, null, fieldInputName, null, 0, obj.toString());

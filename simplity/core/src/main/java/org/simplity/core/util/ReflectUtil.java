@@ -24,7 +24,7 @@ package org.simplity.core.util;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -140,7 +140,7 @@ public class ReflectUtil {
 	 */
 	public static boolean isValueType(Class<?> type) {
 		if (type.isPrimitive() || type.isEnum() || type.equals(String.class) || type.equals(Expression.class)
-				|| type.equals(Date.class) || type.equals(Pattern.class)) {
+				|| type.equals(LocalDate.class) || type.equals(Pattern.class)) {
 			return true;
 		}
 		return false;

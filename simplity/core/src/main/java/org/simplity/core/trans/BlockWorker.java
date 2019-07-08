@@ -22,7 +22,6 @@
 
 package org.simplity.core.trans;
 
-import java.util.Date;
 import java.util.Map;
 
 import org.simplity.core.ApplicationError;
@@ -105,11 +104,12 @@ public class BlockWorker implements IDbClient, IJmsClient {
 		String whatNext = null;
 		while (currentIdx < nbrActions) {
 			AbstractAction action = this.actions[currentIdx];
-			long startedAt = new Date().getTime();
+			long startedAt = System.currentTimeMillis();
 			whatNext = action.executeAction(this.ctx, dbHandle, this.transactionIsDelegated);
 			currentIdx++;
 
-			logger.info("Action {} finished in {} ms", action.actionName, (new Date().getTime() - startedAt) + " ms");
+			logger.info("Action {} finished in {} ms", action.actionName,
+					(System.currentTimeMillis() - startedAt) + " ms");
 
 			if (whatNext == null) {
 				continue;

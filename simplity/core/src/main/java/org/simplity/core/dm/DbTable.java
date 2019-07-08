@@ -375,7 +375,7 @@ public class DbTable extends Record {
 				throw new ApplicationError("Field " + this.modifiedStampField.getName()
 						+ " is timestamp, and value is required for an update operation to check for concurrency.");
 			}
-			values[nbr] = Value.newTimestampValue(stamp);
+			values[nbr] = stamp;
 		} else {
 			values = new Value[nbr];
 		}
@@ -1542,7 +1542,7 @@ public class DbTable extends Record {
 				return null;
 			}
 			values = new Value[1];
-			values[0] = Value.parseValue(keyValue, this.valueListKeyType);
+			values[0] = this.valueListKeyType.parse(keyValue);
 		}
 		IDataSheet sheet = null;
 		if (this.valueListTypes.length == 1) {
@@ -1865,7 +1865,7 @@ public class DbTable extends Record {
 		 */
 		for (int i = 0; i < nbrCols; i++) {
 			Value[] row = columns.getRow(i);
-			String colName = row[2].toText();
+			String colName = row[2].toString();
 			/*
 			 * we should cross-check value type and size. As of now let us check
 			 * for length issues with text fields

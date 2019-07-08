@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package org.simplity.core.value;
+package org.simplity.core.app.internal;
 
 import java.util.HashMap;
 import java.util.Map;

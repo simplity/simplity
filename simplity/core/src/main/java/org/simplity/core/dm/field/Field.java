@@ -22,6 +22,7 @@
 
 package org.simplity.core.dm.field;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.simplity.core.ApplicationError;
@@ -47,7 +48,6 @@ import org.simplity.core.service.OutputRecord;
 import org.simplity.core.service.ServiceContext;
 import org.simplity.core.sql.InputOutputType;
 import org.simplity.core.value.BooleanValue;
-import org.simplity.core.value.IntegerValue;
 import org.simplity.core.value.Value;
 import org.simplity.core.value.ValueType;
 import org.slf4j.Logger;
@@ -340,7 +340,7 @@ public class Field {
 		if (this.defaultValueParameter != null) {
 			String txt = ParameterRetriever.getValue(this.defaultValueParameter, ctx);
 			if (txt != null) {
-				return Value.parseValue(txt, this.defaultValueObject.getValueType());
+				return this.defaultValueObject.getValueType().parse(txt);
 			}
 		}
 		return null;
@@ -363,14 +363,6 @@ public class Field {
 			return this.getDefaultValue(ctx);
 		}
 
-		/**
-		 * we treat integer as milliseconds if the value is to be a date
-		 */
-		if (this.valueType == ValueType.DATE) {
-			if (value.getValueType().equals(ValueType.INTEGER)) {
-				value = Value.newDateValue((((IntegerValue) value).getLong()));
-			}
-		}
 		return value;
 	}
 
@@ -433,7 +425,7 @@ public class Field {
 						 * not only that the basedOnField has to have value, it
 						 * should have a specific value
 						 */
-						Value matchingValue = Value.parseValue(this.basedOnFieldValue, basedValue.getValueType());
+						Value matchingValue = basedValue.getValueType().parse(this.basedOnFieldValue);
 						if (basedValue.equals(matchingValue)) {
 							ctx.addMessage(new FormattedMessage(Messages.INVALID_BASED_ON_FIELD, recordName, this.name,
 									this.basedOnField, 0));
@@ -523,7 +515,16 @@ public class Field {
 		this.hasInterfields = this.basedOnField != null || this.fromField != null || this.toField != null
 				|| this.otherField != null;
 		if (this.valueList != null) {
-			this.validValues = Value.parseValueList(this.valueList, this.valueType);
+			this.validValues = new HashSet<>();
+			for (String text : this.valueList.split(",")) {
+				Value value = this.valueType.parse(text.split(":")[0]);
+				if (value == null) {
+					logger.error("Value list for field {} is {}. This contains invalid value of {}", this.name,
+							this.validValues, text);
+				} else {
+					this.validValues.add(value);
+				}
+			}
 		}
 
 	}

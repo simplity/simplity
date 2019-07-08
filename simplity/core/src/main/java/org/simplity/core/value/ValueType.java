@@ -21,30 +21,21 @@
  */
 package org.simplity.core.value;
 
-import java.io.File;
-import java.io.InputStream;
-import java.io.Reader;
-import java.sql.Blob;
 import java.sql.CallableStatement;
-import java.sql.Clob;
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.util.Date;
+import java.time.Instant;
+import java.time.LocalDate;
 
-import org.simplity.core.ApplicationError;
-import org.simplity.core.dt.BlobDataType;
 import org.simplity.core.dt.BooleanDataType;
-import org.simplity.core.dt.ClobDataType;
 import org.simplity.core.dt.DataType;
 import org.simplity.core.dt.DateDataType;
 import org.simplity.core.dt.NumericDataType;
 import org.simplity.core.dt.TextDataType;
 import org.simplity.core.dt.TimestampDataType;
-import org.simplity.core.file.FileManager;
-import org.simplity.core.util.DateUtil;
-import org.simplity.core.util.JsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,18 +54,13 @@ public enum ValueType {
 		}
 
 		@Override
-		public void toJson(String value, StringBuilder json) {
-			JsonUtil.appendQoutedText(value, json);
-		}
-
-		@Override
 		public Value extractFromRs(ResultSet resultSet, int posn) throws SQLException {
 			/*
 			 * written for text. others override this
 			 */
 			String val = resultSet.getString(posn);
 			if (resultSet.wasNull()) {
-				return Value.newUnknownValue(TEXT);
+				return Value.VALUE_UNKNOWN_TEXT;
 			}
 			return Value.newTextValue(val);
 		}
@@ -86,14 +72,19 @@ public enum ValueType {
 			 */
 			String val = stmt.getString(posn);
 			if (stmt.wasNull()) {
-				return Value.newUnknownValue(TEXT);
+				return Value.VALUE_UNKNOWN_TEXT;
 			}
 			return Value.newTextValue(val);
 		}
 
 		@Override
-		public Value fromObject(Object dbObject) {
+		public Value parse(Object dbObject) {
 			return Value.newTextValue(dbObject.toString());
+		}
+
+		@Override
+		public Value parse(String value) {
+			return Value.newTextValue(value);
 		}
 	},
 	/** whole numbers with no fraction */
@@ -107,7 +98,7 @@ public enum ValueType {
 		public Value extractFromRs(ResultSet resultSet, int idx) throws SQLException {
 			long val = resultSet.getLong(idx);
 			if (resultSet.wasNull()) {
-				return Value.newUnknownValue(INTEGER);
+				return Value.VALUE_UNKNOWN_INTEGER;
 			}
 			return Value.newIntegerValue(val);
 		}
@@ -116,39 +107,26 @@ public enum ValueType {
 		public Value extractFromSp(CallableStatement stmt, int idx) throws SQLException {
 			long val = stmt.getLong(idx);
 			if (stmt.wasNull()) {
-				return Value.newUnknownValue(INTEGER);
+				return Value.VALUE_UNKNOWN_INTEGER;
 			}
 			return Value.newIntegerValue(val);
 		}
 
 		@Override
-		public Value fromObject(Object dbObject) {
-			long val = 0;
-			if (dbObject instanceof Number) {
-				val = ((Number) dbObject).longValue();
-			} else {
-				try {
-					val = Long.parseLong(dbObject.toString());
-				} catch (Exception e) {
-
-					logger.info(dbObject.toString() + " is an invalid number.");
-
-					return null;
-				}
+		public Value parse(Object object) {
+			if (object instanceof Number) {
+				return new IntegerValue(((Number) object).longValue());
 			}
-			return Value.newIntegerValue(val);
+			return this.parse(object.toString());
 		}
 
 		@Override
-		public Value[] toValues(Object[] arr) {
-			int n = arr.length;
-			Value[] result = new Value[n];
-			int i = 0;
-			for (Object obj : arr) {
-				result[i] = this.fromObject(obj);
-				i++;
+		public Value parse(String value) {
+			try {
+				return new IntegerValue(Long.parseLong(value));
+			} catch (Exception e) {
+				return Value.VALUE_UNKNOWN_INTEGER;
 			}
-			return result;
 		}
 	},
 	/** number with possible fraction */
@@ -162,7 +140,7 @@ public enum ValueType {
 		public Value extractFromRs(ResultSet resultSet, int idx) throws SQLException {
 			double val = resultSet.getDouble(idx);
 			if (resultSet.wasNull()) {
-				return Value.newUnknownValue(DECIMAL);
+				return Value.VALUE_UNKNOWN_DECIMAL;
 			}
 			return Value.newDecimalValue(val);
 		}
@@ -171,40 +149,26 @@ public enum ValueType {
 		public Value extractFromSp(CallableStatement stmt, int idx) throws SQLException {
 			double val = stmt.getDouble(idx);
 			if (stmt.wasNull()) {
-				return Value.newUnknownValue(DECIMAL);
+				return Value.VALUE_UNKNOWN_DECIMAL;
 			}
 			return Value.newDecimalValue(val);
 		}
 
 		@Override
-		public Value fromObject(Object dbObject) {
-			double val = 0;
-			if (dbObject instanceof Number) {
-				val = ((Number) dbObject).doubleValue();
-			} else {
-				try {
-					val = Double.parseDouble(dbObject.toString());
-				} catch (Exception e) {
-
-					logger.info(dbObject.toString() + " is an invalid number.");
-
-					return null;
-				}
+		public Value parse(Object object) {
+			if (object instanceof Number) {
+				return new DecimalValue(((Number) object).doubleValue());
 			}
-			return Value.newDecimalValue(val);
+			return this.parse(object.toString());
 		}
 
 		@Override
-		public Value[] toValues(Object[] arr) {
-			Number[] vals = (Number[]) arr;
-			int n = vals.length;
-			Value[] result = new Value[n];
-			for (int i = 0; i < n; i++) {
-				result[i] = Value.newDecimalValue(vals[i].doubleValue());
-
-				logger.info(arr[i] + " got extracted into " + result[i]);
+		public Value parse(String value) {
+			try {
+				return new DecimalValue(Double.parseDouble(value));
+			} catch (Exception e) {
+				return Value.VALUE_UNKNOWN_DECIMAL;
 			}
-			return result;
 		}
 	},
 	/**
@@ -219,246 +183,106 @@ public enum ValueType {
 
 		@Override
 		public Value extractFromRs(ResultSet resultSet, int idx) throws SQLException {
+			/*
+			 * oracle does not have boolean. DB Designers routinely use char as
+			 * boolean. We insist on 0/1as char in that case for boolean
+			 */
 			Object obj = resultSet.getObject(idx);
 			if (resultSet.wasNull()) {
-				return Value.newUnknownValue(BOOLEAN);
+				return Value.VALUE_UNKNOWN_BOOLEAN;
 			}
-			boolean val = false;
-			if (obj instanceof Boolean) {
-				val = ((Boolean) obj).booleanValue();
-			} else {
-				val = this.parse(obj);
-			}
-			if (val) {
-				return Value.VALUE_TRUE;
-			}
-			return Value.VALUE_FALSE;
+			return this.parse(obj);
 		}
 
 		@Override
 		public Value extractFromSp(CallableStatement stmt, int idx) throws SQLException {
 			Object obj = stmt.getObject(idx);
 			if (stmt.wasNull()) {
-				return Value.newUnknownValue(BOOLEAN);
+				return Value.VALUE_UNKNOWN_BOOLEAN;
 			}
-			boolean val = false;
-			if (obj instanceof Boolean) {
-				val = ((Boolean) obj).booleanValue();
-			} else {
-				val = this.parse(obj);
-			}
-			if (val) {
-				return Value.VALUE_TRUE;
-			}
-			return Value.VALUE_FALSE;
+			return this.parseObject(obj);
 		}
 
 		@Override
-		public Value fromObject(Object dbObject) {
-			boolean val = true;
-			if (dbObject instanceof Boolean) {
-				val = ((Boolean) dbObject).booleanValue();
-			} else {
-				val = this.parse(dbObject);
+		public Value parse(Object object) {
+			if (object instanceof Boolean) {
+				if ((Boolean) object) {
+					return Value.VALUE_TRUE;
+				}
+				return Value.VALUE_FALSE;
 			}
-			if (val) {
-				return Value.VALUE_TRUE;
-			}
-			return Value.VALUE_FALSE;
+			return this.parse(object.toString());
 		}
 
 		@Override
-		public Value[] toValues(Object[] arr) {
-			Boolean[] vals = (Boolean[]) arr;
-			int n = vals.length;
-			Value[] result = new Value[n];
-			for (int i = 0; i < n; i++) {
-				result[i] = Value.newBooleanValue(vals[i].booleanValue());
+		public Value parse(String value) {
+			String v = value.toLowerCase();
+			if (v.isEmpty() || "0".equals(v) || "n".equals(v) || "false".equals(v)) {
+				return Value.VALUE_FALSE;
 			}
-			return result;
+			if ("1".equals(value) || "y".equals(v) || "true".equals(v)) {
+				return Value.VALUE_TRUE;
+			}
+			return Value.VALUE_UNKNOWN_BOOLEAN;
 		}
 
-		private boolean parse(Object obj) {
-			String str = obj.toString();
-			if (str.length() == 0) {
-				return false;
-			}
-			char c = str.charAt(0);
-			if (c == ZERO || c == N || c == N1) {
-				return false;
-			}
-			return true;
-		}
 	},
-	/** date, possibly with specific time of day */
+	/**
+	 * date as in a calendar. time-zone insensitive, possibly with specific time
+	 * of day
+	 */
 	DATE(Types.DATE, "DATE") {
 		@Override
 		protected DataType getDataType() {
-			return DateDataType.getDefaultInstanceWithTime();
+			return DateDataType.getDefaultInstance();
 		}
 
 		@Override
 		public Value extractFromRs(ResultSet resultSet, int idx) throws SQLException {
-			Timestamp val = resultSet.getTimestamp(idx);
-			if (resultSet.wasNull()) {
-				return Value.newUnknownValue(DATE);
+			Date val = resultSet.getDate(idx);
+			if (val == null) {
+				return Value.VALUE_UNKNOWN_DATE;
 			}
-			return Value.newDateValue(val);
+			return Value.newDateValue(val.toLocalDate());
 		}
 
 		@Override
 		public Value extractFromSp(CallableStatement stmt, int idx) throws SQLException {
-			Timestamp val = stmt.getTimestamp(idx);
-			if (stmt.wasNull()) {
-				return Value.newUnknownValue(DATE);
+			Date val = stmt.getDate(idx);
+			if (val == null) {
+				return Value.VALUE_UNKNOWN_DATE;
 			}
-			return Value.newDateValue(val);
+			return Value.newDateValue(val.toLocalDate());
 		}
 
 		@Override
-		public Value fromObject(Object dbObject) {
-			if (dbObject instanceof java.util.Date) {
-				return Value.newDateValue(((java.util.Date) dbObject).getTime());
+		public Value parse(Object dbObject) {
+			if (dbObject instanceof Date) {
+				return new DateValue(((Date) dbObject).toLocalDate());
 			}
-
-			if (dbObject instanceof Number) {
-				return Value.newDateValue(new Date(((Number) dbObject).longValue()));
+			if (dbObject instanceof LocalDate) {
+				return new DateValue((LocalDate) dbObject);
 			}
-
-			String val = dbObject.toString();
-			java.util.Date date = DateUtil.parseDateWithOptionalTime(val);
-			if (date != null) {
-				return Value.newDateValue(date);
+			try {
+				return new DateValue(LocalDate.parse(dbObject.toString()));
+			} catch (Exception ignore) {
+				return Value.VALUE_UNKNOWN_DATE;
 			}
-			return null;
 		}
 
 		@Override
-		public Value[] toValues(Object[] arr) {
-			java.util.Date[] vals = (java.util.Date[]) arr;
-			int n = vals.length;
-			Value[] result = new Value[n];
-			n = 0;
-			for (java.util.Date date : vals) {
-				result[n] = Value.newDateValue(date);
-				n++;
-			}
-			return result;
-		}
-	},
-	/**
-	 * clob : a wrapper on text specifically for RDBMS clob field. Behaviour
-	 * mimics text except for RDBMS I/O
-	 */
-	CLOB(Types.CLOB, "CLOB") {
-		@Override
-		protected DataType getDataType() {
-			return ClobDataType.getDefaultInstance();
-		}
-
-		@Override
-		public void toJson(String value, StringBuilder json) {
-			JsonUtil.appendQoutedText(value, json);
-		}
-
-		@Override
-		public Value extractFromRs(ResultSet resultSet, int posn) throws SQLException {
-			Clob clob = resultSet.getClob(posn);
-			if (resultSet.wasNull()) {
-				clob = null;
-			}
-			return this.saveIt(clob);
-		}
-
-		@Override
-		public Value extractFromSp(CallableStatement stmt, int posn) throws SQLException {
-			Clob clob = stmt.getClob(posn);
-			if (stmt.wasNull()) {
-				clob = null;
-			}
-			return this.saveIt(clob);
-		}
-
-		@Override
-		public Value fromObject(Object dbObject) {
-			return Value.newClobValue(dbObject.toString());
-		}
-
-		/*
-		 * save clob into file
-		 */
-		private Value saveIt(Clob clob) {
-			if (clob == null) {
-				return Value.newUnknownValue(CLOB);
-			}
-			try (Reader reader = clob.getCharacterStream()) {
-				File file = FileManager.createTempFile(reader);
-				if (file == null) {
-					throw new ApplicationError("Unable to save clob value to a tmp storage.");
-				}
-				return Value.newClobValue(file.getName());
-			} catch (Exception e) {
-				throw new ApplicationError(e, "Error while saving clob value to a tmp storage.");
+		public Value parse(String value) {
+			try {
+				return new DateValue(LocalDate.parse(value));
+			} catch (Exception ignore) {
+				return Value.VALUE_UNKNOWN_DATE;
 			}
 		}
 	},
 	/**
-	 * Blob : this is a sub-class of text that behaves differently ONLY when
-	 * dealing with RDBMS i/o
+	 * an instance of time. This is ALWAYS the number of nano seconds from
+	 * UTC-Epoch. This may have to be converted to local time for printing
 	 */
-	BLOB(Types.BLOB, "BLOB") {
-		@Override
-		protected DataType getDataType() {
-			return BlobDataType.getDefaultInstance();
-		}
-
-		@Override
-		public void toJson(String value, StringBuilder json) {
-			JsonUtil.appendQoutedText(value, json);
-		}
-
-		@Override
-		public Value extractFromRs(ResultSet resultSet, int posn) throws SQLException {
-			Blob blob = resultSet.getBlob(posn);
-			if (resultSet.wasNull()) {
-				return this.saveIt(null);
-			}
-			return this.saveIt(blob);
-		}
-
-		@Override
-		public Value extractFromSp(CallableStatement stmt, int posn) throws SQLException {
-			Blob blob = stmt.getBlob(posn);
-			if (stmt.wasNull()) {
-				return this.saveIt(null);
-			}
-			return this.saveIt(blob);
-		}
-
-		@Override
-		public Value fromObject(Object dbObject) {
-			return Value.newBlobValue(dbObject.toString());
-		}
-
-		/*
-		 * save blob into file
-		 */
-		private Value saveIt(Blob blob) {
-			if (blob == null) {
-				return Value.newUnknownValue(BLOB);
-			}
-			try (InputStream stream = blob.getBinaryStream()) {
-				File file = FileManager.createTempFile(stream);
-				if (file == null) {
-					throw new ApplicationError("Unable to save blob value to a tmp storage.");
-				}
-				return Value.newBlobValue(file.getName());
-			} catch (Exception e) {
-				throw new ApplicationError(e, "Error while saving blob field to a temp file");
-			}
-		}
-	},
-	/** time-stamp that is specifically used for RDBMS related operations */
 	TIMESTAMP(Types.TIMESTAMP, "TIMESTAMP") {
 		@Override
 		protected DataType getDataType() {
@@ -469,44 +293,46 @@ public enum ValueType {
 		public Value extractFromRs(ResultSet resultSet, int idx) throws SQLException {
 			Timestamp ts = resultSet.getTimestamp(idx);
 			if (resultSet.wasNull()) {
-				return Value.newUnknownValue(INTEGER);
+				return Value.VALUE_UNKNOWN_TIMESTAMP;
 			}
-			return new TimestampValue(ts);
+			return new TimestampValue(ts.toInstant());
 		}
 
 		@Override
 		public Value extractFromSp(CallableStatement stmt, int idx) throws SQLException {
 			Timestamp ts = stmt.getTimestamp(idx);
 			if (stmt.wasNull()) {
-				return Value.newUnknownValue(INTEGER);
+				return Value.VALUE_UNKNOWN_TIMESTAMP;
 			}
-			return new TimestampValue(ts);
+			return new TimestampValue(ts.toInstant());
 		}
 
 		@Override
-		public Value fromObject(Object dbObject) {
-			long val = 0;
-			if (dbObject instanceof Timestamp) {
-				return Value.newTimestampValue((Timestamp) dbObject);
+		public Value parse(Object object) {
+			if (object instanceof Timestamp) {
+				return new TimestampValue(((Timestamp) object).toInstant());
 			}
+
+			if (object instanceof Instant) {
+				return new TimestampValue((Instant) object);
+			}
+
 			try {
-				val = Long.parseLong(dbObject.toString());
-			} catch (Exception e) {
-				return null;
+				return new TimestampValue(Instant.parse(object.toString()));
+			} catch (Exception ignore) {
+				return Value.VALUE_UNKNOWN_TIMESTAMP;
 			}
-			return Value.newTimestampValue(val);
 		}
 
 		@Override
-		public Value[] toValues(Object[] arr) {
-			int n = arr.length;
-			Value[] result = new Value[n];
-			int i = 0;
-			for (Object obj : arr) {
-				result[i] = this.fromObject(obj);
-				i++;
+		public Value parse(String value) {
+
+			try {
+				return new TimestampValue(Instant.parse(value));
+			} catch (Exception ignore) {
+				return Value.VALUE_UNKNOWN_TIMESTAMP;
 			}
-			return result;
+
 		}
 	};
 	protected static final Logger logger = LoggerFactory.getLogger(ValueType.class);
@@ -535,8 +361,18 @@ public enum ValueType {
 		return this.sqlType;
 	}
 
+	/** @return get the sql type text */
+	public String getSqlTypeText() {
+		return this.sqlText;
+	}
+
+	/** @return a default data type for this value type */
+	public DataType getDefaultDataType() {
+		return this.defaultDataType;
+	}
+
 	/**
-	 * extracts the value from result set at the current index
+	 * extracts the value from result set
 	 *
 	 * @param resultSet
 	 * @param posn
@@ -547,7 +383,8 @@ public enum ValueType {
 	public abstract Value extractFromRs(ResultSet resultSet, int posn) throws SQLException;
 
 	/**
-	 * extracts the value from result set at the current index
+	 * extracts the value from result of a stored procedure (callable
+	 * statement)x
 	 *
 	 * @param stmt
 	 * @param posn
@@ -568,84 +405,26 @@ public enum ValueType {
 	}
 
 	/**
-	 * assuming that the supplied value is a valid value, format it for a json
-	 *
-	 * @param value
-	 *            text input
-	 * @param json
-	 *            to which value is to be appended
-	 */
-	public void toJson(String value, StringBuilder json) {
-		if (value == null || value.length() == 0) {
-			json.append(NULL);
-		} else {
-			json.append(value);
-		}
-	}
-
-	/**
-	 * @param arr
-	 * @return value list for the array object
-	 */
-	public Value[] toValues(Object[] arr) {
-
-		logger.info("Going to convert " + arr.length + " objects into " + this.name());
-
-		int n = arr.length;
-		Value[] result = new Value[n];
-		for (int i = 0; i < n; i++) {
-			Object obj = arr[i];
-			String val = obj == null ? "null" : obj.toString();
-			result[i] = this.fromObject(val);
-		}
-		return result;
-	}
-
-	/**
 	 * @param object
 	 *            as returned by a resultSet.getObject() or json.opt()
 	 * @return object converted to value of this value type
 	 */
 	public Value parseObject(Object object) {
 		if (object == null) {
-
-			logger.info("Parse Object received null for type " + this.name()
-					+ ". Client may receive null or empty string depending on the setting.");
-
 			return Value.newUnknownValue(this);
 		}
-		return this.fromObject(object);
+		return this.parse(object);
 	}
 
 	/**
 	 * parse/convert object instance to specific value
 	 *
-	 * @param dbObject
-	 * @return value. null if dbObject is not the right object for this value
-	 *         type.
+	 * @param text
+	 *            non-null
+	 * @return non-null, but the value.isUNknown() is true if the value is nu
+	 *         could be if text could not be parsed into this type of value
 	 */
-	public abstract Value fromObject(Object dbObject);
+	public abstract Value parse(String text);
 
-	/** @return get the sql type text */
-	public String getSqlTypeText() {
-		return this.sqlText;
-	}
-
-	/** @return a default data type for this value type */
-	public DataType getDefaultDataType() {
-		return this.defaultDataType;
-	}
-
-	/**
-	 * @param sqlType
-	 * @return the ValueType name based on SQL Type
-	 */
-	public static ValueType getValueType(String sqlType) {
-		for (ValueType value : ValueType.values()) {
-			if (value.getSqlTypeText().equals(sqlType)) {
-				return value;
-			}
-		}
-		return null;
-	}
+	protected abstract Value parse(Object dbObject);
 }

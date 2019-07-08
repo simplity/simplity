@@ -22,11 +22,8 @@
  */
 package org.simplity.core.dt;
 
-import org.simplity.core.value.InvalidValueException;
 import org.simplity.core.value.Value;
 import org.simplity.core.value.ValueType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** @author simplity.org */
 public class BooleanDataType extends DataType {
@@ -45,8 +42,6 @@ public class BooleanDataType extends DataType {
 	public static BooleanDataType getDefaultInstance() {
 		return defaultInstance;
 	}
-
-	private static final Logger logger = LoggerFactory.getLogger(BooleanDataType.class);
 
 	private static final String DESC = "1 for yes/true and 0 for false/no";
 
@@ -68,19 +63,5 @@ public class BooleanDataType extends DataType {
 	@Override
 	protected String synthesiseDscription() {
 		return DESC;
-	}
-
-	@Override
-	public String formatVal(Value value) {
-
-		try {
-			if (value.toBoolean()) {
-				return Value.TRUE_TEXT_VALUE;
-			}
-		} catch (InvalidValueException e) {
-
-			logger.info("Boolean data type is asked to format  non-boolean value. False value assumed");
-		}
-		return Value.FALSE_TEXT_VALUE;
 	}
 }

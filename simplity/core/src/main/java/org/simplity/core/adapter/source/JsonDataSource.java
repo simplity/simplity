@@ -22,11 +22,10 @@
 
 package org.simplity.core.adapter.source;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 import org.simplity.core.adapter.IDataListSource;
 import org.simplity.core.adapter.IDataSource;
-import org.simplity.core.util.DateUtil;
 import org.simplity.core.util.JsonUtil;
 import org.simplity.json.JSONArray;
 import org.simplity.json.JSONObject;
@@ -112,15 +111,20 @@ public class JsonDataSource {
 		}
 
 		@Override
-		public Date getDateValue(String fieldName) {
+		public LocalDate getDateValue(String fieldName) {
 			Object obj = JsonUtil.getChildValue(this.source, fieldName);
 			if (obj == null) {
 				return null;
 			}
-			if (obj instanceof Date) {
-				return (Date) obj;
+			if (obj instanceof LocalDate) {
+				return (LocalDate) obj;
 			}
-			return DateUtil.parseDateWithOptionalTime(obj.toString());
+			try {
+				LocalDate.parse(obj.toString());
+			} catch (Exception e) {
+				//
+			}
+			return null;
 		}
 	}
 }

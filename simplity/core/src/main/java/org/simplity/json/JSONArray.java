@@ -30,67 +30,58 @@ import java.io.Writer;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.simplity.core.util.DateUtil;
 import org.simplity.core.value.Value;
 
 /**
  * A JSONArray is an ordered sequence of values. Its external text form is a
- * string wrapped in
- * square brackets with commas separating the values. The internal form is an
- * object having <code>
+ * string wrapped in square brackets with commas separating the values. The
+ * internal form is an object having <code>
  * get</code> and <code>opt</code> methods for accessing the values by index,
- * and <code>put</code>
- * methods for adding or replacing values. The values can be any of these types:
- * <code>Boolean
+ * and <code>put</code> methods for adding or replacing values. The values can
+ * be any of these types: <code>Boolean
  * </code>, <code>JSONArray</code>, <code>JSONObject</code>,
  * <code>Number</code>, <code>String
  * </code>, or the <code>JSONObject.NULL object</code>.
  *
  * <p>
  * The constructor can convert a JSON text into a Java object. The
- * <code>toString</code> method
- * converts to JSON text.
+ * <code>toString</code> method converts to JSON text.
  *
  * <p>
  * A <code>get</code> method returns a value if one can be found, and throws an
- * exception if one
- * cannot be found. An <code>opt</code> method returns a default value instead
- * of throwing an
- * exception, and so is useful for obtaining optional values.
+ * exception if one cannot be found. An <code>opt</code> method returns a
+ * default value instead of throwing an exception, and so is useful for
+ * obtaining optional values.
  *
  * <p>
  * The generic <code>get()</code> and <code>opt()</code> methods return an
- * object which you can
- * cast or query for type. There are also typed <code>get</code> and
- * <code>opt</code> methods that
- * do type checking and type coercion for you.
+ * object which you can cast or query for type. There are also typed
+ * <code>get</code> and <code>opt</code> methods that do type checking and type
+ * coercion for you.
  *
  * <p>
  * The texts produced by the <code>toString</code> methods strictly conform to
- * JSON syntax rules.
- * The constructors are more forgiving in the texts they will accept:
+ * JSON syntax rules. The constructors are more forgiving in the texts they will
+ * accept:
  *
  * <ul>
  * <li>An extra <code>,</code>&nbsp;<small>(comma)</small> may appear just
- * before the closing
- * bracket.
+ * before the closing bracket.
  * <li>The <code>null</code> value will be inserted when there is <code>,</code>
  * &nbsp;<small>(comma)</small> epsilon.
  * <li>Strings may be quoted with <code>'</code>&nbsp;<small>(single
  * quote)</small>.
  * <li>Strings do not need to be quoted at all if they do not begin with a quote
- * or single quote,
- * and if they do not contain leading or trailing spaces, and if they do not
- * contain any of
- * these characters: <code>{ } [ ] / \ : , #</code> and if they do not look like
- * numbers and
- * if they are not the reserved words <code>true</code>, <code>false</code>, or
+ * or single quote, and if they do not contain leading or trailing spaces, and
+ * if they do not contain any of these characters:
+ * <code>{ } [ ] / \ : , #</code> and if they do not look like numbers and if
+ * they are not the reserved words <code>true</code>, <code>false</code>, or
  * <code>null
  *       </code>.
  * </ul>
@@ -98,7 +89,7 @@ import org.simplity.core.value.Value;
  * @author JSON.org
  * @version 2015-10-29
  */
-public class JSONArray implements Iterable<Object>, JsonWritable{
+public class JSONArray implements Iterable<Object>, JsonWritable {
 
 	/** The arrayList where the JSONArray's properties are kept. */
 	private final ArrayList<Object> myArrayList;
@@ -152,8 +143,8 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 	 *
 	 * @param source
 	 *            A string that begins with <code>[</code>&nbsp;<small>(left
-	 *            bracket)</small> and
-	 *            ends with <code>]</code> &nbsp;<small>(right bracket)</small>.
+	 *            bracket)</small> and ends with <code>]</code>
+	 *            &nbsp;<small>(right bracket)</small>.
 	 * @throws JSONException
 	 *             If there is a syntax error.
 	 */
@@ -220,16 +211,14 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 
 	/**
 	 * Get the boolean value associated with an index. The string values "true"
-	 * and "false" are
-	 * converted to boolean.
+	 * and "false" are converted to boolean.
 	 *
 	 * @param index
 	 *            The index must be between 0 and length() - 1.
 	 * @return The truth.
 	 * @throws JSONException
 	 *             If there is no value for the index or if the value is not
-	 *             convertible to
-	 *             boolean.
+	 *             convertible to boolean.
 	 */
 	public boolean getBoolean(int index) throws JSONException {
 		Object object = this.get(index);
@@ -268,12 +257,16 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 	 *            The index must be between 0 and length() - 1.
 	 * @return The value or null if it is not a date
 	 */
-	public Date optDate(int index) {
+	public LocalDate optDate(int index) {
 		Object object = this.get(index);
-		if (object instanceof Date) {
-			return (Date) object;
+		if (object instanceof LocalDate) {
+			return (LocalDate) object;
 		}
-		return DateUtil.parseDateWithOptionalTime(object.toString());
+		try {
+			return LocalDate.parse(object.toString());
+		} catch (Exception e) {
+			return null;
+		}
 	}
 
 	/**
@@ -286,8 +279,8 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 	 *             If the key is not found or if the value cannot be converted
 	 *             to a Date.
 	 */
-	public Date getDate(int index) throws JSONException {
-		Date date = this.optDate(index);
+	public LocalDate getDate(int index) throws JSONException {
+		LocalDate date = this.optDate(index);
 		if (date == null) {
 			throw new JSONException("JSONArray[" + index + "] is not a date or string in UTC date format.");
 		}
@@ -304,12 +297,12 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 	 * @throws JSONException
 	 *             If the key is not found
 	 */
-	public Value getValue(int index)  throws JSONException{
+	public Value getValue(int index) throws JSONException {
 		Object value = this.get(index);
-		if(value instanceof Value) {
-			return (Value)value;
+		if (value instanceof Value) {
+			return (Value) value;
 		}
-		return Value.parseObject(value);
+		return Value.parse(value);
 	}
 
 	/**
@@ -325,10 +318,10 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 		if (value == null) {
 			return null;
 		}
-		if(value instanceof Value) {
-			return (Value)value;
+		if (value instanceof Value) {
+			return (Value) value;
 		}
-		return Value.parseObject(value);
+		return Value.parse(value);
 	}
 
 	/**
@@ -365,8 +358,7 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 	 * @return The value.
 	 * @throws JSONException
 	 *             If the key is not found or if the value cannot be converted
-	 *             to a
-	 *             BigDecimal.
+	 *             to a BigDecimal.
 	 */
 	public BigDecimal getBigDecimal(int index) throws JSONException {
 		Object object = this.get(index);
@@ -385,8 +377,7 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 	 * @return The value.
 	 * @throws JSONException
 	 *             If the key is not found or if the value cannot be converted
-	 *             to a
-	 *             BigInteger.
+	 *             to a BigInteger.
 	 */
 	public BigInteger getBigInteger(int index) throws JSONException {
 		Object object = this.get(index);
@@ -500,10 +491,8 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 
 	/**
 	 * Make a string from the contents of this JSONArray. The
-	 * <code>separator</code> string is
-	 * inserted between each element. Warning: This method assumes that the data
-	 * structure is
-	 * acyclical.
+	 * <code>separator</code> string is inserted between each element. Warning:
+	 * This method assumes that the data structure is acyclical.
 	 *
 	 * @param separator
 	 *            A string that will be inserted between the elements.
@@ -546,8 +535,8 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 
 	/**
 	 * Get the optional boolean value associated with an index. It returns false
-	 * if there is no value
-	 * at that index, or if the value is not Boolean.TRUE or the String "true".
+	 * if there is no value at that index, or if the value is not Boolean.TRUE
+	 * or the String "true".
 	 *
 	 * @param index
 	 *            The index must be between 0 and length() - 1.
@@ -559,10 +548,8 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 
 	/**
 	 * Get the optional boolean value associated with an index. It returns the
-	 * defaultValue if there
-	 * is no value at that index or if it is not a Boolean or the String "true"
-	 * or "false" (case
-	 * insensitive).
+	 * defaultValue if there is no value at that index or if it is not a Boolean
+	 * or the String "true" or "false" (case insensitive).
 	 *
 	 * @param index
 	 *            The index must be between 0 and length() - 1.
@@ -580,9 +567,8 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 
 	/**
 	 * Get the optional double value associated with an index. NaN is returned
-	 * if there is no value
-	 * for the index, or if the value is not a number and cannot be converted to
-	 * a number.
+	 * if there is no value for the index, or if the value is not a number and
+	 * cannot be converted to a number.
 	 *
 	 * @param index
 	 *            The index must be between 0 and length() - 1.
@@ -594,9 +580,8 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 
 	/**
 	 * Get the optional double value associated with an index. The defaultValue
-	 * is returned if there
-	 * is no value for the index, or if the value is not a number and cannot be
-	 * converted to a number.
+	 * is returned if there is no value for the index, or if the value is not a
+	 * number and cannot be converted to a number.
 	 *
 	 * @param index
 	 *            subscript
@@ -614,9 +599,8 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 
 	/**
 	 * Get the optional int value associated with an index. Zero is returned if
-	 * there is no value for
-	 * the index, or if the value is not a number and cannot be converted to a
-	 * number.
+	 * there is no value for the index, or if the value is not a number and
+	 * cannot be converted to a number.
 	 *
 	 * @param index
 	 *            The index must be between 0 and length() - 1.
@@ -628,9 +612,8 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 
 	/**
 	 * Get the optional int value associated with an index. The defaultValue is
-	 * returned if there is
-	 * no value for the index, or if the value is not a number and cannot be
-	 * converted to a number.
+	 * returned if there is no value for the index, or if the value is not a
+	 * number and cannot be converted to a number.
 	 *
 	 * @param index
 	 *            The index must be between 0 and length() - 1.
@@ -673,8 +656,7 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 	 * @param defaultValue
 	 *            The default in case the value is not found
 	 * @return The enum value at the index location or defaultValue if the value
-	 *         is not found or
-	 *         cannot be assigned to clazz
+	 *         is not found or cannot be assigned to clazz
 	 */
 	public <E extends Enum<E>> E optEnum(Class<E> clazz, int index, E defaultValue) {
 		try {
@@ -696,10 +678,8 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 
 	/**
 	 * Get the optional BigInteger value associated with an index. The
-	 * defaultValue is returned if
-	 * there is no value for the index, or if the value is not a number and
-	 * cannot be converted to a
-	 * number.
+	 * defaultValue is returned if there is no value for the index, or if the
+	 * value is not a number and cannot be converted to a number.
 	 *
 	 * @param index
 	 *            The index must be between 0 and length() - 1.
@@ -717,10 +697,8 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 
 	/**
 	 * Get the optional BigDecimal value associated with an index. The
-	 * defaultValue is returned if
-	 * there is no value for the index, or if the value is not a number and
-	 * cannot be converted to a
-	 * number.
+	 * defaultValue is returned if there is no value for the index, or if the
+	 * value is not a number and cannot be converted to a number.
 	 *
 	 * @param index
 	 *            The index must be between 0 and length() - 1.
@@ -742,8 +720,7 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 	 * @param index
 	 *            subscript
 	 * @return A JSONArray value, or null if the index has no value, or if the
-	 *         value is not a
-	 *         JSONArray.
+	 *         value is not a JSONArray.
 	 */
 	public JSONArray optJSONArray(int index) {
 		Object o = this.opt(index);
@@ -752,8 +729,8 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 
 	/**
 	 * Get the optional JSONObject associated with an index. Null is returned if
-	 * the key is not found,
-	 * or null if the index has no value, or if the value is not a JSONObject.
+	 * the key is not found, or null if the index has no value, or if the value
+	 * is not a JSONObject.
 	 *
 	 * @param index
 	 *            The index must be between 0 and length() - 1.
@@ -766,9 +743,8 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 
 	/**
 	 * Get the optional long value associated with an index. Zero is returned if
-	 * there is no value for
-	 * the index, or if the value is not a number and cannot be converted to a
-	 * number.
+	 * there is no value for the index, or if the value is not a number and
+	 * cannot be converted to a number.
 	 *
 	 * @param index
 	 *            The index must be between 0 and length() - 1.
@@ -780,9 +756,8 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 
 	/**
 	 * Get the optional long value associated with an index. The defaultValue is
-	 * returned if there is
-	 * no value for the index, or if the value is not a number and cannot be
-	 * converted to a number.
+	 * returned if there is no value for the index, or if the value is not a
+	 * number and cannot be converted to a number.
 	 *
 	 * @param index
 	 *            The index must be between 0 and length() - 1.
@@ -800,10 +775,8 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 
 	/**
 	 * Get the optional string value associated with an index. It returns an
-	 * empty string if there is
-	 * no value at that index. If the value is not a string and is not null,
-	 * then it is converted to a
-	 * string.
+	 * empty string if there is no value at that index. If the value is not a
+	 * string and is not null, then it is converted to a string.
 	 *
 	 * @param index
 	 *            The index must be between 0 and length() - 1.
@@ -815,8 +788,7 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 
 	/**
 	 * Get the optional string associated with an index. The defaultValue is
-	 * returned if the key is
-	 * not found.
+	 * returned if the key is not found.
 	 *
 	 * @param index
 	 *            The index must be between 0 and length() - 1.
@@ -843,8 +815,7 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 
 	/**
 	 * Put a value in the JSONArray, where the value will be a JSONArray which
-	 * is produced from a
-	 * Collection.
+	 * is produced from a Collection.
 	 *
 	 * @param value
 	 *            A Collection value.
@@ -897,8 +868,7 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 
 	/**
 	 * Put a value in the JSONArray, where the value will be a JSONObject which
-	 * is produced from a
-	 * Map.
+	 * is produced from a Map.
 	 *
 	 * @param value
 	 *            A Map value.
@@ -914,8 +884,8 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 	 *
 	 * @param value
 	 *            An object value. The value should be a Boolean, Double,
-	 *            Integer, JSONArray,
-	 *            JSONObject, Long, or String, or the JSONObject.NULL object.
+	 *            Integer, JSONArray, JSONObject, Long, or String, or the
+	 *            JSONObject.NULL object.
 	 * @return this.
 	 */
 	public JSONArray put(Object value) {
@@ -925,8 +895,8 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 
 	/**
 	 * Put or replace a boolean value in the JSONArray. If the index is greater
-	 * than the length of the
-	 * JSONArray, then null elements will be added as necessary to pad it out.
+	 * than the length of the JSONArray, then null elements will be added as
+	 * necessary to pad it out.
 	 *
 	 * @param index
 	 *            The subscript.
@@ -943,8 +913,7 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 
 	/**
 	 * Put a value in the JSONArray, where the value will be a JSONArray which
-	 * is produced from a
-	 * Collection.
+	 * is produced from a Collection.
 	 *
 	 * @param index
 	 *            The subscript.
@@ -961,8 +930,8 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 
 	/**
 	 * Put or replace a double value. If the index is greater than the length of
-	 * the JSONArray, then
-	 * null elements will be added as necessary to pad it out.
+	 * the JSONArray, then null elements will be added as necessary to pad it
+	 * out.
 	 *
 	 * @param index
 	 *            The subscript.
@@ -979,8 +948,8 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 
 	/**
 	 * Put or replace an int value. If the index is greater than the length of
-	 * the JSONArray, then
-	 * null elements will be added as necessary to pad it out.
+	 * the JSONArray, then null elements will be added as necessary to pad it
+	 * out.
 	 *
 	 * @param index
 	 *            The subscript.
@@ -997,8 +966,8 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 
 	/**
 	 * Put or replace a long value. If the index is greater than the length of
-	 * the JSONArray, then
-	 * null elements will be added as necessary to pad it out.
+	 * the JSONArray, then null elements will be added as necessary to pad it
+	 * out.
 	 *
 	 * @param index
 	 *            The subscript.
@@ -1033,16 +1002,15 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 
 	/**
 	 * Put or replace an object value in the JSONArray. If the index is greater
-	 * than the length of the
-	 * JSONArray, then null elements will be added as necessary to pad it out.
+	 * than the length of the JSONArray, then null elements will be added as
+	 * necessary to pad it out.
 	 *
 	 * @param index
 	 *            The subscript.
 	 * @param value
 	 *            The value to put into the array. The value should be a
-	 *            Boolean, Double, Integer,
-	 *            JSONArray, JSONObject, Long, or String, or the JSONObject.NULL
-	 *            object.
+	 *            Boolean, Double, Integer, JSONArray, JSONObject, Long, or
+	 *            String, or the JSONObject.NULL object.
 	 * @return this.
 	 * @throws JSONException
 	 *             If the index is negative or if the the value is an invalid
@@ -1082,8 +1050,7 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 	 *
 	 * @param names
 	 *            A JSONArray containing a list of key strings. These will be
-	 *            paired with the
-	 *            values.
+	 *            paired with the values.
 	 * @return A JSONObject, or null if there are no names or if this JSONArray
 	 *         has no values.
 	 * @throws JSONException
@@ -1102,10 +1069,9 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 
 	/**
 	 * Make a JSON text of this JSONArray. For compactness, no unnecessary
-	 * whitespace is added. If it
-	 * is not possible to produce a syntactically correct JSON text then null
-	 * will be returned
-	 * instead. This could occur if the array contains an invalid number.
+	 * whitespace is added. If it is not possible to produce a syntactically
+	 * correct JSON text then null will be returned instead. This could occur if
+	 * the array contains an invalid number.
 	 *
 	 * <p>
 	 * Warning: This method assumes that the data structure is acyclical.
@@ -1124,15 +1090,13 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 
 	/**
 	 * Make a prettyprinted JSON text of this JSONArray. Warning: This method
-	 * assumes that the data
-	 * structure is acyclical.
+	 * assumes that the data structure is acyclical.
 	 *
 	 * @param indentFactor
 	 *            The number of spaces to add to each level of indentation.
 	 * @return a printable, displayable, transmittable representation of the
-	 *         object, beginning with
-	 *         <code>[</code>&nbsp;<small>(left bracket)</small> and ending with
-	 *         <code>]</code>
+	 *         object, beginning with <code>[</code>&nbsp;<small>(left
+	 *         bracket)</small> and ending with <code>]</code>
 	 *         &nbsp;<small>(right bracket)</small>.
 	 * @throws JSONException
 	 *             Exception
@@ -1146,8 +1110,7 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 
 	/**
 	 * Write the contents of the JSONArray as JSON text to a writer. For
-	 * compactness, no whitespace is
-	 * added.
+	 * compactness, no whitespace is added.
 	 *
 	 * <p>
 	 * Warning: This method assumes that the data structure is acyclical.
@@ -1164,8 +1127,7 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 
 	/**
 	 * Write the contents of the JSONArray as JSON text to a writer. For
-	 * compactness, no whitespace is
-	 * added.
+	 * compactness, no whitespace is added.
 	 *
 	 * <p>
 	 * Warning: This method assumes that the data structure is acyclical.
@@ -1254,15 +1216,19 @@ public class JSONArray implements Iterable<Object>, JsonWritable{
 		}
 		return null;
 	}
-	/* (non-Javadoc)
-	 * @see org.simplity.json.Jsonable#writeJsonValue(org.simplity.json.JSONWriter)
+
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see
+	 * org.simplity.json.Jsonable#writeJsonValue(org.simplity.json.JSONWriter)
 	 */
 	@Override
 	public void writeJsonValue(JSONWriter writer) {
 		writer.array();
-			for(Object obj : this.myArrayList) {
-				writer.value(obj);
-			}
+		for (Object obj : this.myArrayList) {
+			writer.value(obj);
+		}
 		writer.endArray();
 		return;
 	}

@@ -137,7 +137,7 @@ public class ObjectConverter {
 			return true;
 		}
 
-		Value value = Value.parseValue(text, vt);
+		Value value = vt.parse(text);
 		if (value == null) {
 			ctx.addMessage(new FormattedMessage(Messages.INVALID_DATA, fieldName));
 			return false;
@@ -179,7 +179,7 @@ public class ObjectConverter {
 		boolean allOk = true;
 		for (int i = 0; i < nbr; i++) {
 			String text = nodes.item(i).getTextContent();
-			Value value = Value.parseValue(text, vt);
+			Value value = vt.parse(text);
 			if (value == null) {
 				ctx.addMessage(new FormattedMessage(Messages.INVALID_DATA, fieldName));
 				allOk = false;

@@ -88,7 +88,7 @@ public class AddColumn extends AbstractNonDbAction {
 				/*
 				 * it is a constant
 				 */
-				value = Value.parseValue(this.columnValue, this.columnValueType);
+				value = this.columnValueType.parse(this.columnValue);
 			}
 			if (value == null) {
 				logger.info("Value is null for column {}. not added.", this.columnName);

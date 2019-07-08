@@ -22,8 +22,6 @@
 
 package org.simplity.core.test;
 
-import java.util.Date;
-
 import org.simplity.core.app.AppConventions;
 import org.simplity.core.comp.ComponentType;
 import org.simplity.core.comp.FieldMetaData;
@@ -125,7 +123,7 @@ public class TestCase {
 
 		logger.info("Input Json : " + json);
 
-		long startedAt = new Date().getTime();
+		long startedAt = System.currentTimeMillis();
 		String msg = null;
 		try {
 			json = ctx.runService(this.serviceName, json);
@@ -138,7 +136,7 @@ public class TestCase {
 
 		logger.info("Output JSON : " + json);
 
-		int millis = (int) (new Date().getTime() - startedAt);
+		int millis = (int) (System.currentTimeMillis() - startedAt);
 		TestResult result = new TestResult(this.serviceName, this.testCaseName, millis, msg);
 		ctx.addResult(result);
 		return msg;

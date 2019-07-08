@@ -174,7 +174,7 @@ public class DbRecordGenerator {
 			for (int i = 0; i < fields.length; i++) {
 				Value[] row = columns.getRow(i);
 
-				String extern = row[2].toText();
+				String extern = row[2].toString();
 				String name = extern;
 				if (this.conversion != null) {
 					name = this.conversion.toJavaName(extern);

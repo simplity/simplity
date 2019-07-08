@@ -21,7 +21,7 @@
  */
 package org.simplity.core.adapter.destn;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 import org.simplity.core.adapter.IDataListTarget;
 import org.simplity.core.adapter.IDataTarget;
@@ -48,7 +48,7 @@ public class ContextDataTarget implements IDataTarget {
 
 	@Override
 	public void setPrimitiveValue(String fieldName, String fieldValue) {
-		this.ctx.setValue(fieldName, Value.parseValue(fieldValue));
+		this.ctx.setValue(fieldName, Value.parse(fieldValue));
 	}
 
 	@Override
@@ -67,7 +67,7 @@ public class ContextDataTarget implements IDataTarget {
 	}
 
 	@Override
-	public void setDateValue(String fieldName, Date fieldValue) {
+	public void setDateValue(String fieldName, LocalDate fieldValue) {
 		this.ctx.setDateValue(fieldName, fieldValue);
 	}
 }

@@ -170,7 +170,7 @@ public class InputField {
 			if (value != null) {
 				Value newValue = this.dataTypeObject.validateValue(value);
 				if (newValue == null) {
-					this.validationError(value.toText(), 0, ctx);
+					this.validationError(value.toString(), 0, ctx);
 					return false;
 				}
 				ctx.setValue(this.name, newValue);
@@ -227,7 +227,7 @@ public class InputField {
 
 	private Value parseValue(Object objectValue, ServiceContext ctx, int idx) {
 		Value value = this.dataTypeObject.getValueType()
-				.fromObject(objectValue);
+				.parseObject(objectValue);
 		if (value != null) {
 			value = this.dataTypeObject.validateValue(value);
 		}
@@ -278,7 +278,7 @@ public class InputField {
 		for (Object obj : arr) {
 			Value value = null;
 			if (obj != null) {
-				value = vt.fromObject(obj);
+				value = vt.parseObject(obj);
 			}
 			if (value == null) {
 				this.validationError("" + obj, idx, ctx);
@@ -305,7 +305,7 @@ public class InputField {
 			Object obj = arr.opt(i);
 			Value value = null;
 			if (obj != null) {
-				value = vt.fromObject(obj);
+				value = vt.parseObject(obj);
 			}
 			if (value == null) {
 				this.validationError("" + obj, i, ctx);
@@ -393,7 +393,7 @@ public class InputField {
 			Object obj = reader.getValue(i);
 			Value value = null;
 			if (obj != null) {
-				value = vt.fromObject(obj);
+				value = vt.parseObject(obj);
 			}
 			if (value == null) {
 				this.validationError("" + obj, i, ctx);
@@ -421,7 +421,7 @@ public class InputField {
 		if (value != null) {
 			Value newValue = this.dataTypeObject.validateValue(value);
 			if (newValue == null) {
-				this.validationError(value.toText(), 0, ctx);
+				this.validationError(value.toString(), 0, ctx);
 				return 0;
 			}
 			ctx.setValue(this.name, newValue);

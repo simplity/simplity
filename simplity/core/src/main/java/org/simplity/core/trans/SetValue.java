@@ -98,7 +98,7 @@ public class SetValue extends AbstractNonDbAction {
 			}
 			this.parsedField = TextUtil.getFieldName(this.fieldValue);
 			if (this.parsedField == null) {
-				this.parsedValue = Value.parseValue(this.fieldValue);
+				this.parsedValue = Value.parse(this.fieldValue);
 				if (this.parsedValue == null) {
 					throw new ApplicationError(
 							"SetValue action "

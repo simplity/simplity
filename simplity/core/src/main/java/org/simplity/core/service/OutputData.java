@@ -415,7 +415,7 @@ public class OutputData {
 
 	private void writeFields(IResponseWriter writer, ServiceContext ctx) {
 		for (String fieldName : this.fieldNames) {
-			fieldName = TextUtil.getFieldValue(ctx, fieldName).toText();
+			fieldName = TextUtil.getFieldValue(ctx, fieldName).toString();
 			Value value = ctx.getValue(fieldName);
 			if (value != null) {
 				if (value.isUnknown() == false) {

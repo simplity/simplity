@@ -22,13 +22,12 @@
  */
 package org.simplity.core.expr;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import org.simplity.core.data.DynamicSheet;
 import org.simplity.core.data.IFieldsCollection;
-import org.simplity.core.util.DateUtil;
 import org.simplity.core.value.InvalidValueException;
 import org.simplity.core.value.Value;
 import org.simplity.core.value.ValueType;
@@ -743,8 +742,10 @@ public class Expression {
 			String token = new String(this.chars, this.parsingAt, foundAt - this.parsingAt);
 			Value value = null;
 			if (delimiter == Chars.DIVIDE) {
-				Date date = DateUtil.parseDateWithOptionalTime(token);
-				if (date == null) {
+				LocalDate date = null;
+				try {
+					date = LocalDate.parse(token);
+				} catch (Exception e) {
 					throw new InternalParseException(
 							token
 									+ " is not a valid date. yyyy-mm-dd and yyyy-mm-ddThh:mm:ss.sssZ (UTC standard) are the only acceptable format for date.",
